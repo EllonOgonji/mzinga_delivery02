@@ -28,7 +28,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <Link to={`/product/${product.id}`} className="group">
-      <div className="bg-card rounded-lg overflow-hidden border hover-lift">
+      <div className="overflow-hidden cursor-pointer">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
@@ -39,34 +39,35 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           
           {/* Badges */}
           {discount > 0 && (
-            <Badge className="absolute top-2 right-2 bg-destructive">
+            <Badge className="absolute top-2 left-2 bg-destructive">
               {discount}% OFF
             </Badge>
           )}
-          {product.featured && (
+
+          {/* {product.featured && (
             <Badge className="absolute top-2 left-2 bg-accent">
               Featured
             </Badge>
-          )}
+          )} */}
 
           {/* Wishlist */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 bg-white/90 hover:bg-white h-8 w-8"
+            className="absolute top-2 right-2 h-8 w-8"
             onClick={(e) => {
               e.preventDefault();
               // TODO: Add to wishlist
             }}
           >
             <Heart className="h-4 w-4" />
-          </Button>
+          </Button> */}
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-2">
+        <div className="pt-4 space-y-2">
           {/* Shop Name */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground truncate">
               {shop?.name}
             </span>
@@ -79,10 +80,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 Closed
               </Badge>
             )}
-          </div>
+          </div> */}
 
           {/* Product Name */}
-          <h3 className="font-semibold line-clamp-2 min-h-[2.5rem]">
+          <h3 className="uppercase text-md leading-tight truncate">
             {product.name}
           </h3>
 
@@ -97,7 +98,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
           {/* Price */}
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-accent">
+            <span className="text-md font-semibold">
               ${product.price.toFixed(2)}
             </span>
             {product.compareAtPrice && (
@@ -115,13 +116,13 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           )}
 
           {/* Add to Cart Button */}
-          <Button
+          {/* <Button
             className="w-full bg-accent hover:bg-accent/90"
             onClick={handleAddToCart}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart
-          </Button>
+          </Button> */}
         </div>
       </div>
     </Link>

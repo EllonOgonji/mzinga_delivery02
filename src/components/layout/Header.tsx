@@ -119,7 +119,7 @@ export const Header = () => {
       {/* Navigation */}
       <nav className="border-t">
         <div className="container mx-auto px-4">
-          <ul className="flex items-center gap-6 h-12 text-sm overflow-x-auto">
+          <ul className="flex items-center gap-6 h-12 text-sm overflow-x-auto uppercase">
             <li>
               <Link to="/" className="hover:text-accent transition-colors">
                 Home
@@ -140,11 +140,11 @@ export const Header = () => {
                 Deals
               </Link>
             </li>
-            <li className="ml-auto">
+            {/* <li className="ml-auto">
               <Link to="/vendor/register" className="text-accent hover:underline font-medium">
                 Register as Vendor
               </Link>
-            </li>
+            </li> */}
           </ul>
         </div>
       </nav>

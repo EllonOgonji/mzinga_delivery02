@@ -53,7 +53,7 @@ export const Hero = () => {
   };
 
   return (
-    <div className="relative h-[500px] md:h-[600px] overflow-hidden rounded-lg">
+    <div className="relative h-[500px] md:h-[600px] overflow-hidden">
       {slides.map((slide, index) => (
         <div
           key={slide.id}
@@ -86,7 +86,7 @@ export const Hero = () => {
       ))}
 
       {/* Navigation Arrows */}
-      <Button
+      {/* <Button
         variant="ghost"
         size="icon"
         className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white"
@@ -101,7 +101,7 @@ export const Hero = () => {
         onClick={nextSlide}
       >
         <ChevronRight className="h-6 w-6" />
-      </Button>
+      </Button> */}
 
       {/* Dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">

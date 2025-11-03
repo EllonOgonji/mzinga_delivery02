@@ -28,7 +28,7 @@ export const ShopSelectionBar = ({ onOpenModal }: ShopSelectionBarProps) => {
             Select Shops
           </Button>
 
-          {selectedShops.length > 0 ? (
+          {/* {selectedShops.length > 0 ? (
             <>
               <span className="text-sm text-muted-foreground">
                 Shopping from {selectedShops.length} {selectedShops.length === 1 ? 'shop' : 'shops'}:
@@ -55,6 +55,28 @@ export const ShopSelectionBar = ({ onOpenModal }: ShopSelectionBarProps) => {
             <span className="text-sm text-muted-foreground">
               Shopping from all shops
             </span>
+          )} */}
+
+          {selectedShops.length > 0 && (
+            <>
+              <div className="flex gap-2 flex-wrap">
+                {selectedShops.map(shopId => (
+                  <Badge
+                    key={shopId}
+                    variant="secondary"
+                    className="gap-2 pr-1"
+                  >
+                    {getShopName(shopId)}
+                    <button
+                      onClick={() => toggleShop(shopId)}
+                      className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

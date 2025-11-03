@@ -113,6 +113,34 @@ All colors MUST be HSL.
   }
 }
 
+@layer base {
+  html, body, #root {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE 10+ */
+  }
+
+  /* WebKit (Chrome, Safari, Edge) */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* Hide scrollbars while preserving scrolling (Firefox, IE, WebKit). Add after your @tailwind base; */
+@layer base {
+  .no-scrollbar {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE 10+ */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+}
+
 @layer utilities {
   .hover-lift {
     @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;

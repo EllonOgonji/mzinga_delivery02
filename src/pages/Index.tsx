@@ -9,6 +9,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { Button } from '@/components/ui/button';
 import { mockProducts } from '@/data/mockData';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
+import { Beer, Pizza, Smartphone, ShoppingCart, Shirt, Sparkles, Home, Wrench, ChevronRight } from 'lucide-react';
 
 const Index = () => {
   const [shopModalOpen, setShopModalOpen] = useState(false);
@@ -25,6 +26,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+
       <ShopSelectionBar onOpenModal={() => setShopModalOpen(true)} />
       
       <main className="flex-1">
@@ -38,10 +40,10 @@ const Index = () => {
           {/* Featured Deals */}
           <section className="py-12">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold">Today's Hot Deals</h2>
-              <Button variant="outline">View All Deals</Button>
+              <h2 className="text-2xl font-bold">Today's Hot Deals</h2>
+              <Button variant="ghost">View All Deals <ChevronRight/> </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-6">
               {featuredDeals.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -52,7 +54,7 @@ const Index = () => {
           <section className="py-12">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-3xl font-bold">Trending Products</h2>
+                <h2 className="text-2xl font-bold">Trending Products</h2>
                 <p className="text-muted-foreground mt-1">
                   {selectedShops.length > 0 
                     ? `From ${selectedShops.length} selected ${selectedShops.length === 1 ? 'shop' : 'shops'}`
@@ -60,9 +62,9 @@ const Index = () => {
                   }
                 </p>
               </div>
-              <Button variant="outline">See More</Button>
+              <Button variant="ghost">See More <ChevronRight/> </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-6">
               {trendingProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -71,7 +73,7 @@ const Index = () => {
 
           {/* How It Works */}
           <section className="py-12 bg-gradient-card rounded-lg p-8">
-            <h2 className="text-3xl font-bold text-center mb-12">How Cstop Shop Works</h2>
+            <h2 className="text-2xl font-bold text-center mb-12">How Cstop Shop Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
