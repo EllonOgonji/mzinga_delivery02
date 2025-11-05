@@ -141,6 +141,11 @@ export const Header = () => {
                 Deals
               </Link>
             </li>
+            <li>
+              <Link to="/deals" className="hover:text-accent transition-colors">
+                Orders
+              </Link>
+            </li>
             {/* <li className="ml-auto">
               <Link to="/vendor/register" className="text-accent hover:underline font-medium">
                 Register as Vendor
