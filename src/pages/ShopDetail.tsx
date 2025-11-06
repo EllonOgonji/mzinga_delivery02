@@ -157,14 +157,14 @@ const ShopDetail = () => {
                     </div>
 
                     <div className="flex gap-2 mt-4">
-                      <Button>
+                      {/* <Button>
                         <Phone className="w-4 h-4 mr-2" />
                         Contact Shop
                       </Button>
                       <Button variant="outline">
                         <MapPin className="w-4 h-4 mr-2" />
                         View on Map
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </div>
@@ -200,7 +200,7 @@ const ShopDetail = () => {
                 />
               </div>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger className="w-full md:w-48 rounded-none">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,9 +266,9 @@ const ShopDetail = () => {
                     <div className="h-48 bg-muted rounded-lg flex items-center justify-center">
                       <p className="text-sm text-muted-foreground">Map View</p>
                     </div>
-                    <Button variant="outline" className="w-full">
+                    {/* <Button variant="outline" className="w-full">
                       Get Directions
-                    </Button>
+                    </Button> */}
                   </div>
                 </CardContent>
               </Card>

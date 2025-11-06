@@ -182,15 +182,15 @@ export default function ProductDetail() {
             <div>
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-accent">
-                  ${product.price.toFixed(2)}
+                  KES {product.price.toFixed(2)}
                 </span>
                 {product.compareAtPrice && (
                   <>
                     <span className="text-2xl text-muted-foreground line-through">
-                      ${product.compareAtPrice.toFixed(2)}
+                      KES {product.compareAtPrice.toFixed(2)}
                     </span>
                     <Badge variant="destructive" className="text-sm">
-                      Save ${(product.compareAtPrice - product.price).toFixed(2)}
+                      Save KES {(product.compareAtPrice - product.price).toFixed(2)}
                     </Badge>
                   </>
                 )}
@@ -232,7 +232,7 @@ export default function ProductDetail() {
             {/* Add to Cart Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="flex items-center border rounded-lg">
+                <div className="flex items-center border">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -273,6 +273,13 @@ export default function ProductDetail() {
                 >
                   <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
                 </Button>
+               <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleShare}
+                >
+                  <Share2 className="h-5 w-5" />
+                </Button>
               </div>
 
               <Button size="lg" variant="secondary" className="w-full" onClick={handleAddToCart}>
@@ -295,20 +302,6 @@ export default function ProductDetail() {
                     <div>
                       <p className="font-medium">Delivery fee: From ${shop.deliveryFees['0-2km']}</p>
                       <p className="text-muted-foreground text-xs">Depends on your location</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Standard: 2-3 business days</p>
-                      <p className="text-muted-foreground text-xs">Express: Same day (if ordered before 2 PM)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Package className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Free pickup at shop location</p>
-                      <p className="text-muted-foreground text-xs">{shop.location.address}</p>
                     </div>
                   </div>
                 </div>
@@ -358,10 +351,22 @@ export default function ProductDetail() {
 
         {/* Tabs Section */}
         <Tabs defaultValue="specifications" className="mb-12">
-          <TabsList className="w-full justify-start">
+          {/* <TabsList className="w-full justify-start">
             <TabsTrigger value="specifications">Specifications</TabsTrigger>
             <TabsTrigger value="reviews">Reviews ({product.reviewCount})</TabsTrigger>
             <TabsTrigger value="related">Related Products</TabsTrigger>
+          </TabsList> */}
+
+          <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+            <TabsTrigger value="specifications" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+              Specifications
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+              Reviews ({product.reviewCount})
+            </TabsTrigger>
+            <TabsTrigger value="related" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+              Related Products
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="specifications" className="mt-6">

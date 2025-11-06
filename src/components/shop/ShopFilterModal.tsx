@@ -65,9 +65,9 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-4 border-b">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4">
             <DialogTitle>Select Shops to Browse From</DialogTitle>
-            <Badge variant="secondary">
+            <Badge variant="secondary" className='w-max'>
               {selectedShops.length} shops selected
             </Badge>
           </div>
@@ -111,7 +111,7 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
             {filteredShops.map(shop => (
               <div
                 key={shop.id}
-                className={`flex items-start gap-4 p-4 rounded-lg border hover-lift cursor-pointer ${
+                className={`flex items-start gap-4 p-4 border cursor-pointer ${
                   selectedShops.includes(shop.id) ? 'border-accent bg-accent/5' : 'bg-card'
                 }`}
                 onClick={() => toggleShop(shop.id)}

@@ -146,7 +146,7 @@ export default function Checkout() {
                           <Label htmlFor="standard" className="flex-1 cursor-pointer">
                             <p className="font-medium">Standard Delivery</p>
                             <p className="text-sm text-muted-foreground">
-                              ${deliveryFeePerShop} - 2-3 business days
+                              ${deliveryFeePerShop} - 1.5 hrs
                             </p>
                           </Label>
                         </div>
@@ -155,7 +155,7 @@ export default function Checkout() {
                           <Label htmlFor="express" className="flex-1 cursor-pointer">
                             <p className="font-medium">Express Delivery</p>
                             <p className="text-sm text-muted-foreground">
-                              ${deliveryFeePerShop * 2} - Same day delivery
+                              ${deliveryFeePerShop * 2} - 30 mins
                             </p>
                           </Label>
                         </div>
@@ -221,7 +221,7 @@ export default function Checkout() {
                       )}
                     </div>
 
-                    <div className="border rounded-lg p-4">
+                    {/* <div className="border rounded-lg p-4">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="cod" id="cod" />
                         <Label htmlFor="cod" className="flex-1 cursor-pointer">
@@ -230,13 +230,13 @@ export default function Checkout() {
                             <div>
                               <p className="font-semibold">Cash on Delivery</p>
                               <p className="text-sm text-muted-foreground">
-                                Pay when you receive your order (+$1 fee)
+                                Pay when you receive your order (+KES 1 fee)
                               </p>
                             </div>
                           </div>
                         </Label>
                       </div>
-                    </div>
+                    </div> */}
                   </RadioGroup>
 
                   <div className="flex gap-3 mt-6">

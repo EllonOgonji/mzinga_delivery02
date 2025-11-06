@@ -1,18 +1,32 @@
 import { Shop, Product } from '@/types';
 
+export const mockCategories: string[] = [
+  "Electronics",
+  "Fashion",
+  "Home & Garden",
+  "Beauty",
+  "Sports & Outdoors",
+  "Toys & Hobbies",
+  "Automotive",
+  "Books & Media",
+  "Health & Wellness",
+  "Alcohol & Beverages",
+  "Groceries"
+];
+
 export const mockShops: Shop[] = [
   {
     id: 1,
-    name: "Fresh Groceries Hub",
+    name: "Mama Yao Wines and Spirits",
     ownerId: 2,
-    category: ["Groceries", "Fresh Produce"],
-    description: "Your neighborhood grocery store with fresh, organic produce",
+    category: ["Alcohol & Beverages"],
+    description: "Your neighborhood liquor store with a wide selection of wines and spirits",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
     rating: 4.5,
     reviewCount: 120,
     location: {
-      address: "123 Market Street, Nairobi",
+      address: "Lurambi",
       lat: -1.2921,
       lng: 36.8219
     },
@@ -37,16 +51,16 @@ export const mockShops: Shop[] = [
   },
   {
     id: 2,
-    name: "TechWorld Electronics",
+    name: "Clutch Lounge",
     ownerId: 3,
-    category: ["Electronics", "Gadgets"],
-    description: "Latest electronics and gadgets at competitive prices",
+    category: ["Alcohol & Beverages"],
+    description: "Premium wines and spirits for every occasion",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
     rating: 4.7,
     reviewCount: 350,
     location: {
-      address: "456 Tech Avenue, Nairobi",
+      address: "Lurambi",
       lat: -1.2850,
       lng: 36.8170
     },
@@ -71,16 +85,16 @@ export const mockShops: Shop[] = [
   },
   {
     id: 3,
-    name: "Fashion Forward",
+    name: "Club Tingiza",
     ownerId: 4,
-    category: ["Fashion", "Clothing"],
-    description: "Trendy fashion for everyone",
+    category: ["Alcohol & Beverages"],
+    description: "Trendy spot for cocktails and nightlife",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
     rating: 4.3,
     reviewCount: 200,
     location: {
-      address: "789 Style Street, Nairobi",
+      address: "Kefinco",
       lat: -1.2880,
       lng: 36.8250
     },
@@ -105,16 +119,16 @@ export const mockShops: Shop[] = [
   },
   {
     id: 4,
-    name: "Quick Bites",
+    name: "Club Valuvalu",
     ownerId: 5,
-    category: ["Fast Food", "Restaurant"],
-    description: "Delicious fast food delivered hot and fresh",
+    category: ["Alcohol & Beverages"],
+    description: "Popular club with great music and drinks",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
     rating: 4.6,
     reviewCount: 500,
     location: {
-      address: "321 Food Court, Nairobi",
+      address: "Sichirai",
       lat: -1.2900,
       lng: 36.8200
     },
@@ -139,16 +153,16 @@ export const mockShops: Shop[] = [
   },
   {
     id: 5,
-    name: "Beauty Bliss",
+    name: "Vault Retro",
     ownerId: 6,
-    category: ["Beauty", "Personal Care"],
-    description: "Premium beauty and personal care products",
+    category: ["Alcohol & Beverages"],
+    description: "Premium wines and spirits for every occasion",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
     rating: 4.8,
     reviewCount: 280,
     location: {
-      address: "555 Beauty Lane, Nairobi",
+      address: "Bukhungu Stadium",
       lat: -1.2860,
       lng: 36.8230
     },
@@ -173,16 +187,16 @@ export const mockShops: Shop[] = [
   },
   {
     id: 6,
-    name: "Home & Garden Paradise",
+    name: "Vovo",
     ownerId: 7,
-    category: ["Home & Garden", "Furniture"],
+    category: ["Alcohol & Beverages"],
     description: "Everything for your home and garden",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
     rating: 4.4,
     reviewCount: 150,
     location: {
-      address: "888 Home Street, Nairobi",
+      address: "Chandarana",
       lat: -1.2940,
       lng: 36.8180
     },
@@ -211,100 +225,100 @@ export const mockProducts: Product[] = [
   {
     id: 1,
     shopId: 1,
-    name: "Fresh Organic Apples",
-    category: "Fresh Produce",
-    description: "Crisp, organic apples from local farms. Perfect for snacking or baking.",
-    price: 5.99,
-    compareAtPrice: 7.99,
+    name: "Kenyan Cane Original",
+    category: "Alcohol & Beverages",
+    description: "A smooth, locally distilled spirit with a warm caramel finish. Perfect neat or in classic cocktails.",
+    price: 24.99,
+    compareAtPrice: 29.99,
     images: ["/placeholder.svg"],
-    stock: 100,
-    rating: 4.8,
-    reviewCount: 45,
+    stock: 120,
+    rating: 4.6,
+    reviewCount: 210,
     featured: true,
     specifications: {
-      weight: "1 kg",
+      volume: "750ml",
+      abv: "40%",
       origin: "Kenya"
     },
     status: "active",
-    createdAt: "2024-02-01"
+    createdAt: "2024-01-10"
   },
   {
     id: 2,
     shopId: 1,
-    name: "Organic Bananas",
-    category: "Fresh Produce",
-    description: "Sweet, ripe organic bananas. High in potassium and perfect for smoothies.",
-    price: 3.49,
+    name: "Kenyan Cane Pineapple",
+    category: "Alcohol & Beverages",
+    description: "Tropical pineapple-infused variant of Kenyan Cane — fruity and aromatic, great for mixed drinks and summer sips.",
+    price: 26.5,
     images: ["/placeholder.svg"],
-    stock: 150,
-    rating: 4.6,
-    reviewCount: 32,
+    stock: 80,
+    rating: 4.4,
+    reviewCount: 95,
     featured: false,
     specifications: {
-      weight: "1 kg",
-      origin: "Kenya"
+      volume: "750ml",
+      abv: "35%",
+      flavor: "Pineapple"
     },
     status: "active",
-    createdAt: "2024-02-05"
+    createdAt: "2024-01-12"
   },
   {
     id: 3,
     shopId: 2,
-    name: "Wireless Bluetooth Headphones",
-    category: "Electronics",
-    description: "Premium noise-cancelling wireless headphones with 30-hour battery life.",
-    price: 129.99,
-    compareAtPrice: 179.99,
+    name: "Tusker Lager (6-pack)",
+    category: "Alcohol & Beverages",
+    description: "Classic crisp lager with a balanced malt profile. Ready-to-drink 6-pack for gatherings.",
+    price: 9.99,
     images: ["/placeholder.svg"],
-    stock: 50,
-    rating: 4.7,
-    reviewCount: 180,
+    stock: 300,
+    rating: 4.2,
+    reviewCount: 480,
     featured: true,
     specifications: {
-      battery: "30 hours",
-      connectivity: "Bluetooth 5.0",
-      color: "Black"
+      pack: "6 x 330ml",
+      abv: "4.2%",
+      type: "Lager"
+    },
+    status: "active",
+    createdAt: "2024-01-05"
+  },
+  {
+    id: 4,
+    shopId: 2,
+    name: "Tusker Cider",
+    category: "Alcohol & Beverages",
+    description: "Refreshing apple cider with a light, fruity finish. Low on bitterness and highly drinkable.",
+    price: 11.49,
+    images: ["/placeholder.svg"],
+    stock: 200,
+    rating: 4.3,
+    reviewCount: 220,
+    featured: false,
+    specifications: {
+      volume: "500ml",
+      abv: "4.5%",
+      flavor: "Apple"
     },
     status: "active",
     createdAt: "2024-02-10"
   },
   {
-    id: 4,
-    shopId: 2,
-    name: "Smart Watch Pro",
-    category: "Electronics",
-    description: "Feature-packed smartwatch with health tracking and notifications.",
-    price: 249.99,
-    compareAtPrice: 299.99,
-    images: ["/placeholder.svg"],
-    stock: 30,
-    rating: 4.9,
-    reviewCount: 250,
-    featured: true,
-    specifications: {
-      display: "1.4 inch AMOLED",
-      battery: "7 days",
-      waterproof: "Yes"
-    },
-    status: "active",
-    createdAt: "2024-02-12"
-  },
-  {
     id: 5,
     shopId: 3,
-    name: "Premium Cotton T-Shirt",
-    category: "Fashion",
-    description: "Soft, comfortable cotton t-shirt in multiple colors. Perfect for everyday wear.",
-    price: 24.99,
+    name: "Johnnie Walker Red Label (Vial)",
+    category: "Alcohol & Beverages",
+    description: "Blended Scotch whisky known for its bold, vibrant character. A convenient small-format vial for sampling.",
+    price: 7.99,
     images: ["/placeholder.svg"],
-    stock: 200,
-    rating: 4.5,
-    reviewCount: 95,
+    stock: 150,
+    rating: 4.1,
+    reviewCount: 85,
     featured: false,
     specifications: {
-      material: "100% Cotton",
-      sizes: "S, M, L, XL",
-      colors: "5 colors available"
+      volume: "50ml",
+      abv: "40%",
+      brand: "Red Label"
     },
     status: "active",
     createdAt: "2024-02-15"
@@ -312,20 +326,20 @@ export const mockProducts: Product[] = [
   {
     id: 6,
     shopId: 3,
-    name: "Designer Jeans",
-    category: "Fashion",
-    description: "Stylish denim jeans with perfect fit and premium quality.",
-    price: 79.99,
-    compareAtPrice: 99.99,
+    name: "Johnnie Walker Black Label (750ml)",
+    category: "Alcohol & Beverages",
+    description: "Aged blended Scotch whisky with depth and character — smoky, fruity, and rich.",
+    price: 49.99,
+    compareAtPrice: 59.99,
     images: ["/placeholder.svg"],
-    stock: 80,
+    stock: 60,
     rating: 4.7,
-    reviewCount: 120,
+    reviewCount: 320,
     featured: true,
     specifications: {
-      material: "Denim",
-      fit: "Slim fit",
-      sizes: "28-38"
+      volume: "750ml",
+      abv: "40%",
+      brand: "Black Label"
     },
     status: "active",
     createdAt: "2024-02-18"
@@ -333,19 +347,19 @@ export const mockProducts: Product[] = [
   {
     id: 7,
     shopId: 4,
-    name: "Classic Burger Meal",
-    category: "Fast Food",
-    description: "Juicy beef burger with fries and a drink. A classic favorite!",
-    price: 12.99,
+    name: "Viceroy Whiskey",
+    category: "Alcohol & Beverages",
+    description: "Smooth blended whiskey with honeyed notes — great on the rocks or in classic cocktails.",
+    price: 21.99,
     images: ["/placeholder.svg"],
-    stock: 999,
-    rating: 4.6,
-    reviewCount: 340,
-    featured: true,
-    preparationTime: 15,
+    stock: 90,
+    rating: 4.0,
+    reviewCount: 60,
+    featured: false,
     specifications: {
-      includes: "Burger, Fries, Drink",
-      calories: "850 kcal"
+      volume: "750ml",
+      abv: "37%",
+      origin: "Imported"
     },
     status: "active",
     createdAt: "2024-02-20"
@@ -353,19 +367,19 @@ export const mockProducts: Product[] = [
   {
     id: 8,
     shopId: 4,
-    name: "Chicken Wings Combo",
-    category: "Fast Food",
-    description: "Crispy chicken wings with your choice of sauce. Includes fries and dip.",
-    price: 14.99,
+    name: "Kingfisher Premium Lager (4-pack)",
+    category: "Alcohol & Beverages",
+    description: "Light, crisp lager with a subtle hop aroma. Popular choice for everyday drinking.",
+    price: 7.49,
     images: ["/placeholder.svg"],
-    stock: 999,
-    rating: 4.8,
-    reviewCount: 280,
+    stock: 220,
+    rating: 4.2,
+    reviewCount: 140,
     featured: true,
-    preparationTime: 20,
     specifications: {
-      pieces: "10 wings",
-      sauces: "BBQ, Hot, Honey Mustard"
+      pack: "4 x 330ml",
+      abv: "4.8%",
+      type: "Lager"
     },
     status: "active",
     createdAt: "2024-02-22"
@@ -373,83 +387,21 @@ export const mockProducts: Product[] = [
   {
     id: 9,
     shopId: 5,
-    name: "Luxury Face Cream",
-    category: "Beauty",
-    description: "Anti-aging face cream with natural ingredients. Suitable for all skin types.",
-    price: 49.99,
-    compareAtPrice: 69.99,
+    name: "Jaghemister Herbal Liqueur",
+    category: "Alcohol & Beverages",
+    description: "Herbal digestif with complex botanicals and a warming finish. Best served chilled or as a shot.",
+    price: 34.99,
     images: ["/placeholder.svg"],
-    stock: 60,
-    rating: 4.9,
-    reviewCount: 150,
+    stock: 40,
+    rating: 4.5,
+    reviewCount: 110,
     featured: true,
     specifications: {
-      volume: "50ml",
-      type: "Anti-aging",
-      ingredients: "Natural, Cruelty-free"
+      volume: "700ml",
+      abv: "35%",
+      type: "Herbal Liqueur"
     },
     status: "active",
     createdAt: "2024-02-25"
-  },
-  {
-    id: 10,
-    shopId: 5,
-    name: "Hydrating Hair Mask",
-    category: "Beauty",
-    description: "Deep conditioning hair mask for dry and damaged hair.",
-    price: 29.99,
-    images: ["/placeholder.svg"],
-    stock: 75,
-    rating: 4.7,
-    reviewCount: 95,
-    featured: false,
-    specifications: {
-      volume: "200ml",
-      hairType: "All types",
-      treatment: "Deep conditioning"
-    },
-    status: "active",
-    createdAt: "2024-02-28"
-  },
-  {
-    id: 11,
-    shopId: 6,
-    name: "Ceramic Plant Pot",
-    category: "Home & Garden",
-    description: "Elegant ceramic pot perfect for indoor plants. Modern minimalist design.",
-    price: 34.99,
-    images: ["/placeholder.svg"],
-    stock: 45,
-    rating: 4.5,
-    reviewCount: 60,
-    featured: false,
-    specifications: {
-      material: "Ceramic",
-      size: "Medium",
-      drainage: "Yes"
-    },
-    status: "active",
-    createdAt: "2024-03-01"
-  },
-  {
-    id: 12,
-    shopId: 6,
-    name: "Garden Tool Set",
-    category: "Home & Garden",
-    description: "Complete 5-piece gardening tool set with ergonomic handles.",
-    price: 44.99,
-    compareAtPrice: 59.99,
-    images: ["/placeholder.svg"],
-    stock: 35,
-    rating: 4.6,
-    reviewCount: 78,
-    featured: true,
-    specifications: {
-      pieces: "5 tools",
-      material: "Stainless steel",
-      handle: "Ergonomic grip"
-    },
-    status: "active",
-    createdAt: "2024-03-05"
   }
 ];

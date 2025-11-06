@@ -1,25 +1,47 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockShops } from "@/data/mockData";
-import { Grid3x3, List, MapPin, Heart, Star, Clock, Truck } from "lucide-react";
+import { mockShops, mockCategories } from "@/data/mockData";
+import { Grid3x3, MapPin, Heart, Star, Clock, Truck } from "lucide-react";
+import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Sheet, SheetHeader, SheetTitle, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const ShopDirectory = () => {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("featured");
+  const categories = mockCategories;
+  const [shopFeatures, setShopFeatures] = useState<{ id: string; label: string }[]>([
+                { id: 'open-now', label: 'Open now' },
+                { id: 'top-rated', label: 'Top rated (4+ stars)' },
+                { id: 'fast-delivery', label: 'Fast delivery (< 2 hours)' },
+                { id: 'budget-friendly', label: 'Budget-friendly' }
+              ]);
+  const [selectedShopFeatures, setSelectedShopFeatures] = useState<string[]>([]);
+  // Filter states
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  const [deliveryOptions, setDeliveryOptions] = useState<string[]>([]);
+  const [distance, setDistance] = useState('any');
 
-  const filteredShops = mockShops.filter((shop) =>
-    shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    shop.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Expandable sections
+  const [expandedSections, setExpandedSections] = useState({
+    categories: true,
+    rating: true,
+    delivery: false,
+    features: false,
+    distance: false
+  });
 
   const getShopStatus = (shop: typeof mockShops[0]) => {
     const now = new Date();
@@ -41,6 +63,242 @@ const ShopDirectory = () => {
     };
   };
 
+  const FilterSidebar = () => (
+      <div className="space-y-6">
+        {/* Category Filter */}
+        <div className="border-b pb-4">
+          <button
+            onClick={() => toggleSection('categories')}
+            className="flex items-center justify-between w-full text-left mb-3"
+          >
+            <h3 className="font-semibold">Categories</h3>
+            {expandedSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {expandedSections.categories && (
+            <div className="space-y-2">
+              {categories.map(category => (
+                <div key={category} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`category-${category}`}
+                    checked={selectedCategories.includes(category)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedCategories(prev => [...prev, category]);
+                      } else {
+                        setSelectedCategories(prev => prev.filter(c => c !== category));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                    {category}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+  
+        {/* Rating Filter */}
+        <div className="border-b pb-4">
+          <button
+            onClick={() => toggleSection('rating')}
+            className="flex items-center justify-between w-full text-left mb-3"
+          >
+            <h3 className="font-semibold">Rating</h3>
+            {expandedSections.rating ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {expandedSections.rating && (
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map(rating => (
+                <div key={rating} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`rating-${rating}`}
+                    checked={selectedRatings.includes(rating)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedRatings([rating]);
+                      } else {
+                        setSelectedRatings([]);
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`rating-${rating}`} className="text-sm cursor-pointer">
+                    {rating === 5 ? '5 stars' : `${rating} stars & up`}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+  
+        {/* Delivery Options */}
+        <div className="border-b pb-4">
+          <button
+            onClick={() => toggleSection('delivery')}
+            className="flex items-center justify-between w-full text-left mb-3"
+          >
+            <h3 className="font-semibold">Delivery Options</h3>
+            {expandedSections.delivery ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {expandedSections.delivery && (
+            <div className="space-y-2">
+              {['Pickup available', 'Express delivery', 'Standard delivery', 'Scheduled delivery', 'Free delivery'].map(option => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`delivery-${option}`}
+                    checked={deliveryOptions.includes(option)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setDeliveryOptions(prev => [...prev, option]);
+                      } else {
+                        setDeliveryOptions(prev => prev.filter(o => o !== option));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`delivery-${option}`} className="text-sm cursor-pointer">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+  
+        {/* Shop Features */}
+        <div className="border-b pb-4">
+          <button
+            onClick={() => toggleSection('features')}
+            className="flex items-center justify-between w-full text-left mb-3"
+          >
+            <h3 className="font-semibold">Shop Features</h3>
+            {expandedSections.features ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {expandedSections.features && (
+            <div className="space-y-2">
+              {shopFeatures.map(feature => (
+                <div key={feature.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`feature-${feature.id}`}
+                    checked={selectedShopFeatures.includes(feature.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedShopFeatures(prev => [...prev, feature.id]);
+                      } else {
+                        setSelectedShopFeatures(prev => prev.filter(f => f !== feature.id));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`feature-${feature.id}`} className="text-sm cursor-pointer">
+                    {feature.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+  
+        {/* Distance Filter */}
+        <div className="pb-4">
+          <button
+            onClick={() => toggleSection('distance')}
+            className="flex items-center justify-between w-full text-left mb-3"
+          >
+            <h3 className="font-semibold">Distance</h3>
+            {expandedSections.distance ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {expandedSections.distance && (
+            <RadioGroup value={distance} onValueChange={setDistance}>
+              {['within-1km', 'within-2km', 'within-5km', 'within-10km', '10km+', 'any'].map(dist => (
+                <div key={dist} className="flex items-center space-x-2">
+                  <RadioGroupItem value={dist} id={`distance-${dist}`} />
+                  <Label htmlFor={`distance-${dist}`} className="text-sm cursor-pointer">
+                    {dist === 'any' ? 'Any distance' : dist.replace('within-', 'Within ').replace('km', ' km')}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          )}
+        </div>
+  
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          <Button variant="outline" className="w-full" onClick={clearAllFilters}>
+            Clear All Filters
+          </Button>
+        </div>
+      </div>
+  );
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+  
+    // Filter and sort shops
+  const filteredShops = useMemo(() => {
+    let shops = mockShops;
+
+    // Filter by search query
+    if (searchQuery.trim() !== "") {
+        shops = shops.filter((shop) =>
+          shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          shop.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+    }
+
+    // Filter by categories
+    if (selectedCategories.length > 0) {
+      shops = shops.filter(shop =>
+        shop.category.some(cat => selectedCategories.includes(cat))
+      );
+    }
+
+    // Filter by rating
+    if (selectedRatings.length > 0) {
+      const minRating = Math.min(...selectedRatings);
+      shops = shops.filter(p => p.rating >= minRating);
+    }
+
+    // Filter by shop features
+    if (selectedShopFeatures.includes('open-now')) {
+      const openShopIds = mockShops.filter(s => s.status === 'active').map(s => s.id);
+      shops = shops.filter(p => openShopIds.includes(p.id));
+    }
+
+    if (selectedShopFeatures.includes('top-rated')) {
+      const topRatedShopIds = mockShops.filter(s => s.rating >= 4).map(s => s.id);
+      shops = shops.filter(p => topRatedShopIds.includes(p.id));
+    }
+    
+    return shops;
+  }, [selectedCategories, selectedRatings, selectedShopFeatures, sortBy, searchQuery]);
+  
+  const uniqueShops = new Set(filteredShops.map(p => p.id)).size;
+  
+  const clearAllFilters = () => {
+    setSelectedCategories([]);
+    setSelectedRatings([]);
+    setShopFeatures([]);
+    setDistance('any');
+  };
+  
+    const activeFilters = [
+      ...selectedCategories.map(c => ({ label: c, type: 'category' as const })),
+      ...(selectedRatings.length > 0 ? [{ label: `${Math.min(...selectedRatings)}+ stars`, type: 'rating' as const }] : []),
+      ...selectedShopFeatures.map(f => ({ label: f.replace('-', ' '), type: 'feature' as const })),
+    ];
+  
+    const removeFilter = (filter: typeof activeFilters[0]) => {
+      if (filter.type === 'category') {
+        setSelectedCategories(prev => prev.filter(c => c !== filter.label));
+      } else if (filter.type === 'rating') {
+        setSelectedRatings([]);
+      } else if (filter.type === 'feature') {
+        setSelectedShopFeatures(prev => prev.filter(f => f.replace('-', ' ') !== filter.label));
+      }
+    };
+
+
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -59,15 +317,15 @@ const ShopDirectory = () => {
       </section>
 
       <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="flex gap-6">
           {/* Filters Sidebar */}
-          <aside className="lg:col-span-1">
+          {/* <aside className="lg:col-span-1">
             <Card>
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-4">Filters</h3>
                 
                 <div className="space-y-6">
-                  {/* Categories */}
+                  
                   <div>
                     <h4 className="text-sm font-medium mb-3">Categories</h4>
                     <div className="space-y-2">
@@ -82,7 +340,7 @@ const ShopDirectory = () => {
                     </div>
                   </div>
 
-                  {/* Rating */}
+                  
                   <div>
                     <h4 className="text-sm font-medium mb-3">Rating</h4>
                     <div className="space-y-2">
@@ -98,7 +356,7 @@ const ShopDirectory = () => {
                     </div>
                   </div>
 
-                  {/* Status */}
+                  
                   <div>
                     <h4 className="text-sm font-medium mb-3">Status</h4>
                     <div className="space-y-2">
@@ -121,10 +379,16 @@ const ShopDirectory = () => {
                 </div>
               </CardContent>
             </Card>
+          </aside> */}
+
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-20">
+              <FilterSidebar />
+            </div>
           </aside>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className="flex-1">
             {/* Search and Controls */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="flex-1">
@@ -134,8 +398,9 @@ const ShopDirectory = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger className="w-full md:w-48 rounded-none">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,7 +410,26 @@ const ShopDirectory = () => {
                   <SelectItem value="name">A-Z</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex gap-2">
+
+              {/* Mobile Filter Button */}
+              <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="lg:hidden">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <FilterSidebar />
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* <div className="flex gap-2">
                 <Button
                   variant={viewMode === "grid" ? "default" : "outline"}
                   size="icon"
@@ -160,7 +444,7 @@ const ShopDirectory = () => {
                 >
                   <List className="w-4 h-4" />
                 </Button>
-              </div>
+              </div> */}
             </div>
 
             {/* Results Count */}

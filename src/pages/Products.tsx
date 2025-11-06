@@ -19,7 +19,7 @@ import { useShopFilter } from '@/contexts/ShopFilterContext';
 import { Filter, Grid, List, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 const categories = [
-  'Alcohol',
+  'Alcohol & Beverages',
   'Fast Food',
   'Groceries',
   'Electronics',
@@ -482,7 +482,7 @@ export default function Products() {
 
               <div className="flex items-center gap-4">
                 {/* View Toggle */}
-                <div className="flex border rounded-lg">
+                {/* <div className="flex border rounded-lg">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
@@ -497,11 +497,11 @@ export default function Products() {
                   >
                     <List className="h-4 w-4" />
                   </Button>
-                </div>
+                </div> */}
 
                 {/* Sort Dropdown */}
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-48 rounded-none">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
