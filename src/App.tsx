@@ -21,6 +21,10 @@ import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorProducts from "./pages/vendor/Products";
 import VendorProductForm from "./pages/vendor/ProductForm";
 import VendorOrders from "./pages/vendor/Orders";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminUsers from "./pages/admin/Users";
+import AdminShops from "./pages/admin/Shops";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +52,11 @@ const App = () => (
                 <Route path="/vendor/products" element={<VendorProducts />} />
                 <Route path="/vendor/products/:id" element={<VendorProductForm />} />
                 <Route path="/vendor/orders" element={<VendorOrders />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="shops" element={<AdminShops />} />
+                </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
