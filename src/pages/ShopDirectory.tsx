@@ -14,53 +14,38 @@ import { Grid3x3, MapPin, Heart, Star, Clock, Truck } from "lucide-react";
 import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sheet, SheetHeader, SheetTitle, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Shop } from "@/types";
+import {getAllShops} from "@/data/shopData";
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 
 const ShopDirectory = () => {
+  type expandableSections = 'categories' | 'rating' | 'delivery' | 'features' | 'distance';
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("featured");
   const categories = mockCategories;
   const [shopFeatures, setShopFeatures] = useState<{ id: string; label: string }[]>([
                 { id: 'open-now', label: 'Open now' },
-                { id: 'top-rated', label: 'Top rated (4+ stars)' },
-                { id: 'fast-delivery', label: 'Fast delivery (< 2 hours)' },
-                { id: 'budget-friendly', label: 'Budget-friendly' }
+                // { id: 'top-rated', label: 'Top rated (4+ stars)' },
+                // { id: 'fast-delivery', label: 'Fast delivery (< 2 hours)' },
+                // { id: 'budget-friendly', label: 'Budget-friendly' }
               ]);
   const [selectedShopFeatures, setSelectedShopFeatures] = useState<string[]>([]);
-  // Filter states
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
-  const [deliveryOptions, setDeliveryOptions] = useState<string[]>([]);
-  const [distance, setDistance] = useState('any');
+  const [shops, setShops] = useState<Shop[]>(getAllShops({}));
 
-  // Expandable sections
-  const [expandedSections, setExpandedSections] = useState({
+  // Expandable sections - recal which sections are open and which are not
+  const [expandedSections, setExpandedSections] = useState<{
+    [key in expandableSections]: boolean;
+  }>({
     categories: true,
     rating: true,
     delivery: false,
     features: false,
     distance: false
   });
-
-  const getShopStatus = (shop: typeof mockShops[0]) => {
-    const now = new Date();
-    const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const hours = shop.openingHours[day];
-    
-    if (!hours) return { isOpen: false, text: "Closed" };
-    
-    const currentTime = now.getHours() * 60 + now.getMinutes();
-    const [openHour, openMin] = hours.open.split(':').map(Number);
-    const [closeHour, closeMin] = hours.close.split(':').map(Number);
-    const openTime = openHour * 60 + openMin;
-    const closeTime = closeHour * 60 + closeMin;
-    
-    const isOpen = currentTime >= openTime && currentTime <= closeTime;
-    return {
-      isOpen,
-      text: isOpen ? `Open - Closes at ${hours.close}` : `Closed - Opens at ${hours.open}`,
-    };
+  const toggleSection = (section: expandableSections) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
   const FilterSidebar = () => (
@@ -229,44 +214,42 @@ const ShopDirectory = () => {
       </div>
   );
 
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-  
+  // Filter states
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  const [deliveryOptions, setDeliveryOptions] = useState<string[]>([]);
+  const [distance, setDistance] = useState('any');
     // Filter and sort shops
   const filteredShops = useMemo(() => {
-    let shops = mockShops;
-
     // Filter by search query
     if (searchQuery.trim() !== "") {
-        shops = shops.filter((shop) =>
+        setShops(prev => prev.filter((shop) =>
           shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           shop.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+        ));
     }
 
     // Filter by categories
     if (selectedCategories.length > 0) {
-      shops = shops.filter(shop =>
+      setShops(prev => prev.filter(shop =>
         shop.category.some(cat => selectedCategories.includes(cat))
-      );
+      ));
     }
 
     // Filter by rating
     if (selectedRatings.length > 0) {
+      const averageRating = (ratings: number[]) => {
+        const total = ratings.reduce((sum, r) => sum + r, 0);
+        return total / ratings.length;
+      };
       const minRating = Math.min(...selectedRatings);
-      shops = shops.filter(p => p.rating >= minRating);
-    }
+      setShops(prev => prev.filter(shop => averageRating(shop.rating) >= minRating));
+    }    
 
     // Filter by shop features
     if (selectedShopFeatures.includes('open-now')) {
       const openShopIds = mockShops.filter(s => s.status === 'active').map(s => s.id);
-      shops = shops.filter(p => openShopIds.includes(p.id));
-    }
-
-    if (selectedShopFeatures.includes('top-rated')) {
-      const topRatedShopIds = mockShops.filter(s => s.rating >= 4).map(s => s.id);
-      shops = shops.filter(p => topRatedShopIds.includes(p.id));
+      setShops(prev => prev.filter(p => openShopIds.includes(p.id)));
     }
     
     return shops;
@@ -281,23 +264,21 @@ const ShopDirectory = () => {
     setDistance('any');
   };
   
-    const activeFilters = [
-      ...selectedCategories.map(c => ({ label: c, type: 'category' as const })),
-      ...(selectedRatings.length > 0 ? [{ label: `${Math.min(...selectedRatings)}+ stars`, type: 'rating' as const }] : []),
-      ...selectedShopFeatures.map(f => ({ label: f.replace('-', ' '), type: 'feature' as const })),
-    ];
+  const activeFilters = [
+    ...selectedCategories.map(c => ({ label: c, type: 'category' as const })),
+    ...(selectedRatings.length > 0 ? [{ label: `${Math.min(...selectedRatings)}+ stars`, type: 'rating' as const }] : []),
+    ...selectedShopFeatures.map(f => ({ label: f.replace('-', ' '), type: 'feature' as const })),
+  ];
   
-    const removeFilter = (filter: typeof activeFilters[0]) => {
-      if (filter.type === 'category') {
-        setSelectedCategories(prev => prev.filter(c => c !== filter.label));
-      } else if (filter.type === 'rating') {
-        setSelectedRatings([]);
-      } else if (filter.type === 'feature') {
-        setSelectedShopFeatures(prev => prev.filter(f => f.replace('-', ' ') !== filter.label));
-      }
-    };
-
-
+  const removeFilter = (filter: typeof activeFilters[0]) => {
+    if (filter.type === 'category') {
+      setSelectedCategories(prev => prev.filter(c => c !== filter.label));
+    } else if (filter.type === 'rating') {
+      setSelectedRatings([]);
+    } else if (filter.type === 'feature') {
+      setSelectedShopFeatures(prev => prev.filter(f => f.replace('-', ' ') !== filter.label));
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -453,12 +434,12 @@ const ShopDirectory = () => {
             </p>
 
             {/* Shop Grid/List */}
-            <div className={viewMode === "grid" 
-              ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" 
-              : "space-y-4"
-            }>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredShops.map((shop) => {
                 const status = getShopStatus(shop);
+                const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
+                const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude});
+                const averageRating = shop.rating.length > 0 ? (shop.rating.reduce((sum, r) => sum + r, 0) / shop.rating.length).toFixed(1) : "N/A";
                 return (
                   <Card key={shop.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardContent className="p-0">
@@ -502,16 +483,16 @@ const ShopDirectory = () => {
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
                             <Star className="w-4 h-4 fill-primary text-primary" />
-                            <span className="font-medium">{shop.rating}</span>
-                            <span className="text-muted-foreground">({shop.reviewCount} reviews)</span>
+                            <span className="font-medium">{averageRating}</span>
+                            <span className="text-muted-foreground">({shop.rating.length} reviews)</span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="w-4 h-4" />
-                            <span>2.5 km away</span>
+                            <span>{distanceToUser.toFixed(1)} km away</span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Truck className="w-4 h-4" />
-                            <span>From ${shop.deliveryFees["0-2km"]}</span>
+                            <span>KES. {deliveryFees}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
@@ -537,6 +518,26 @@ const ShopDirectory = () => {
       <Footer />
     </div>
   );
+};
+
+const getShopStatus = (shop: Shop) => {
+  const now = new Date();
+  const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  const hours = shop.openingHours[day];
+  
+  if (!hours) return { isOpen: false, text: "Closed" };
+  
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+  const [openHour, openMin] = hours.open.split(':').map(Number);
+  const [closeHour, closeMin] = hours.close.split(':').map(Number);
+  const openTime = openHour * 60 + openMin;
+  const closeTime = closeHour * 60 + closeMin;
+  
+  const isOpen = currentTime >= openTime && currentTime <= closeTime;
+  return {
+    isOpen,
+    text: isOpen ? `Open - Closes at ${hours.close}` : `Closed - Opens at ${hours.open}`,
+  };
 };
 
 export default ShopDirectory;

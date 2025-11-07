@@ -23,13 +23,10 @@ export const mockShops: Shop[] = [
     description: "Your neighborhood liquor store with a wide selection of wines and spirits",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
-    rating: 4.5,
-    reviewCount: 120,
-    location: {
-      address: "Lurambi",
-      lat: -1.2921,
-      lng: 36.8219
-    },
+    rating: [4.5, 4.6, 4.7, 4.4, 4.8],
+    longitude: 36.8219,
+    latitude: -1.2921,
+    address: "Lurambi",
     openingHours: {
       monday: { open: "08:00", close: "22:00" },
       tuesday: { open: "08:00", close: "22:00" },
@@ -38,12 +35,6 @@ export const mockShops: Shop[] = [
       friday: { open: "08:00", close: "23:00" },
       saturday: { open: "08:00", close: "23:00" },
       sunday: { open: "09:00", close: "21:00" }
-    },
-    deliveryFees: {
-      "0-2km": 2,
-      "2-5km": 3,
-      "5-10km": 5,
-      "10km+": 8
     },
     status: "active",
     featured: true,
@@ -57,13 +48,10 @@ export const mockShops: Shop[] = [
     description: "Premium wines and spirits for every occasion",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
-    rating: 4.7,
-    reviewCount: 350,
-    location: {
-      address: "Lurambi",
-      lat: -1.2850,
-      lng: 36.8170
-    },
+    rating: [4.7, 4.8, 4.6, 4.9, 4.5],
+    address: "Lurambi",
+    latitude: -1.2850,
+    longitude: 36.8170,
     openingHours: {
       monday: { open: "09:00", close: "21:00" },
       tuesday: { open: "09:00", close: "21:00" },
@@ -72,12 +60,6 @@ export const mockShops: Shop[] = [
       friday: { open: "09:00", close: "22:00" },
       saturday: { open: "09:00", close: "22:00" },
       sunday: { open: "10:00", close: "20:00" }
-    },
-    deliveryFees: {
-      "0-2km": 3,
-      "2-5km": 5,
-      "5-10km": 7,
-      "10km+": 10
     },
     status: "active",
     featured: true,
@@ -91,13 +73,10 @@ export const mockShops: Shop[] = [
     description: "Trendy spot for cocktails and nightlife",
     logo: "/placeholder.svg",
     banner: "/placeholder.svg",
-    rating: 4.3,
-    reviewCount: 200,
-    location: {
-      address: "Kefinco",
-      lat: -1.2880,
-      lng: 36.8250
-    },
+    rating: [4.3, 4.4, 4.2, 4.5, 4.1],
+    longitude: 36.8148,
+    latitude: -1.3061,
+    address: "Lurambi",
     openingHours: {
       monday: { open: "10:00", close: "20:00" },
       tuesday: { open: "10:00", close: "20:00" },
@@ -107,117 +86,9 @@ export const mockShops: Shop[] = [
       saturday: { open: "10:00", close: "21:00" },
       sunday: { open: "11:00", close: "19:00" }
     },
-    deliveryFees: {
-      "0-2km": 2,
-      "2-5km": 4,
-      "5-10km": 6,
-      "10km+": 9
-    },
     status: "active",
     featured: false,
     createdAt: "2024-02-01"
-  },
-  {
-    id: 4,
-    name: "Club Valuvalu",
-    ownerId: 5,
-    category: ["Alcohol & Beverages"],
-    description: "Popular club with great music and drinks",
-    logo: "/placeholder.svg",
-    banner: "/placeholder.svg",
-    rating: 4.6,
-    reviewCount: 500,
-    location: {
-      address: "Sichirai",
-      lat: -1.2900,
-      lng: 36.8200
-    },
-    openingHours: {
-      monday: { open: "11:00", close: "23:00" },
-      tuesday: { open: "11:00", close: "23:00" },
-      wednesday: { open: "11:00", close: "23:00" },
-      thursday: { open: "11:00", close: "23:00" },
-      friday: { open: "11:00", close: "00:00" },
-      saturday: { open: "11:00", close: "00:00" },
-      sunday: { open: "11:00", close: "23:00" }
-    },
-    deliveryFees: {
-      "0-2km": 2,
-      "2-5km": 3,
-      "5-10km": 5,
-      "10km+": 7
-    },
-    status: "active",
-    featured: true,
-    createdAt: "2024-01-20"
-  },
-  {
-    id: 5,
-    name: "Vault Retro",
-    ownerId: 6,
-    category: ["Alcohol & Beverages"],
-    description: "Premium wines and spirits for every occasion",
-    logo: "/placeholder.svg",
-    banner: "/placeholder.svg",
-    rating: 4.8,
-    reviewCount: 280,
-    location: {
-      address: "Bukhungu Stadium",
-      lat: -1.2860,
-      lng: 36.8230
-    },
-    openingHours: {
-      monday: { open: "09:00", close: "20:00" },
-      tuesday: { open: "09:00", close: "20:00" },
-      wednesday: { open: "09:00", close: "20:00" },
-      thursday: { open: "09:00", close: "20:00" },
-      friday: { open: "09:00", close: "21:00" },
-      saturday: { open: "09:00", close: "21:00" },
-      sunday: { open: "10:00", close: "19:00" }
-    },
-    deliveryFees: {
-      "0-2km": 2,
-      "2-5km": 3,
-      "5-10km": 5,
-      "10km+": 8
-    },
-    status: "active",
-    featured: true,
-    createdAt: "2024-01-15"
-  },
-  {
-    id: 6,
-    name: "Vovo",
-    ownerId: 7,
-    category: ["Alcohol & Beverages"],
-    description: "Everything for your home and garden",
-    logo: "/placeholder.svg",
-    banner: "/placeholder.svg",
-    rating: 4.4,
-    reviewCount: 150,
-    location: {
-      address: "Chandarana",
-      lat: -1.2940,
-      lng: 36.8180
-    },
-    openingHours: {
-      monday: { open: "08:00", close: "19:00" },
-      tuesday: { open: "08:00", close: "19:00" },
-      wednesday: { open: "08:00", close: "19:00" },
-      thursday: { open: "08:00", close: "19:00" },
-      friday: { open: "08:00", close: "20:00" },
-      saturday: { open: "08:00", close: "20:00" },
-      sunday: { open: "09:00", close: "18:00" }
-    },
-    deliveryFees: {
-      "0-2km": 5,
-      "2-5km": 8,
-      "5-10km": 12,
-      "10km+": 15
-    },
-    status: "active",
-    featured: false,
-    createdAt: "2024-02-10"
   }
 ];
 

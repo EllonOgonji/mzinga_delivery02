@@ -1,3 +1,20 @@
+export interface ShopFilters {
+  category?: string[];
+  rating?: number;
+  isOpenNow?: boolean;
+  featured?: boolean;
+  searchQuery?: string;
+}
+
+export interface ProductFilters {
+  category?: string[];
+  priceRange?: { min: number; max: number };
+  rating?: number;
+  inStock?: boolean;
+  featured?: boolean;
+  searchQuery?: string;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -34,22 +51,17 @@ export interface Shop {
   description: string;
   logo: string;
   banner: string;
-  rating: number;
-  reviewCount: number;
-  location: {
-    address: string;
-    lat: number;
-    lng: number;
-  };
+  rating: number[];
+  latitude: number;
+  longitude: number;
+  address?: string;
   openingHours: {
     [key: string]: { open: string; close: string };
   };
-  deliveryFees: {
-    [key: string]: number;
-  };
-  status: 'active' | 'closed' | 'suspended';
+  status: 'active' | 'suspended';
   featured: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Product {
