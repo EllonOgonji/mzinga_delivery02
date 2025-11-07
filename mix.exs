@@ -9,7 +9,8 @@ defmodule MzingaDelivery.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: releases()
     ]
   end
 
@@ -52,6 +53,15 @@ defmodule MzingaDelivery.MixProject do
       {:timex, "~> 3.7"},
       {:dotenvy, "~> 1.1.0", only: [:dev, :test]},
       {:guardian, "~> 2.0"}
+    ]
+  end
+
+  defp releases do
+    [
+      mzinga_delivery: [
+        include_executables_for: [:unix],
+        applications: [runtime_tools: :permanent]
+      ]
     ]
   end
 
