@@ -6,7 +6,7 @@ export const getAllShops = function (filters: ShopFilters): Shop[] {
 
     if (filters) {
         if (filters.category) {
-            filters.category.forEach((cat) => parameters.append("category", cat));
+            parameters.append("category", filters.category.join(","));
         }
         if (filters.rating) {
             parameters.append("rating", filters.rating.toString());
@@ -19,6 +19,10 @@ export const getAllShops = function (filters: ShopFilters): Shop[] {
         }
         if (filters.searchQuery) {
             parameters.append("searchQuery", filters.searchQuery);
+        }
+        if (filters.id){
+            parameters.append("id", filters.id.toString());
+            return mockShops.filter((shop) => shop.id === filters.id);
         }
     }
 

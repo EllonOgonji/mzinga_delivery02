@@ -23,14 +23,16 @@ import {
   Instagram,
   Twitter,
 } from "lucide-react";
+import { getAllShops } from "@/data/shopData";
+import { getAllProducts } from "@/data/productData";
+import { calculateDeliveryFee, getShopStatus, findDistanceBetweenUserAndShop } from "@/lib/utils";
 
 const ShopDetail = () => {
   const { id } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
-
-  const shop = mockShops.find((s) => s.id === Number(id));
-  const shopProducts = mockProducts.filter((p) => p.shopId === Number(id));
+  const [shop, setShop]  = useState(getAllShops({ id: Number(id) })[0]);
+  const [shopProducts, setShopProducts] = useState(getAllProducts({ shopId: Number(id) }));
 
   if (!shop) {
     return (
@@ -49,24 +51,14 @@ const ShopDetail = () => {
     );
   }
 
-  const getShopStatus = () => {
-    const now = new Date();
-    const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const hours = shop.openingHours[day];
-    
-    if (!hours) return { isOpen: false, text: "Closed" };
-    
-    return {
-      isOpen: true,
-      text: `Open - Closes at ${hours.close}`,
-    };
-  };
-
-  const status = getShopStatus();
-
   const filteredProducts = shopProducts.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const status = getShopStatus(shop);
+  const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
+  const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude});
+  const averageRating = shop.rating.length > 0 ? (shop.rating.reduce((sum, r) => sum + r, 0) / shop.rating.length).toFixed(1) : "N/A";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -114,16 +106,16 @@ const ShopDetail = () => {
                               <Star
                                 key={i}
                                 className={`w-5 h-5 ${
-                                  i < Math.floor(shop.rating)
+                                  i < Math.floor(Number(averageRating))
                                     ? "fill-primary text-primary"
                                     : "text-muted"
                                 }`}
                               />
                             ))}
                           </div>
-                          <span className="font-medium">{shop.rating}</span>
+                          <span className="font-medium">{averageRating}</span>
                           <span className="text-muted-foreground">
-                            ({shop.reviewCount} reviews)
+                            ({shop.rating.length} reviews)
                           </span>
                         </div>
                       </div>
@@ -142,11 +134,11 @@ const ShopDetail = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span>2.5 km away</span>
+                        <span>{distanceToUser.toFixed(1)} km away</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Truck className="w-4 h-4 text-muted-foreground" />
-                        <span>From ${shop.deliveryFees["0-2km"]} delivery</span>
+                        <span>KES. {deliveryFees} delivery</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className={`w-4 h-4 ${status.isOpen ? "text-success" : "text-destructive"}`} />
@@ -261,7 +253,7 @@ const ShopDetail = () => {
                   <div className="space-y-4">
                     <div className="flex items-start gap-2">
                       <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                      <p className="text-sm">{shop.location.address}</p>
+                      <p className="text-sm">{shop.address}</p>
                     </div>
                     <div className="h-48 bg-muted rounded-lg flex items-center justify-center">
                       <p className="text-sm text-muted-foreground">Map View</p>
@@ -316,13 +308,13 @@ const ShopDetail = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
-                    <div className="text-5xl font-bold mb-2">{shop.rating}</div>
+                    <div className="text-5xl font-bold mb-2">{averageRating}</div>
                     <div className="flex justify-center mb-2">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           className={`w-5 h-5 ${
-                            i < Math.floor(shop.rating)
+                            i < Math.floor(Number(averageRating))
                               ? "fill-primary text-primary"
                               : "text-muted"
                           }`}
@@ -330,7 +322,7 @@ const ShopDetail = () => {
                       ))}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Based on {shop.reviewCount} reviews
+                      Based on {shop.rating.length} reviews
                     </p>
                   </div>
 

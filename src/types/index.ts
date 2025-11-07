@@ -1,4 +1,5 @@
 export interface ShopFilters {
+  id?: number;
   category?: string[];
   rating?: number;
   isOpenNow?: boolean;
@@ -7,6 +8,8 @@ export interface ShopFilters {
 }
 
 export interface ProductFilters {
+  id?: number;
+  shopId?: number;
   category?: string[];
   priceRange?: { min: number; max: number };
   rating?: number;
