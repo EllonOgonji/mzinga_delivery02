@@ -9,8 +9,8 @@ export const calculateDeliveryFee = (coordinates: { lat: number; lon: number }):
   const distanceKm = findDistanceBetweenCoordinates(
     coordinates.lat,
     coordinates.lon,
-    parseFloat(localStorage.getItem("userLat")),
-    parseFloat(localStorage.getItem("userLon"))
+    parseFloat(localStorage.getItem("userLat")) || -1.2828,
+    parseFloat(localStorage.getItem("userLon")) || 36.8029
   );
   const feeTiers = {
     "0-2km": 70.0,
