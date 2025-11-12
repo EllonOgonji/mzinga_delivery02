@@ -10,6 +10,12 @@ defmodule MzingaDeliveryWeb.Router do
     plug MzingaDeliveryWeb.Auth.Pipeline
   end
 
+  # health check route
+  scope "/", MzingaDeliveryWeb do
+    pipe_through :api
+    get "/", HealthController, :index
+  end
+
   # Public routes
   scope "/api", MzingaDeliveryWeb do
     pipe_through :api
