@@ -36,6 +36,11 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
+  # added for render
+  if System.get_env("PHX_SERVER") in [nil, ""] do
+    System.put_env("PHX_SERVER", "true")
+  end
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
@@ -78,6 +83,7 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0},
       port: port
     ],
+    server: true,
     secret_key_base: secret_key_base
 
   # Mpesa config
