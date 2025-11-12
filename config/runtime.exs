@@ -1,5 +1,5 @@
 import Config
-#alias Dotenvy.Parser
+# alias Dotenvy.Parser
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
@@ -15,11 +15,13 @@ if File.exists?(".env") do
     case String.split(line, "=", parts: 2) do
       [key, value] when key != "" ->
         System.put_env(String.trim(key), String.trim(value, ~s("')))
+
       _ ->
         :skip
     end
   end)
 end
+
 # ## Using releases
 #
 # If you use `mix release`, you need to explicitly enable the server
@@ -73,20 +75,20 @@ if config_env() == :prod do
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
       # See the documentation on https://hexdocs.pm/bandit/Bandit.html#t:options/0
       # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0},
+      ip: {0, 0, 0, 0},
       port: port
     ],
     secret_key_base: secret_key_base
 
-    #Mpesa config
-    config :mzinga_delivery, :mpesa,
+  # Mpesa config
+  config :mzinga_delivery, :mpesa,
     api_url: System.get_env("MPESA_API_URL") || raise("MPESA_API_URL not set"),
     shortcode: System.get_env("MPESA_SHORTCODE") || raise("MPESA_SHORTCODE not set"),
     passkey: System.get_env("MPESA_PASSKEY") || raise("MPESA_PASSKEY not set"),
     consumer_key: System.get_env("MPESA_CONSUMER_KEY") || raise("MPESA_CONSUMER_KEY not set"),
-    consumer_secret: System.get_env("MPESA_CONSUMER_SECRET") || raise("MPESA_CONSUMER_SECRET not set"),
+    consumer_secret:
+      System.get_env("MPESA_CONSUMER_SECRET") || raise("MPESA_CONSUMER_SECRET not set"),
     callback_url: System.get_env("MPESA_CALLBACK_URL") || raise("MPESA_CALLBACK_URL not set")
-
 else
   # DEVELOPMENT/TEST CONFIGURATION
 
@@ -94,9 +96,18 @@ else
     api_url: "https://sandbox.safaricom.co.ke",
     shortcode: "174379",
     passkey: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",
-    consumer_key: System.get_env("MPESA_CONSUMER_KEY", "eUcoSqN08wAAmEP0k31rosEfqgRWyggtbv629w4kpRzRPiTe"),
-    consumer_secret: System.get_env("MPESA_CONSUMER_SECRET", "B54U4HCWGHFQHEkAERUwh73SnsnKGIxMH308FpGvcwuYpCAWXrG5WOQSL1Mh3aXq"),
-    callback_url: System.get_env("MPESA_CALLBACK_URL", "https://lordless-tama-equally.ngrok-free.dev/api/payments/callback")
+    consumer_key:
+      System.get_env("MPESA_CONSUMER_KEY", "eUcoSqN08wAAmEP0k31rosEfqgRWyggtbv629w4kpRzRPiTe"),
+    consumer_secret:
+      System.get_env(
+        "MPESA_CONSUMER_SECRET",
+        "B54U4HCWGHFQHEkAERUwh73SnsnKGIxMH308FpGvcwuYpCAWXrG5WOQSL1Mh3aXq"
+      ),
+    callback_url:
+      System.get_env(
+        "MPESA_CALLBACK_URL",
+        "https://lordless-tama-equally.ngrok-free.dev/api/payments/callback"
+      )
 
   # ## SSL Support
   #

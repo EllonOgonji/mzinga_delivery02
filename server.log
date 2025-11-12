@@ -1,0 +1,10 @@
+Loading .env variables...
+[info] Running MzingaDeliveryWeb.Endpoint with Bandit 1.8.0 at 127.0.0.1:4000 (http)
+[info] Access MzingaDeliveryWeb.Endpoint at http://localhost:4000
+[notice] Application mzinga_delivery exited: shutdown
+
+BREAK: (a)bort (A)bort with dump (c)ontinue (p)roc info (i)nfo
+       (l)oaded (v)ersion (k)ill (D)b-tables (d)istribution
+Invalid option 's'. Please enter one of the following:
+BREAK: (a)bort (A)bort with dump (c)ontinue (p)roc info (i)nfo
+       (l)oaded (v)ersion (k)ill (D)b-tables (d)istribution

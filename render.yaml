@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: mzinga_delivery
+    runtime: elixir
+    plan: free
+    buildCommand: mix deps.get --only prod && MIX_ENV=prod mix compile
+    startCommand: MIX_ENV=prod mix phx.server
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY_BASE
+        sync: false
+      - key: PHX_HOST
+        value: mzinga-delivery.onrender.com
+      - key: POOL_SIZE
+        value: 10
