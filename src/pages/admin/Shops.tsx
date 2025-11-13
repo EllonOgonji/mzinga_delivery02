@@ -45,8 +45,7 @@ export default function AdminShops() {
 
   const filteredShops = mockShops.filter((shop) => {
     const matchesSearch =
-      shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shop.location.address.toLowerCase().includes(searchTerm.toLowerCase());
+      shop.name.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesCategory =
       categoryFilter === "all" || shop.category.includes(categoryFilter);
@@ -55,7 +54,7 @@ export default function AdminShops() {
   });
 
   const pendingShops = filteredShops.filter((shop) => shop.status === "closed");
-  const activeShops = filteredShops.filter((shop) => shop.status === "active");
+  const activeShops = filteredShops.filter((shop) => shop.status === "open");
   const suspendedShops = filteredShops.filter((shop) => shop.status === "suspended");
 
   const getStatusColor = (status: string) => {
@@ -119,17 +118,17 @@ export default function AdminShops() {
               <TableCell>
                 <Badge variant="outline">{shop.category[0]}</Badge>
               </TableCell>
-              <TableCell className="max-w-[200px] truncate">
+              {/* <TableCell className="max-w-[200px] truncate">
                 {shop.location.address}
-              </TableCell>
+              </TableCell> */}
               <TableCell>{shopProducts.length}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  <span className="font-medium">{shop.rating}</span>
-                  <span className="text-muted-foreground">
+                  {/* <span className="font-medium">{shop.rating}</span> */}
+                  {/* <span className="text-muted-foreground">
                     ({shop.reviewCount})
-                  </span>
+                  </span> */}
                 </div>
               </TableCell>
               <TableCell>
@@ -346,28 +345,29 @@ export default function AdminShops() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Rating</p>
-                  <div className="flex items-center gap-1 mt-1">
+                  {/* <div className="flex items-center gap-1 mt-1">
                     <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                     <span className="font-medium">{selectedShop.rating}</span>
                     <span className="text-muted-foreground">
                       ({selectedShop.reviewCount} reviews)
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">
                   Description
                 </p>
                 <p className="text-sm">{selectedShop.description}</p>
-              </div>
+              </div> */}
 
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">
                   Location
                 </p>
-                <p className="text-sm">{selectedShop.location.address}</p>
+                <p className="text-sm">{selectedShop.longitude}</p>
+                <p className="text-sm">{selectedShop.latitude}</p>
               </div>
 
               <div className="flex gap-2">
@@ -429,3 +429,4 @@ export default function AdminShops() {
     </div>
   );
 }
+

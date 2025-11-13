@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { getAllShops } from "@/data/shopData";
 import { getAllProducts } from "@/data/productData";
-import { calculateDeliveryFee, getShopStatus, findDistanceBetweenUserAndShop } from "@/lib/utils";
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 
 const ShopDetail = () => {
   const { id } = useParams();

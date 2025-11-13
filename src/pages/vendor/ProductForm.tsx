@@ -32,7 +32,6 @@ const ProductForm = () => {
     compareAtPrice: existingProduct?.compareAtPrice?.toString() || '',
     stock: existingProduct?.stock?.toString() || '',
     sku: '',
-    preparationTime: existingProduct?.preparationTime?.toString() || '',
     trackQuantity: true,
     status: (existingProduct?.status || 'active') as 'active' | 'inactive',
   });
@@ -320,7 +319,7 @@ const ProductForm = () => {
                     <CardTitle>Food Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="prepTime">Preparation Time (minutes)</Label>
                       <Input
                         id="prepTime"
@@ -329,7 +328,7 @@ const ProductForm = () => {
                         value={formData.preparationTime}
                         onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
                       />
-                    </div>
+                    </div> */}
 
                     <div className="space-y-3">
                       <Label>Dietary Information</Label>

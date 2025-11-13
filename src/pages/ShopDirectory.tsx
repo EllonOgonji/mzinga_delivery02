@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sheet, SheetHeader, SheetTitle, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Shop } from "@/types";
 import {getAllShops} from "@/data/shopData";
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop, getShopStatus } from "@/lib/utils";
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 
 const ShopDirectory = () => {
   type expandableSections = 'categories' | 'rating' | 'delivery' | 'features' | 'distance';

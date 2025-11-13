@@ -76,7 +76,10 @@ export default function Products() {
 
     // Filter by categories
     if (selectedCategories.length > 0) {
-      filter.category = selectedCategories;
+      selectedCategories.forEach(category => {
+        filter.category = ""
+        filter.category = filter.category ? filter.category + `|${category}` : category;
+      });
     }
 
     // Filter by price range
@@ -106,9 +109,6 @@ export default function Products() {
         break;
       case 'price-high':
         products = [...products].sort((a, b) => b.price - a.price)
-        break;
-      case 'rating':
-        products = [...products].sort((a, b) => b.averageRating - a.averageRating)
         break;
       case 'newest':
         products = [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
