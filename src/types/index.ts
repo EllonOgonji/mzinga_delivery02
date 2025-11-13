@@ -1,16 +1,21 @@
 export interface ShopFilters {
+  idMultiple?: number[];
   id?: number;
   category?: string[];
   rating?: number;
   isOpenNow?: boolean;
-  featured?: boolean;
+  // featured?: boolean;
   searchQuery?: string;
 }
 
 export interface ProductFilters {
+  idMultiple?: number[];
   id?: number;
   shopId?: number;
-  category?: string[];
+  shopIdMultiple?: number[];
+  shopOpen?: boolean;
+  category?: string;
+  categoryMultiple?: string[];
   priceRange?: { min: number; max: number };
   rating?: number;
   inStock?: boolean;
@@ -51,20 +56,15 @@ export interface Shop {
   name: string;
   ownerId: number;
   category: string[];
-  description: string;
   logo: string;
   banner: string;
-  rating: number[];
   latitude: number;
   longitude: number;
-  address?: string;
-  openingHours: {
-    [key: string]: { open: string; close: string };
-  };
-  status: 'active' | 'suspended';
-  featured: boolean;
+  status: 'open' | 'suspended' | 'closed';
   createdAt: string;
   updatedAt?: string;
+  // 
+  verified?: boolean;
 }
 
 export interface Product {
@@ -74,16 +74,14 @@ export interface Product {
   category: string;
   description: string;
   price: number;
-  compareAtPrice?: number;
+  compareAtPrice?: number; 
   images: string[];
   stock: number;
-  rating: number;
-  reviewCount: number;
-  featured: boolean;
-  preparationTime?: number;
+  rating: number[];
   specifications: Record<string, string>;
   status: 'active' | 'inactive';
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
@@ -99,14 +97,23 @@ export interface Order {
   userId: number;
   items: CartItem[];
   deliveryAddress: Address;
-  deliveryMethod: string;
-  paymentMethod: string;
+  // deliveryMethod: string;
+  // paymentMethod: string;
   subtotal: number;
   deliveryFee: number;
   discount: number;
   total: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
   createdAt: string;
+}
+
+export interface OrderItem {
+  id: number;
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  status: 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  
 }
 
 export interface Review {

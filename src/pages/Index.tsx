@@ -10,15 +10,14 @@ import { Button } from '@/components/ui/button';
 import { mockProducts } from '@/data/mockData';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
 import { Beer, Pizza, Smartphone, ShoppingCart, Shirt, Sparkles, Home, Wrench, ChevronRight } from 'lucide-react';
+import { getAllProducts } from '@/data/productData';
 
 const Index = () => {
   const [shopModalOpen, setShopModalOpen] = useState(false);
   const { selectedShops } = useShopFilter();
 
   // Filter products based on selected shops
-  const filteredProducts = selectedShops.length > 0
-    ? mockProducts.filter(p => selectedShops.includes(p.shopId))
-    : mockProducts;
+  const filteredProducts = getAllProducts(selectedShops.length > 0 ? { idMultiple: selectedShops } : {});
 
   const featuredDeals = filteredProducts.filter(p => p.featured).slice(0, 8);
   const trendingProducts = filteredProducts.slice(0, 8);

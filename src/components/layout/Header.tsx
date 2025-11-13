@@ -118,7 +118,7 @@ export const Header = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="border-t">
+      {/* <nav className="border-t">
         <div className="container mx-auto px-4">
           <ul className="flex items-center gap-6 h-12 text-sm overflow-x-auto uppercase">
             <li>
@@ -146,14 +146,9 @@ export const Header = () => {
                 Orders
               </Link>
             </li>
-            {/* <li className="ml-auto">
-              <Link to="/vendor/register" className="text-accent hover:underline font-medium">
-                Register as Vendor
-              </Link>
-            </li> */}
           </ul>
         </div>
-      </nav>
+      </nav> */}
     </header>
   );
 };

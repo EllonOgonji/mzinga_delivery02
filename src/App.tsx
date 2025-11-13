@@ -38,7 +38,26 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
+                {/* <Route path="/" element={<Index />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
+                <Route path="/order-tracking/:orderNumber" element={<OrderTracking />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/shops" element={<ShopDirectory />} />
+                <Route path="/shop/:id" element={<ShopDetail />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+                <Route path="/vendor/products" element={<VendorProducts />} />
+                <Route path="/vendor/products/:id" element={<VendorProductForm />} />
+                <Route path="/vendor/orders" element={<VendorOrders />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="shops" element={<AdminShops />} />
+                </Route> */}
+                <Route path="/" element={<ShopDirectory />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />

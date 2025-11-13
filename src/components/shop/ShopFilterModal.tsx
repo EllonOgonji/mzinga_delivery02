@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
 import { mockShops } from '@/data/mockData';
+import {getAllShops} from "@/data/shopData";
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 
 interface ShopFilterModalProps {
   open: boolean;
@@ -37,14 +39,14 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
     
     let matchesFilters = true;
     if (activeFilters.includes('open')) {
-      matchesFilters = matchesFilters && shop.status === 'active';
+      matchesFilters = matchesFilters && shop.status === 'open';
     }
-    if (activeFilters.includes('rated')) {
-      matchesFilters = matchesFilters && shop.rating >= 4.5;
-    }
-    if (activeFilters.includes('fast')) {
-      matchesFilters = matchesFilters && shop.deliveryFees['0-2km'] <= 3;
-    }
+    // if (activeFilters.includes('rated')) {
+    //   matchesFilters = matchesFilters && shop.rating >= 4.5;
+    // }
+    // if (activeFilters.includes('fast')) {
+    //   matchesFilters = matchesFilters && shop.deliveryFees['0-2km'] <= 3;
+    // }
 
     return matchesSearch && matchesFilters;
   });
@@ -108,72 +110,72 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
 
           {/* Shop List */}
           <div className="space-y-2">
-            {filteredShops.map(shop => (
-              <div
-                key={shop.id}
-                className={`flex items-start gap-4 p-4 border cursor-pointer ${
-                  selectedShops.includes(shop.id) ? 'border-accent bg-accent/5' : 'bg-card'
-                }`}
-                onClick={() => toggleShop(shop.id)}
-              >
-                <Checkbox
-                  checked={selectedShops.includes(shop.id)}
-                  onCheckedChange={() => toggleShop(shop.id)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold">{shop.name}</h3>
-                      <div className="flex gap-2 mt-1">
-                        {shop.category.slice(0, 2).map(cat => (
-                          <Badge key={cat} variant="secondary" className="text-xs">
-                            {cat}
-                          </Badge>
-                        ))}
+            {filteredShops.map((shop) => {
+              const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
+              const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude}).toFixed(1);
+              return (
+                <div
+                  key={shop.id}
+                  className={`flex items-start gap-4 p-4 border cursor-pointer ${
+                    selectedShops.includes(shop.id) ? 'border-accent bg-accent/5' : 'bg-card'
+                  }`}
+                  onClick={() => toggleShop(shop.id)}
+                >
+                  <Checkbox
+                    checked={selectedShops.includes(shop.id)}
+                    onCheckedChange={() => toggleShop(shop.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold">{shop.name}</h3>
+                        <div className="flex gap-2 mt-1">
+                          {shop.category.slice(0, 2).map(cat => (
+                            <Badge key={cat} variant="secondary" className="text-xs">
+                              {cat}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // TODO: Toggle favorite
+                        }}
+                        className="text-muted-foreground hover:text-accent transition-colors"
+                      >
+                        <Heart className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {distanceToUser} km away
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Truck className="h-3 w-3" />
+                        KES. {deliveryFees}
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // TODO: Toggle favorite
-                      }}
-                      className="text-muted-foreground hover:text-accent transition-colors"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </button>
-                  </div>
 
-                  <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-warning text-warning" />
-                      {shop.rating} ({shop.reviewCount})
+                    <div className="mt-2">
+                      {shop.status ? (
+                        <span className="text-xs text-success font-medium">
+                          {shop.status}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-destructive font-medium">
+                          {shop.status}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      1.5 km away
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Truck className="h-3 w-3" />
-                      From ${shop.deliveryFees['0-2km']}
-                    </div>
-                  </div>
-
-                  <div className="mt-2">
-                    {shop.status === 'active' ? (
-                      <span className="text-xs text-success font-medium">
-                        Open - Closes at 9 PM
-                      </span>
-                    ) : (
-                      <span className="text-xs text-destructive font-medium">
-                        Closed - Opens at 8 AM
-                      </span>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 

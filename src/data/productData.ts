@@ -6,7 +6,13 @@ export const getAllProducts = function (filters: ProductFilters): Product[] {
 
     if (filters) {
         if (filters.category) {
-            parameters.append("category", filters.category.join(","));
+            parameters.append("category", filters.category.toString());
+        }
+        if (filters.categoryMultiple) {
+            parameters.append("categoryMultiple", filters.categoryMultiple.join(","));
+        }
+        if (filters.shopOpen) {
+            parameters.append("shopOpen", filters.shopOpen.toString());
         }
         if (filters.rating) {
             parameters.append("rating", filters.rating.toString());
@@ -27,6 +33,14 @@ export const getAllProducts = function (filters: ProductFilters): Product[] {
         if (filters.id){
             parameters.append("id", filters.id.toString());
             return mockProducts.filter((product) => product.id === filters.id);
+        }
+        if (filters.shopIdMultiple && filters.shopIdMultiple.length > 0) {
+            parameters.append("shopIdMultiple", filters.shopIdMultiple.join(","));
+            return mockProducts.filter((product) => filters.shopIdMultiple?.includes(product.id));
+        }
+         if (filters.idMultiple && filters.idMultiple.length > 0) {
+            parameters.append("idMultiple", filters.idMultiple.join(","));
+            return mockProducts.filter((product) => filters.idMultiple?.includes(product.id));
         }
         if (filters.shopId){
             parameters.append("shopId", filters.shopId.toString());

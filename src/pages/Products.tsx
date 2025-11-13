@@ -17,6 +17,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { mockProducts, mockShops } from '@/data/mockData';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
 import { Filter, Grid, List, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Product, ProductFilters } from '@/types';
+import { getAllProducts } from '@/data/productData';
 
 const categories = [
   'Alcohol & Beverages',
@@ -31,6 +33,7 @@ const categories = [
 ];
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
   const { selectedShops, isShopSelected } = useShopFilter();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isShopFilterOpen, setIsShopFilterOpen] = useState(false);
@@ -39,9 +42,9 @@ export default function Products() {
   
   // Filter states
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 0]);
   const [minPrice, setMinPrice] = useState('0');
-  const [maxPrice, setMaxPrice] = useState('500');
+  const [maxPrice, setMaxPrice] = useState('0');
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [deliveryOptions, setDeliveryOptions] = useState<string[]>([]);
   const [shopFeatures, setShopFeatures] = useState<string[]>([]);
@@ -65,36 +68,36 @@ export default function Products() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let products = mockProducts;
+    let filter: ProductFilters = {};
 
-    // Filter by selected shops
     if (!shopFromAll && selectedShops.length > 0) {
-      products = products.filter(p => selectedShops.includes(p.shopId));
+      filter.shopIdMultiple = selectedShops;
     }
 
     // Filter by categories
     if (selectedCategories.length > 0) {
-      products = products.filter(p => selectedCategories.includes(p.category));
+      filter.category = selectedCategories;
     }
 
     // Filter by price range
-    products = products.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    if (priceRange[0] != 0 || priceRange[1] != 0) {
+      filter.priceRange = { min: priceRange[0], max: priceRange[1] };
+    }
 
     // Filter by rating
     if (selectedRatings.length > 0) {
-      const minRating = Math.min(...selectedRatings);
-      products = products.filter(p => p.rating >= minRating);
+      filter.rating = Math.min(...selectedRatings);
     }
 
     // Filter by shop features
     if (shopFeatures.includes('open-now')) {
-      const openShopIds = mockShops.filter(s => s.status === 'active').map(s => s.id);
-      products = products.filter(p => openShopIds.includes(p.shopId));
+      filter.shopOpen = true;
     }
     if (shopFeatures.includes('top-rated')) {
-      const topRatedShopIds = mockShops.filter(s => s.rating >= 4).map(s => s.id);
-      products = products.filter(p => topRatedShopIds.includes(p.shopId));
+      filter.rating = 4;
     }
+
+    let products = getAllProducts(filter);
 
     // Sort products
     switch (sortBy) {
@@ -102,13 +105,13 @@ export default function Products() {
         products = [...products].sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        products = [...products].sort((a, b) => b.price - a.price);
+        products = [...products].sort((a, b) => b.price - a.price)
         break;
       case 'rating':
-        products = [...products].sort((a, b) => b.rating - a.rating);
+        products = [...products].sort((a, b) => b.averageRating - a.averageRating)
         break;
       case 'newest':
-        products = [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        products = [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         break;
     }
 
@@ -119,9 +122,9 @@ export default function Products() {
 
   const clearAllFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, 500]);
+    setPriceRange([0, 0]);
     setMinPrice('0');
-    setMaxPrice('500');
+    setMaxPrice('0');
     setSelectedRatings([]);
     setDeliveryOptions([]);
     setShopFeatures([]);

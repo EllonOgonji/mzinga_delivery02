@@ -9,10 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { mockProducts, mockShops } from '@/data/mockData';
 import { useCart } from '@/contexts/CartContext';
 import { Heart, Share2, ShoppingCart, Star, MapPin, Clock, Truck, Package, Shield, CheckCircle, Phone, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAllProducts } from '@/data/productData';
+import { getAllShops } from '@/data/shopData';
+import { calculateDeliveryFee } from '@/lib/utils';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -21,11 +23,11 @@ export default function ProductDetail() {
   const [mainImage, setMainImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const product = mockProducts.find(p => p.id === parseInt(id || '0'));
-  const shop = product ? mockShops.find(s => s.id === product.shopId) : null;
-  const relatedProducts = mockProducts.filter(p => 
-    p.id !== product?.id && (p.category === product?.category || p.shopId === product?.shopId)
-  ).slice(0, 8);
+  const product = getAllProducts({id: id ? parseInt(id) : undefined});
+  const shop = getAllShops({id: product[0].shopId})[0]
+  const relatedProducts = getAllProducts({category: product[0].category, shopId: product[0].shopId}).filter(p => p.id !== product[0].id).slice(0, 8);
+  const productAverageRating = product[0].rating.length > 0 ? (product[0].rating.reduce((sum, r) => sum + r, 0) / product[0].rating.length).toFixed(1) : 0;
+  const deliveryFee = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
 
   if (!product || !shop) {
     return (
@@ -44,16 +46,16 @@ export default function ProductDetail() {
     );
   }
 
-  const discount = product.compareAtPrice
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+  const discount = product[0].compareAtPrice
+    ? Math.round(((product[0].compareAtPrice - product[0].price) / product[0].compareAtPrice) * 100)
     : 0;
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart({
-        productId: product.id,
-        shopId: product.shopId,
-        price: product.price
+        productId: product[0].id,
+        shopId: product[0].shopId,
+        price: product[0].price
       });
     }
   };
@@ -61,8 +63,8 @@ export default function ProductDetail() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: product.name,
-        text: product.description,
+        title: product[0].name,
+        text: product[0].description,
         url: window.location.href
       });
     } else {
@@ -87,7 +89,7 @@ export default function ProductDetail() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/products">{product.category}</Link>
+                <Link to="/products">{product[0].category}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -98,7 +100,7 @@ export default function ProductDetail() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{product.name}</BreadcrumbPage>
+              <BreadcrumbPage>{product[0].name}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -110,15 +112,15 @@ export default function ProductDetail() {
             {/* Main Image */}
             <div className="relative aspect-square bg-muted rounded-lg overflow-hidden group">
               <img
-                src={product.images[mainImage]}
-                alt={product.name}
+                src={product[0].images[mainImage]}
+                alt={product[0].name}
                 className="w-full h-full object-cover cursor-zoom-in hover:scale-110 transition-transform duration-500"
               />
-              {discount > 0 && (
+              {/* {discount > 0 && (
                 <Badge className="absolute top-4 left-4 bg-destructive text-lg">
                   Save {discount}%
                 </Badge>
-              )}
+              )} */}
               <div className="absolute top-4 right-4 flex gap-2">
                 <Button
                   variant="secondary"
@@ -132,7 +134,7 @@ export default function ProductDetail() {
 
             {/* Thumbnail Gallery */}
             <div className="flex gap-2 overflow-x-auto">
-              {product.images.map((image, index) => (
+              {product[0].images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setMainImage(index)}
@@ -140,7 +142,7 @@ export default function ProductDetail() {
                     mainImage === index ? 'border-primary' : 'border-transparent'
                   }`}
                 >
-                  <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={image} alt={`${product[0].name} ${index + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -150,13 +152,13 @@ export default function ProductDetail() {
           <div className="space-y-6">
             {/* Product Header */}
             <div>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-3xl font-bold mb-2">{product[0].name}</h1>
               
               {/* Shop Info */}
               <Link to={`/shop/${shop.id}`} className="flex items-center gap-2 mb-3 hover:text-accent">
                 <img src={shop.logo} alt={shop.name} className="w-8 h-8 rounded-full" />
                 <span className="font-medium">{shop.name}</span>
-                {shop.status === 'active' && (
+                {shop.verified && (
                   <Badge variant="outline" className="text-xs border-success text-success">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Verified
@@ -168,10 +170,10 @@ export default function ProductDetail() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-warning text-warning" />
-                  <span className="text-lg font-semibold">{product.rating}</span>
+                  <span className="text-lg font-semibold">{product[0].rating}</span>
                 </div>
                 <button className="text-sm text-muted-foreground hover:text-foreground">
-                  ({product.reviewCount} reviews)
+                  ({product[0].rating.length} reviews)
                 </button>
               </div>
             </div>
@@ -182,39 +184,31 @@ export default function ProductDetail() {
             <div>
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-accent">
-                  KES {product.price.toFixed(2)}
+                  KES {product[0].price.toFixed(2)}
                 </span>
-                {product.compareAtPrice && (
+                {product[0].compareAtPrice && (
                   <>
                     <span className="text-2xl text-muted-foreground line-through">
-                      KES {product.compareAtPrice.toFixed(2)}
+                      KES {product[0].compareAtPrice.toFixed(2)}
                     </span>
-                    <Badge variant="destructive" className="text-sm">
-                      Save KES {(product.compareAtPrice - product.price).toFixed(2)}
-                    </Badge>
+                    {/* <Badge variant="destructive" className="text-sm">
+                      Save KES {(product[0].compareAtPrice - product[0].price).toFixed(2)}
+                    </Badge> */}
                   </>
                 )}
               </div>
 
               {/* Stock Status */}
-              {product.stock > 0 ? (
+              {product[0].stock > 0 ? (
                 <div className="flex items-center gap-2 text-success">
                   <CheckCircle className="h-5 w-5" />
                   <span className="font-medium">
-                    {product.stock > 10 ? 'In Stock' : `Only ${product.stock} left`}
+                    {product[0].stock > 10 ? 'In Stock' : `Only ${product[0].stock} left`}
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-destructive">
                   <span className="font-medium">Out of Stock</span>
-                </div>
-              )}
-
-              {/* Fast Food Prep Time */}
-              {product.preparationTime && (
-                <div className="flex items-center gap-2 text-muted-foreground mt-2">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">Preparation time: ~{product.preparationTime} mins</span>
                 </div>
               )}
             </div>
@@ -224,7 +218,7 @@ export default function ProductDetail() {
             {/* Product Description */}
             <div>
               <h3 className="font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+              <p className="text-muted-foreground leading-relaxed">{product[0].description}</p>
             </div>
 
             <Separator />
@@ -245,8 +239,8 @@ export default function ProductDetail() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    disabled={quantity >= product.stock}
+                    onClick={() => setQuantity(Math.min(product[0].stock, quantity + 1))}
+                    disabled={quantity >= product[0].stock}
                   >
                     +
                   </Button>
@@ -258,7 +252,7 @@ export default function ProductDetail() {
                   size="lg"
                   className="flex-1"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={product[0].stock === 0}
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart
@@ -300,7 +294,7 @@ export default function ProductDetail() {
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Delivery fee: From ${shop.deliveryFees['0-2km']}</p>
+                      <p className="font-medium">Delivery fee: From ${deliveryFee}</p>
                       <p className="text-muted-foreground text-xs">Depends on your location</p>
                     </div>
                   </div>
@@ -315,18 +309,18 @@ export default function ProductDetail() {
                   <img src={shop.logo} alt={shop.name} className="w-12 h-12 rounded-full" />
                   <div className="flex-1">
                     <h3 className="font-semibold">{shop.name}</h3>
-                    <div className="flex items-center gap-1 text-sm">
+                    {/* <div className="flex items-center gap-1 text-sm">
                       <Star className="h-4 w-4 fill-warning text-warning" />
                       <span>{shop.rating}</span>
-                      <span className="text-muted-foreground">({shop.reviewCount} reviews)</span>
-                    </div>
+                      <span className="text-muted-foreground">({shop.rating.length} reviews)</span>
+                    </div> */}
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className={shop.status === 'active' ? 'text-success' : 'text-destructive'}>
-                      {shop.status === 'active' ? 'Open - Closes at 10 PM' : 'Closed - Opens at 8 AM'}
+                    <span className={shop.status === 'open' ? 'text-success' : 'text-destructive'}>
+                      {shop.status.toUpperCase()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -353,7 +347,7 @@ export default function ProductDetail() {
         <Tabs defaultValue="specifications" className="mb-12">
           {/* <TabsList className="w-full justify-start">
             <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({product.reviewCount})</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews ({product[0].reviewCount})</TabsTrigger>
             <TabsTrigger value="related">Related Products</TabsTrigger>
           </TabsList> */}
 
@@ -362,7 +356,7 @@ export default function ProductDetail() {
               Specifications
             </TabsTrigger>
             <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              Reviews ({product.reviewCount})
+              Reviews ({product[0].rating.length})
             </TabsTrigger>
             <TabsTrigger value="related" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
               Related Products
@@ -374,7 +368,7 @@ export default function ProductDetail() {
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4">Product Specifications</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {Object.entries(product.specifications).map(([key, value]) => (
+                  {Object.entries(product[0].specifications).map(([key, value]) => (
                     <div key={key} className="flex border-b pb-2">
                       <span className="font-medium w-40 capitalize">{key}:</span>
                       <span className="text-muted-foreground">{value}</span>
@@ -390,13 +384,13 @@ export default function ProductDetail() {
               <CardContent className="p-6">
                 <div className="flex items-start gap-8 mb-8">
                   <div className="text-center">
-                    <div className="text-5xl font-bold mb-2">{product.rating}</div>
+                    <div className="text-5xl font-bold mb-2">{product[0].rating}</div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(product.rating) ? 'fill-warning text-warning' : 'text-muted'}`} />
+                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(Number(productAverageRating)) ? 'fill-warning text-warning' : 'text-muted'}`} />
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground">{product.reviewCount} reviews</p>
+                    <p className="text-sm text-muted-foreground">{product[0].rating.length} reviews</p>
                   </div>
 
                   <div className="flex-1 space-y-2">
@@ -446,9 +440,9 @@ export default function ProductDetail() {
       {/* Sticky Buy Bar (Mobile) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex items-center gap-3 z-50">
         <div className="flex-1">
-          <div className="text-2xl font-bold text-accent">${product.price.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-accent">${product[0].price.toFixed(2)}</div>
         </div>
-        <Button size="lg" onClick={handleAddToCart} disabled={product.stock === 0}>
+        <Button size="lg" onClick={handleAddToCart} disabled={product[0].stock === 0}>
           <ShoppingCart className="mr-2 h-5 w-5" />
           Add to Cart
         </Button>

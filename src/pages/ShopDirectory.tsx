@@ -234,21 +234,11 @@ const ShopDirectory = () => {
       setShops(prev => prev.filter(shop =>
         shop.category.some(cat => selectedCategories.includes(cat))
       ));
-    }
-
-    // Filter by rating
-    if (selectedRatings.length > 0) {
-      const averageRating = (ratings: number[]) => {
-        const total = ratings.reduce((sum, r) => sum + r, 0);
-        return total / ratings.length;
-      };
-      const minRating = Math.min(...selectedRatings);
-      setShops(prev => prev.filter(shop => averageRating(shop.rating) >= minRating));
-    }    
+    } 
 
     // Filter by shop features
     if (selectedShopFeatures.includes('open-now')) {
-      const openShopIds = mockShops.filter(s => s.status === 'active').map(s => s.id);
+      const openShopIds = mockShops.filter(s => s.status === 'open').map(s => s.id);
       setShops(prev => prev.filter(p => openShopIds.includes(p.id)));
     }
     
@@ -362,11 +352,11 @@ const ShopDirectory = () => {
             </Card>
           </aside> */}
 
-          <aside className="hidden lg:block w-64 flex-shrink-0">
+          {/* <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-20">
               <FilterSidebar />
             </div>
-          </aside>
+          </aside> */}
 
           {/* Main Content */}
           <div className="flex-1">
@@ -436,10 +426,8 @@ const ShopDirectory = () => {
             {/* Shop Grid/List */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredShops.map((shop) => {
-                const status = getShopStatus(shop);
                 const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
                 const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude});
-                const averageRating = shop.rating.length > 0 ? (shop.rating.reduce((sum, r) => sum + r, 0) / shop.rating.length).toFixed(1) : "N/A";
                 return (
                   <Card key={shop.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardContent className="p-0">
@@ -481,11 +469,11 @@ const ShopDirectory = () => {
                         </div>
 
                         <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
+                          {/* <div className="flex items-center gap-2">
                             <Star className="w-4 h-4 fill-primary text-primary" />
                             <span className="font-medium">{averageRating}</span>
                             <span className="text-muted-foreground">({shop.rating.length} reviews)</span>
-                          </div>
+                          </div> */}
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="w-4 h-4" />
                             <span>{distanceToUser.toFixed(1)} km away</span>
@@ -496,8 +484,8 @@ const ShopDirectory = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span className={status.isOpen ? "text-success" : "text-destructive"}>
-                              {status.text}
+                            <span className={shop.status === "open" ? "text-success" : "text-destructive"}>
+                              {shop.status.toUpperCase()}
                             </span>
                           </div>
                         </div>

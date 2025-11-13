@@ -55,10 +55,8 @@ const ShopDetail = () => {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const status = getShopStatus(shop);
   const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
   const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude});
-  const averageRating = shop.rating.length > 0 ? (shop.rating.reduce((sum, r) => sum + r, 0) / shop.rating.length).toFixed(1) : "N/A";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -100,7 +98,7 @@ const ShopDetail = () => {
                             </Badge>
                           ))}
                         </div>
-                        <div className="flex items-center gap-2">
+                        {/* <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
@@ -117,7 +115,7 @@ const ShopDetail = () => {
                           <span className="text-muted-foreground">
                             ({shop.rating.length} reviews)
                           </span>
-                        </div>
+                        </div> */}
                       </div>
 
                       <div className="flex gap-2">
@@ -141,9 +139,9 @@ const ShopDetail = () => {
                         <span>KES. {deliveryFees} delivery</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <Clock className={`w-4 h-4 ${status.isOpen ? "text-success" : "text-destructive"}`} />
-                        <span className={status.isOpen ? "text-success" : "text-destructive"}>
-                          {status.text}
+                        <Clock className={`w-4 h-4 ${shop.status === "open" ? "text-success" : "text-destructive"}`} />
+                        <span className={shop.status === "open" ? "text-success" : "text-destructive"}>
+                          {shop.status.toUpperCase()}
                         </span>
                       </div>
                     </div>
@@ -176,9 +174,9 @@ const ShopDetail = () => {
             <TabsTrigger value="about" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
               About
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+            {/* <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
               Reviews
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="products" className="mt-6">
@@ -220,18 +218,17 @@ const ShopDetail = () => {
 
           <TabsContent value="about" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              {/* <Card>
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-lg mb-4">About {shop.name}</h3>
-                  <p className="text-muted-foreground mb-4">{shop.description}</p>
                   <p className="text-sm text-muted-foreground">
                     {shop.name} has been serving customers since {new Date(shop.createdAt).getFullYear()}, 
                     providing quality products and excellent service.
                   </p>
                 </CardContent>
-              </Card>
+              </Card> */}
 
-              <Card>
+              {/* <Card>
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-lg mb-4">Opening Hours</h3>
                   <div className="space-y-2">
@@ -245,17 +242,16 @@ const ShopDetail = () => {
                     ))}
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
 
               <Card>
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-lg mb-4">Location</h3>
                   <div className="space-y-4">
-                    <div className="flex items-start gap-2">
+                    {/* <div className="flex items-start gap-2">
                       <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                      <p className="text-sm">{shop.address}</p>
-                    </div>
-                    <div className="h-48 bg-muted rounded-lg flex items-center justify-center">
+                    </div> */}
+                    <div className="h-48 bg-muted flex items-center justify-center">
                       <p className="text-sm text-muted-foreground">Map View</p>
                     </div>
                     {/* <Button variant="outline" className="w-full">
@@ -275,15 +271,15 @@ const ShopDetail = () => {
                         +254 712 345 678
                       </a>
                     </div>
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                       <Mail className="w-5 h-5 text-muted-foreground" />
                       <a href="mailto:info@shop.com" className="text-sm hover:text-primary">
                         info@{shop.name.toLowerCase().replace(/\s+/g, '')}.com
                       </a>
-                    </div>
+                    </div> */}
                   </div>
 
-                  <div className="mt-6">
+                  {/* <div className="mt-6">
                     <h4 className="font-medium mb-3">Follow Us</h4>
                     <div className="flex gap-2">
                       <Button variant="outline" size="icon">
@@ -296,36 +292,17 @@ const ShopDetail = () => {
                         <Twitter className="w-4 h-4" />
                       </Button>
                     </div>
-                  </div>
+                  </div> */}
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="reviews" className="mt-6">
+          {/* <TabsContent value="reviews" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Rating Summary */}
+              
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="text-5xl font-bold mb-2">{averageRating}</div>
-                    <div className="flex justify-center mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-5 h-5 ${
-                            i < Math.floor(Number(averageRating))
-                              ? "fill-primary text-primary"
-                              : "text-muted"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Based on {shop.rating.length} reviews
-                    </p>
-                  </div>
-
                   <div className="space-y-2">
                     {[5, 4, 3, 2, 1].map((rating) => (
                       <div key={rating} className="flex items-center gap-2">
@@ -348,7 +325,7 @@ const ShopDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Reviews List */}
+              
               <div className="lg:col-span-2 space-y-4">
                 <Card>
                   <CardContent className="p-6">
@@ -391,7 +368,7 @@ const ShopDetail = () => {
                 </Card>
               </div>
             </div>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
 

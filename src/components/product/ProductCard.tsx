@@ -92,7 +92,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             <Star className="h-4 w-4 fill-warning text-warning" />
             <span className="text-sm font-medium">{product.rating}</span>
             <span className="text-xs text-muted-foreground">
-              ({product.reviewCount})
+              ({product.rating.length})
             </span>
           </div>
 
@@ -107,13 +107,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               </span>
             )}
           </div>
-
-          {/* Additional Info */}
-          {product.preparationTime && (
-            <p className="text-xs text-muted-foreground">
-              Prep: ~{product.preparationTime} mins
-            </p>
-          )}
 
           {/* Add to Cart Button */}
           {/* <Button

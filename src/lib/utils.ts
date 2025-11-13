@@ -57,23 +57,3 @@ export const findDistanceBetweenCoordinates = (
 
   return distance;
 }
-
-export const getShopStatus = (shop: Shop) => {
-  const now = new Date();
-  const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const hours = shop.openingHours[day];
-  
-  if (!hours) return { isOpen: false, text: "Closed" };
-  
-  const currentTime = now.getHours() * 60 + now.getMinutes();
-  const [openHour, openMin] = hours.open.split(':').map(Number);
-  const [closeHour, closeMin] = hours.close.split(':').map(Number);
-  const openTime = openHour * 60 + openMin;
-  const closeTime = closeHour * 60 + closeMin;
-  
-  const isOpen = currentTime >= openTime && currentTime <= closeTime;
-  return {
-    isOpen,
-    text: isOpen ? `Open - Closes at ${hours.close}` : `Closed - Opens at ${hours.open}`,
-  };
-};
