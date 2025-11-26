@@ -4,7 +4,7 @@ defmodule MzingaDeliveryWeb.Auth.Pipeline do
     module: MzingaDelivery.Auth.Guardian,
     error_handler: MzingaDeliveryWeb.Auth.ErrorHandler
 
-  plug Guardian.Plug.VerifyHeader, realm: "Bearer"
+  plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
   plug Guardian.Plug.EnsureAuthenticated
   plug Guardian.Plug.LoadResource
 end

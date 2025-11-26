@@ -5,6 +5,7 @@ defmodule MzingaDelivery.Orders.OrderItem do
   schema "order_items" do
     field :quantity, :integer
     field :subtotal, :decimal
+    field :status, :string, default: "pending"
 
     belongs_to :order, MzingaDelivery.Orders.Order
     belongs_to :product, MzingaDelivery.Stores.Product
@@ -19,6 +20,14 @@ defmodule MzingaDelivery.Orders.OrderItem do
     |> validate_required([:order_id, :product_id, :quantity, :subtotal])
     |> validate_number(:quantity, greater_than: 0)
     |> validate_number(:subtotal, greater_than: 0)
+    |> validate_inclusion(:status, [
+      "pending",
+      "confirmed",
+      "preparing",
+      "ready",
+      "delivered",
+      "cancelled"
+    ])
     |> foreign_key_constraint(:order_id)
     |> foreign_key_constraint(:product_id)
   end
