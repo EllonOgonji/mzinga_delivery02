@@ -16,19 +16,26 @@ defmodule MzingaDeliveryWeb.Router do
     get "/", HealthController, :index
   end
 
-  # Public routes
+  # PUBLIC API ROUTES
   scope "/api", MzingaDeliveryWeb do
     pipe_through :api
 
-    # Auth
+    # product filters
+    get "/products/filter", ProductFilterController, :filter
+    get "/products/filter/options", ProductFilterController, :filter_options
+
+    # stores filter
+    get "/stores/filter", StoreFilterController, :filter
+
+    # Auth public endpoints
     post "/auth/register", AuthController, :register
     post "/auth/login", AuthController, :login
 
-    # M-Pesa callback (public)
+    # M-Pesa callback
     post "/payments/callback", PaymentController, :mpesa_callback
   end
 
-  # Protected routes
+  # PROTECTED API ROUTES
   scope "/api", MzingaDeliveryWeb do
     pipe_through [:api, :auth]
 
