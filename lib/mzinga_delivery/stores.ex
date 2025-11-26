@@ -6,10 +6,10 @@ defmodule MzingaDelivery.Stores do
   import Ecto.Query, warn: false
   alias MzingaDelivery.Repo
   alias MzingaDelivery.Stores.{Store, Product}
-
+  alias MzingaDelivery.Stores.Filters
+  alias MzingaDelivery.Stores.StoreFilters
 
   # STORES
-
 
   @doc """
   Returns the list of stores.
@@ -83,9 +83,7 @@ defmodule MzingaDelivery.Stores do
     Repo.delete(store)
   end
 
-
   # PRODUCTS
-
 
   @doc """
   Returns the list of products for a store.
@@ -151,5 +149,58 @@ defmodule MzingaDelivery.Stores do
     else
       {:error, :insufficient_stock}
     end
+  end
+
+  @doc """
+  Filters products based on provided parameters.
+  """
+  def filter_products(params \\ %{}) do
+    Filters.filter_products(params)
+  end
+
+  @doc """
+  Count total products matching filters.
+  """
+  def count_filtered_products(params \\ %{}) do
+    Filters.count_filtered_products(params)
+  end
+
+  # STORE FILTERING
+  @doc """
+  Filters stores based on provided parameters.
+  """
+  def filter_stores(params \\ %{}) do
+    StoreFilters.filter_stores(params)
+  end
+
+  @doc """
+  Count total stores matching filters.
+  """
+  def count_filtered_stores(params \\ %{}) do
+    StoreFilters.count_filtered_stores(params)
+  end
+
+  @doc """
+  Get all unique categories from products.
+  """
+  def list_categories do
+    Product
+    |> select([p], p.category)
+    |> distinct(true)
+    |> where([p], not is_nil(p.category))
+    |> order_by([p], asc: p.category)
+    |> Repo.all()
+  end
+
+  @doc """
+  Get price range (min and max) from all products.
+  """
+  def get_price_range do
+    Product
+    |> select([p], %{
+      min_price: min(p.price),
+      max_price: max(p.price)
+    })
+    |> Repo.one()
   end
 end
