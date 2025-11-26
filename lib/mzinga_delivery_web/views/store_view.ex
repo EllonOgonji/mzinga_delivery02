@@ -21,6 +21,9 @@ defmodule MzingaDeliveryWeb.StoreView do
       latitude: store.latitude,
       longitude: store.longitude,
       status: store.status,
+      logo: store.logo,
+      banner: store.banner,
+      category: store.category,
       vendor: %{
         id: store.vendor.id,
         full_name: store.vendor.full_name,

@@ -96,14 +96,16 @@ defmodule MzingaDelivery.Orders do
   Creates multiple order items.
   """
   def create_order_items(order_id, items) when is_list(items) do
-    items_with_order_id = Enum.map(items, fn item ->
-      Map.put(item, "order_id", order_id)
-    end)
+    items_with_order_id =
+      Enum.map(items, fn item ->
+        Map.put(item, "order_id", order_id)
+      end)
 
-    changesets = Enum.map(items_with_order_id, fn item_attrs ->
-      %OrderItem{}
-      |> OrderItem.changeset(item_attrs)
-    end)
+    changesets =
+      Enum.map(items_with_order_id, fn item_attrs ->
+        %OrderItem{}
+        |> OrderItem.changeset(item_attrs)
+      end)
 
     # Check if all changesets are valid
     if Enum.all?(changesets, & &1.valid?) do
@@ -146,21 +148,49 @@ defmodule MzingaDelivery.Orders do
   Accept order (vendor action).
   """
   def accept_order(%Order{} = order) do
-    if order.order_status == "pending" do
-      update_order_status(order, "accepted")
-    else
-      {:error, :invalid_status_transition}
-    end
+    Repo.transaction(fn ->
+      # Update all order items to confirmed
+      order_items = Repo.preload(order, :order_items).order_items
+
+      Enum.each(order_items, fn item ->
+        item
+        |> OrderItem.changeset(%{status: "confirmed"})
+        |> Repo.update()
+      end)
+
+      Repo.preload(order, [:order_items, :customer, :store], force: true)
+    end)
   end
 
   @doc """
   Reject order (vendor action).
   """
   def reject_order(%Order{} = order) do
-    if order.order_status == "pending" do
-      update_order_status(order, "rejected")
-    else
-      {:error, :invalid_status_transition}
+    Repo.transaction(fn ->
+      # Update all order items to cancelled
+      order_items = Repo.preload(order, :order_items).order_items
+
+      Enum.each(order_items, fn item ->
+        item
+        |> OrderItem.changeset(%{status: "cancelled"})
+        |> Repo.update()
+      end)
+
+      Repo.preload(order, [:order_items, :customer, :store], force: true)
+    end)
+  end
+
+  @doc """
+  Get order status based on order items
+  Returns: Pending, confirmed, preparing, ready, delicered, cancelled
+  """
+  def get_orders_status(%Order{} = order) do
+    order = Repo.preload(order, :order_items)
+    statuses = Enum.map(order.order_items, & &1.status) |> Enum.uniq()
+
+    cond do
+      length(statuses) == 1 -> hd(statuses)
+      true -> "mixed"
     end
   end
 
