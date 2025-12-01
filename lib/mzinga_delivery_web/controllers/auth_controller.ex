@@ -7,7 +7,7 @@ defmodule MzingaDeliveryWeb.AuthController do
   action_fallback MzingaDeliveryWeb.FallbackController
 
   @doc """
-  register a new user
+  Register a new user
   POST /api/auth/register
   """
   def register(conn, %{"user" => user_params}) do
@@ -17,17 +17,17 @@ defmodule MzingaDeliveryWeb.AuthController do
 
         conn
         |> put_status(:created)
-        |> render("auth.json", %{user: user, token: token})
+        |> render(:auth, user: user, token: token)
 
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render("error.json", changeset: changeset)
+        |> render(:error, changeset: changeset)
     end
   end
 
   @doc """
-  login existing user
+  Login existing user
   POST /api/auth/login
   """
   def login(conn, %{"email" => email, "password" => password}) do
@@ -37,17 +37,17 @@ defmodule MzingaDeliveryWeb.AuthController do
 
         conn
         |> put_status(:ok)
-        |> render("auth.json", %{user: user, token: token})
+        |> render(:auth, user: user, token: token)
 
       {:error, :unauthorized} ->
         conn
         |> put_status(:unauthorized)
-        |> render("error.json", %{error: "Invalid email or password"})
+        |> render(:error, message: "Invalid email or password")
     end
   end
 
   @doc """
-  get current user profile
+  Get current user profile
   GET /api/auth/me
   """
   def me(conn, _params) do
@@ -55,11 +55,11 @@ defmodule MzingaDeliveryWeb.AuthController do
 
     conn
     |> put_status(:ok)
-    |> render("user.json", %{user: user})
+    |> render(:user, user: user)
   end
 
   @doc """
-  logout user
+  Logout user (client should delete token)
   POST /api/auth/logout
   """
   def logout(conn, _params) do
