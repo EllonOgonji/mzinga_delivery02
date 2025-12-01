@@ -10,6 +10,8 @@ services:
         sync: false
       - key: SECRET_KEY_BASE
         sync: false
+      - key: GUARDIAN_SECRET_KEY
+        sync: false
       - key: PHX_HOST
         value: mzinga-delivery.onrender.com
       - key: POOL_SIZE
