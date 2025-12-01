@@ -5,7 +5,7 @@ defmodule MzingaDelivery.Accounts.User do
   schema "users" do
     field :full_name, :string
     field :email, :string
-    field :phone, :string
+    field :phone_number, :string
     field :role, :string
     field :password_hash, :string
     field :password, :string, virtual: true
@@ -22,10 +22,10 @@ defmodule MzingaDelivery.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:full_name, :email, :phone, :role, :password, :password_confirmation])
-    |> validate_required([:full_name, :email, :phone, :role, :password])
+    |> cast(attrs, [:full_name, :email, :phone_number, :role, :password, :password_confirmation])
+    |> validate_required([:full_name, :email, :phone_number, :role, :password])
     |> validate_format(:email, ~r/@/)
-    |> validate_format(:phone, ~r/^254\d{9}$/, message: "must be valid Kenyan number (254...)")
+    |> validate_format(:phone_number, ~r/^254\d{9}$/, message: "must be valid Kenyan number (254...)")
     |> validate_length(:password, min: 6)
     |> validate_confirmation(:password)
     |> unique_constraint(:email)
@@ -36,8 +36,8 @@ defmodule MzingaDelivery.Accounts.User do
   # Update changeset (without requiring password)
   def update_changeset(user, attrs) do
     user
-    |> cast(attrs, [:full_name, :email, :phone])
-    |> validate_required([:full_name, :email, :phone])
+    |> cast(attrs, [:full_name, :email, :phone_number])
+    |> validate_required([:full_name, :email, :phone_number])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email)
   end
