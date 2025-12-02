@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -43,13 +43,38 @@ const Login = () => {
             return;
         }
 
-        toast({
-            title: "Success!",
-            description: `Logged in successfully as ${show.vendorLogin ? 'Vendor' : 'Customer'}.`,
-        });
+        
+        fetch(`${import.meta.env.VITE_BASE_URL}/api/auth/login`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({user: formData}),
+        }).then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
+            }
 
-        // Validate then redirect
-        // navigate('/vendor/products');
+            return response.json();
+        }).then((data) => {
+            toast({
+                title: "Success!",
+                description: `Successfully logged in as ${data.user.role}.`,
+            });
+            localStorage.setItem('token', data.user.token);
+            localStorage.setItem('role', data.user.role);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+        }).catch((error) => {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+            });
+            return;
+        })
     };
 
     return (
@@ -94,6 +119,10 @@ const Login = () => {
                                 Login
                             </Button>
                         </CardContent>
+                        <CardFooter className='text-sm text-muted-foreground justify-center'>
+                            <span>Don't have an account? </span>
+                            <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
+                        </CardFooter>
                     </Card>
                 </form>)}
 
