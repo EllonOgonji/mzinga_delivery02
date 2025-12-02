@@ -15,15 +15,10 @@ import { useToast } from '@/hooks/use-toast';
 import { mockProducts } from '@/data/mockData';
 
 const Login = () => {
-    const { id } = useParams();
     const navigate = useNavigate();
     const { toast } = useToast();
-    const isNew = id === 'new';
 
-    const [show, setShow] = useState({
-        vendorLogin: true,
-        customerLogin: false,
-    })
+    const [loginType, setLoginType] = useState('customer')
 
     const [formData, setFormData] = useState({
         email: '',
@@ -33,7 +28,6 @@ const Login = () => {
     const handleSubmit = (e: React.FormEvent, asDraft = false) => {
         e.preventDefault();
 
-        // Validation
         if (!formData.email || !formData.password) {
             toast({
                 title: "Error",
@@ -63,10 +57,22 @@ const Login = () => {
                 title: "Success!",
                 description: `Successfully logged in as ${data.user.role}.`,
             });
+
             localStorage.setItem('token', data.user.token);
             localStorage.setItem('role', data.user.role);
             localStorage.setItem('user', JSON.stringify(data.user));
-            data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+
+            if(data.user.role == loginType){
+                data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+            }else{
+                toast({
+                    title: "Error",
+                    description: `You are trying to login as a ${loginType} but your account is registered as a ${data.user.role}.`,
+                    variant: "destructive",
+                });
+                return;
+            }
+            
         }).catch((error) => {
             toast({
                 title: "Error",
@@ -81,11 +87,11 @@ const Login = () => {
         <div className="h-[100vh] w-full flex flex-col justify-center items-center">
             <div className='w-96'>
                 <div className='grid grid-cols-2 w-full'>
-                    <Button variant={show.vendorLogin ? 'active' : 'ghost'} onClick={() => setShow({...show, vendorLogin: true, customerLogin: false})} className='col-span-1 border-none'>Vendor Login</Button>
-                    <Button variant={show.customerLogin ? 'active' : 'ghost'} onClick={() => setShow({...show, vendorLogin: false, customerLogin: true})} className='col-span-1 border-none'>Customer Login</Button>
+                    <Button variant={loginType === 'vendor' ? 'active' : 'ghost'} onClick={() => setLoginType('vendor')} className='col-span-1 border-none'>Vendor Login</Button>
+                    <Button variant={loginType === 'customer' ? 'active' : 'ghost'} onClick={() => setLoginType('customer')} className='col-span-1 border-none'>Customer Login</Button>
                 </div>
 
-                {show.vendorLogin && (<form onSubmit={handleSubmit} className='w-full'>
+                <form onSubmit={handleSubmit} className='w-full'>
                     {/* Basic Information */}
                     <Card className='flex flex-col items-center pt-8'>
                         <CardContent className="space-y-4 w-full text-left">
@@ -124,48 +130,7 @@ const Login = () => {
                             <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
                         </CardFooter>
                     </Card>
-                </form>)}
-
-                {show.customerLogin && (<form onSubmit={handleSubmit} className='w-full'>
-                    {/* Basic Information */}
-                    <Card className='flex flex-col items-center pt-8'>
-                        <CardContent className="space-y-4 w-full text-left">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email *</Label>
-                                <Input
-                                    id="email"
-                                    placeholder="e.g., user@example.com"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Password *</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Enter your password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    required
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className='w-full'
-                            >
-                                Login
-                            </Button>
-                        </CardContent>
-                        <CardFooter className='text-sm text-muted-foreground justify-center'>
-                            <span>Don't have an account? </span>
-                            <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
-                        </CardFooter>
-                    </Card>
-                </form>)}
+                </form>
             </div>
         </div>
     );
