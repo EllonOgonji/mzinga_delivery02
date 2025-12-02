@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { mockProducts } from '@/data/mockData';
 
 const Login = () => {
-    const { id } = useParams();
     const navigate = useNavigate();
     const { toast } = useToast();
 
