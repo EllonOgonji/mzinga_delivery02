@@ -28,6 +28,7 @@ import AdminShops from "./pages/admin/Shops";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ToastFromLocation from "./components/LocationToastHandler";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ToastFromLocation />
               <Routes>
                 {/* <Route path="/" element={<Index />} />
                 <Route path="/cart" element={<Cart />} />
