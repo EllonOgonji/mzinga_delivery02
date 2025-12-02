@@ -1,68 +1,57 @@
 import { ProductFilters, Product } from "@/types";
 import { mockProducts } from "./mockData";
+import { supabase } from "@/integrations/supabase/client";
 
-export const getAllProducts = function (filters: ProductFilters): Product[] {
-    const parameters = new URLSearchParams();
+export const getAllProducts = async function (filters: ProductFilters = {}): Promise<Product[]> {
+    let query = supabase.from('products').select('*');
 
     if (filters) {
-        if (filters.category) {
-            parameters.append("category", filters.category.toString());
+        if (filters.id) {
+            query = query.eq('id', filters.id);
         }
-        if (filters.categoryMultiple) {
-            parameters.append("categoryMultiple", filters.categoryMultiple.join(","));
+        if (filters.idMultiple && filters.idMultiple.length > 0) {
+            query = query.in('id', filters.idMultiple);
         }
-        if (filters.shopOpen) {
-            parameters.append("shopOpen", filters.shopOpen.toString());
-        }
-        if (filters.rating) {
-            parameters.append("rating", filters.rating.toString());
-        }
-        if (filters.priceRange) {
-            parameters.append("minPrice", filters.priceRange.min.toString());
-            parameters.append("maxPrice", filters.priceRange.max.toString());
-        }
-        if (filters.inStock !== undefined) {
-            parameters.append("inStock", filters.inStock.toString());
-        }
-        if (filters.featured !== undefined) {
-            parameters.append("featured", filters.featured.toString());
-        }
-        if (filters.searchQuery) {
-            parameters.append("searchQuery", filters.searchQuery);
-        }
-        if (filters.id){
-            parameters.append("id", filters.id.toString());
-            return mockProducts.filter((product) => product.id === filters.id);
+        if (filters.shopId) {
+            query = query.eq('shopId', filters.shopId);
         }
         if (filters.shopIdMultiple && filters.shopIdMultiple.length > 0) {
-            parameters.append("shopIdMultiple", filters.shopIdMultiple.join(","));
-            return mockProducts.filter((product) => filters.shopIdMultiple?.includes(product.id));
+            query = query.in('shopId', filters.shopIdMultiple);
         }
-         if (filters.idMultiple && filters.idMultiple.length > 0) {
-            parameters.append("idMultiple", filters.idMultiple.join(","));
-            return mockProducts.filter((product) => filters.idMultiple?.includes(product.id));
+        if (filters.category) {
+            // Handle pipe-separated categories from legacy filter
+            if (filters.category.includes('|')) {
+                const categories = filters.category.split('|');
+                query = query.in('category', categories);
+            } else {
+                query = query.eq('category', filters.category);
+            }
         }
-        if (filters.shopId){
-            parameters.append("shopId", filters.shopId.toString());
-            return mockProducts.filter((product) => product.shopId === filters.shopId);
+        if (filters.categoryMultiple && filters.categoryMultiple.length > 0) {
+            query = query.in('category', filters.categoryMultiple);
         }
+        if (filters.priceRange) {
+            query = query.gte('price', filters.priceRange.min).lte('price', filters.priceRange.max);
+        }
+        if (filters.featured !== undefined) {
+            // Assuming there is a featured column
+            query = query.eq('featured', filters.featured);
+        }
+        if (filters.searchQuery) {
+            query = query.ilike('name', `%${filters.searchQuery}%`);
+        }
+        // Note: Complex filters like rating (array average) and shopOpen (join) 
+        // might need Edge Functions or Views. For now, we fetch and potentially filter client-side 
+        // if the DB doesn't support it directly, or we assume columns exist.
+        // For rating, we'll skip DB filtering for now as it requires array calculation.
     }
 
-    const queryString = parameters.toString();
+    const { data, error } = await query;
 
-    try{
-        fetch(`${process.env.BASE_URL}/products?${queryString}`)
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Fetched product data:", data);
-                return data as Product[];
-            })
-            .catch((error) => {
-                console.error("Error fetching product data:", error);
-                return [];
-            });
-    }catch(err){
-        console.error("Error in productData function:", err);
-        return mockProducts
+    if (error) {
+        console.error("Error fetching product data from Supabase:", error);
+        return [];
     }
+
+    return data as Product[];
 };

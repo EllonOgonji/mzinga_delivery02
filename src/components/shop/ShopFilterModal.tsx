@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { X, Search, Heart, Clock, MapPin, Star, Truck, Sparkles } from 'lucide-react';
 import {
   Dialog,
@@ -12,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
 import { mockShops } from '@/data/mockData';
-import {getAllShops} from "@/data/shopData";
+import { getAllShops } from "@/data/shopData";
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 
 interface ShopFilterModalProps {
@@ -34,9 +35,14 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
-  const filteredShops = mockShops.filter(shop => {
+  const { data: shops = [] } = useQuery({
+    queryKey: ['shops', 'filterModal'],
+    queryFn: () => getAllShops({})
+  });
+
+  const filteredShops = shops.filter(shop => {
     const matchesSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     let matchesFilters = true;
     if (activeFilters.includes('open')) {
       matchesFilters = matchesFilters && shop.status === 'open';
@@ -111,14 +117,13 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
           {/* Shop List */}
           <div className="space-y-2">
             {filteredShops.map((shop) => {
-              const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
-              const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude}).toFixed(1);
+              const deliveryFees = calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude });
+              const distanceToUser = findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude }).toFixed(1);
               return (
                 <div
                   key={shop.id}
-                  className={`flex items-start gap-4 p-4 border cursor-pointer ${
-                    selectedShops.includes(shop.id) ? 'border-accent bg-accent/5' : 'bg-card'
-                  }`}
+                  className={`flex items-start gap-4 p-4 border cursor-pointer ${selectedShops.includes(shop.id) ? 'border-accent bg-accent/5' : 'bg-card'
+                    }`}
                   onClick={() => toggleShop(shop.id)}
                 >
                   <Checkbox
@@ -126,7 +131,7 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
                     onCheckedChange={() => toggleShop(shop.id)}
                     onClick={(e) => e.stopPropagation()}
                   />
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
