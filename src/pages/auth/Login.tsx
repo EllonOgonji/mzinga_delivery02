@@ -160,6 +160,10 @@ const Login = () => {
                                 Login
                             </Button>
                         </CardContent>
+                        <CardFooter className='text-sm text-muted-foreground justify-center'>
+                            <span>Don't have an account? </span>
+                            <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
+                        </CardFooter>
                     </Card>
                 </form>)}
             </div>
