@@ -1,46 +1,46 @@
 import { Shop, ShopFilters } from "@/types";
 import { mockShops } from "./mockData";
+import { supabase } from "@/integrations/supabase/client";
 
-export const getAllShops = function (filters: ShopFilters): Shop[] {
-    const parameters = new URLSearchParams();
+export const getAllShops = async function (filters: ShopFilters = {}): Promise<Shop[]> {
+    let query = supabase.from('stores').select('*');
 
     if (filters) {
         if (filters.category) {
-            parameters.append("category", filters.category.join(","));
+            // Assuming category is an array in DB or we filter by one of them
+            // This might need adjustment based on DB schema. 
+            // If category is text[] in postgres:
+            query = query.overlaps('category', filters.category);
         }
         if (filters.rating) {
-            parameters.append("rating", filters.rating.toString());
+            // query = query.gte('rating', filters.rating);
+            // Skip for now as rating might be computed
         }
         if (filters.isOpenNow !== undefined) {
-            parameters.append("isOpenNow", filters.isOpenNow.toString());
+            if (filters.isOpenNow) {
+                query = query.eq('status', 'open');
+            }
         }
-        if (filters.featured !== undefined) {
-            parameters.append("featured", filters.featured.toString());
-        }
+        // if (filters.featured !== undefined) {
+        //     query = query.eq('featured', filters.featured);
+        // }
         if (filters.searchQuery) {
-            parameters.append("searchQuery", filters.searchQuery);
+            query = query.ilike('name', `%${filters.searchQuery}%`);
         }
-        if (filters.id){
-            parameters.append("id", filters.id.toString());
-            return mockShops.filter((shop) => shop.id === filters.id);
+        if (filters.id) {
+            query = query.eq('id', filters.id);
+        }
+        if (filters.idMultiple && filters.idMultiple.length > 0) {
+            query = query.in('id', filters.idMultiple);
         }
     }
 
-    const queryString = parameters.toString();
+    const { data, error } = await query;
 
-    try{
-        fetch(`${process.env.BASE_URL}/shops?${queryString}`)
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Fetched shop data:", data);
-                return data as Shop[];
-            })
-            .catch((error) => {
-                console.error("Error fetching shop data:", error);
-                return [];
-            });
-    }catch(err){
-        console.error("Error in shopData function:", err);
-        return mockShops
+    if (error) {
+        console.error("Error fetching shop data from Supabase:", error);
+        return [];
     }
+
+    return data as Shop[];
 };

@@ -74,7 +74,7 @@ export interface Product {
   category: string;
   description: string;
   price: number;
-  compareAtPrice?: number; 
+  compareAtPrice?: number;
   images: string[];
   stock: number;
   rating: number[];
@@ -82,6 +82,9 @@ export interface Product {
   status: 'active' | 'inactive';
   createdAt: string;
   updatedAt?: string;
+  // New
+  searchTags?: string[];
+  featured?: boolean;
 }
 
 export interface CartItem {
@@ -113,7 +116,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   status: 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
-  
+
 }
 
 export interface Review {

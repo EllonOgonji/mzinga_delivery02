@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Hero } from '@/components/home/Hero';
@@ -17,7 +18,11 @@ const Index = () => {
   const { selectedShops } = useShopFilter();
 
   // Filter products based on selected shops
-  const filteredProducts = getAllProducts(selectedShops.length > 0 ? { idMultiple: selectedShops } : {});
+  // Filter products based on selected shops
+  const { data: filteredProducts = [] } = useQuery({
+    queryKey: ['products', 'index', selectedShops],
+    queryFn: () => getAllProducts(selectedShops.length > 0 ? { shopIdMultiple: selectedShops } : {})
+  });
 
   const featuredDeals = filteredProducts.filter(p => p.featured).slice(0, 8);
   const trendingProducts = filteredProducts.slice(0, 8);
@@ -27,7 +32,7 @@ const Index = () => {
       <Header />
 
       <ShopSelectionBar onOpenModal={() => setShopModalOpen(true)} />
-      
+
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
           {/* Hero Section */}
@@ -40,7 +45,7 @@ const Index = () => {
           <section className="py-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Today's Hot Deals</h2>
-              <Button variant="ghost">View All Deals <ChevronRight/> </Button>
+              <Button variant="ghost">View All Deals <ChevronRight /> </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-6">
               {featuredDeals.map(product => (
@@ -55,13 +60,13 @@ const Index = () => {
               <div>
                 <h2 className="text-2xl font-bold">Trending Products</h2>
                 <p className="text-muted-foreground mt-1">
-                  {selectedShops.length > 0 
+                  {selectedShops.length > 0
                     ? `From ${selectedShops.length} selected ${selectedShops.length === 1 ? 'shop' : 'shops'}`
                     : 'From all shops'
                   }
                 </p>
               </div>
-              <Button variant="ghost">See More <ChevronRight/> </Button>
+              <Button variant="ghost">See More <ChevronRight /> </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-6">
               {trendingProducts.map(product => (
