@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +61,8 @@ const Login = () => {
                 description: `Successfully registered as ${data.user.role}.`,
             });
             localStorage.setItem('token', data.user.token);
+            localStorage.setItem('role', data.user.role);
+            localStorage.setItem('user', JSON.stringify(data.user));
             data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
         }).catch((error) => {
             toast({
@@ -150,6 +152,10 @@ const Login = () => {
                                 Sign Up
                             </Button>
                         </CardContent>
+                        <CardFooter className='text-sm text-muted-foreground justify-center'>
+                            <span>Already have an account? </span>
+                            <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/login')}>Login here</Button>
+                        </CardFooter>
                     </Card>
                 </form>
             </div>
