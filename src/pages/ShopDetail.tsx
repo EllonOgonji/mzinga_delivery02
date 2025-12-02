@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -10,14 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockShops, mockProducts } from "@/data/mockData";
-import { 
-  Heart, 
-  Share2, 
-  MapPin, 
-  Truck, 
-  Clock, 
-  Phone, 
-  Mail, 
+import {
+  Heart,
+  Share2,
+  MapPin,
+  Truck,
+  Clock,
+  Phone,
+  Mail,
   Star,
   Facebook,
   Instagram,
@@ -31,8 +32,25 @@ const ShopDetail = () => {
   const { id } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
-  const [shop, setShop]  = useState(getAllShops({ id: Number(id) })[0]);
-  const [shopProducts, setShopProducts] = useState(getAllProducts({ shopId: Number(id) }));
+
+  const shopId = id ? parseInt(id) : undefined;
+
+  const { data: shops = [], isLoading: isLoadingShop } = useQuery({
+    queryKey: ['shop', shopId],
+    queryFn: () => getAllShops({ id: shopId }),
+    enabled: !!shopId
+  });
+  const shop = shops[0];
+
+  const { data: shopProducts = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['shopProducts', shopId],
+    queryFn: () => getAllProducts({ shopId: shopId }),
+    enabled: !!shopId
+  });
+
+  if (isLoadingShop || isLoadingProducts) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (!shop) {
     return (
@@ -55,8 +73,8 @@ const ShopDetail = () => {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const deliveryFees = calculateDeliveryFee({lat: shop.latitude, lon: shop.longitude});
-  const distanceToUser = findDistanceBetweenUserAndShop({lat: shop.latitude, lon: shop.longitude});
+  const deliveryFees = calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude });
+  const distanceToUser = findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude });
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

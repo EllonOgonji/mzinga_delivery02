@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -39,7 +40,7 @@ export default function Products() {
   const [isShopFilterOpen, setIsShopFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('relevance');
-  
+
   // Filter states
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 0]);
@@ -67,56 +68,64 @@ export default function Products() {
   };
 
   // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let filter: ProductFilters = {};
+  // Construct filter object
+  const filter = useMemo(() => {
+    let f: ProductFilters = {};
 
     if (!shopFromAll && selectedShops.length > 0) {
-      filter.shopIdMultiple = selectedShops;
+      f.shopIdMultiple = selectedShops;
     }
 
     // Filter by categories
     if (selectedCategories.length > 0) {
-      selectedCategories.forEach(category => {
-        filter.category = ""
-        filter.category = filter.category ? filter.category + `|${category}` : category;
-      });
+      // Use categoryMultiple for multiple categories
+      f.categoryMultiple = selectedCategories;
     }
 
     // Filter by price range
     if (priceRange[0] != 0 || priceRange[1] != 0) {
-      filter.priceRange = { min: priceRange[0], max: priceRange[1] };
+      f.priceRange = { min: priceRange[0], max: priceRange[1] };
     }
 
     // Filter by rating
     if (selectedRatings.length > 0) {
-      filter.rating = Math.min(...selectedRatings);
+      f.rating = Math.min(...selectedRatings);
     }
 
     // Filter by shop features
     if (shopFeatures.includes('open-now')) {
-      filter.shopOpen = true;
+      f.shopOpen = true;
     }
     if (shopFeatures.includes('top-rated')) {
-      filter.rating = 4;
+      f.rating = 4;
     }
 
-    let products = getAllProducts(filter);
+    return f;
+  }, [selectedShops, shopFromAll, selectedCategories, priceRange, selectedRatings, shopFeatures]);
 
-    // Sort products
+  const { data: fetchedProducts = [], isLoading } = useQuery({
+    queryKey: ['products', filter],
+    queryFn: () => getAllProducts(filter)
+  });
+
+  // Sort products
+  const filteredProducts = useMemo(() => {
+    let products = [...fetchedProducts];
+
     switch (sortBy) {
       case 'price-low':
-        products = [...products].sort((a, b) => a.price - b.price);
+        products.sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        products = [...products].sort((a, b) => b.price - a.price)
+        products.sort((a, b) => b.price - a.price)
         break;
       case 'newest':
-        products = [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         break;
     }
 
     return products;
-  }, [selectedShops, shopFromAll, selectedCategories, priceRange, selectedRatings, shopFeatures, sortBy]);
+  }, [fetchedProducts, sortBy]);
 
   const uniqueShops = new Set(filteredProducts.map(p => p.shopId)).size;
 
@@ -155,7 +164,7 @@ export default function Products() {
   const FilterSidebar = () => (
     <div className="space-y-6">
       {/* Shop Filter Section */}
-      <div className="border-b pb-4">
+      {/* <div className="border-b pb-4">
         <button
           onClick={() => toggleSection('shops')}
           className="flex items-center justify-between w-full text-left mb-3"
@@ -192,10 +201,10 @@ export default function Products() {
             )}
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Category Filter */}
-      <div className="border-b pb-4">
+      {/* <div className="border-b pb-4">
         <button
           onClick={() => toggleSection('categories')}
           className="flex items-center justify-between w-full text-left mb-3"
@@ -225,7 +234,7 @@ export default function Products() {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Price Range */}
       <div className="border-b pb-4">
@@ -238,7 +247,7 @@ export default function Products() {
         </button>
         {expandedSections.price && (
           <div className="space-y-4">
-            <Slider
+            {/* <Slider
               value={priceRange}
               onValueChange={(value) => {
                 setPriceRange(value);
@@ -248,8 +257,8 @@ export default function Products() {
               max={500}
               step={5}
               className="w-full"
-            />
-            <div className="flex gap-2">
+            /> */}
+            <div className="flex items-center gap-2">
               <Input
                 type="number"
                 placeholder="Min"
@@ -261,6 +270,7 @@ export default function Products() {
                 }}
                 className="w-full"
               />
+              -
               <Input
                 type="number"
                 placeholder="Max"
@@ -273,7 +283,7 @@ export default function Products() {
                 className="w-full"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            {/* <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={() => { setPriceRange([0, 10]); setMinPrice('0'); setMaxPrice('10'); }}>
                 Under $10
               </Button>
@@ -284,9 +294,9 @@ export default function Products() {
                 $50-$100
               </Button>
               <Button variant="outline" size="sm" onClick={() => { setPriceRange([100, 500]); setMinPrice('100'); setMaxPrice('500'); }}>
-                $100+
+                Over $100
               </Button>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
@@ -325,7 +335,7 @@ export default function Products() {
       </div>
 
       {/* Delivery Options */}
-      <div className="border-b pb-4">
+      {/* <div className="border-b pb-4">
         <button
           onClick={() => toggleSection('delivery')}
           className="flex items-center justify-between w-full text-left mb-3"
@@ -355,7 +365,7 @@ export default function Products() {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Shop Features */}
       <div className="border-b pb-4">
@@ -370,9 +380,6 @@ export default function Products() {
           <div className="space-y-2">
             {[
               { id: 'open-now', label: 'Open now' },
-              { id: 'top-rated', label: 'Top rated (4+ stars)' },
-              { id: 'fast-delivery', label: 'Fast delivery (< 2 hours)' },
-              { id: 'budget-friendly', label: 'Budget-friendly' }
             ].map(feature => (
               <div key={feature.id} className="flex items-center space-x-2">
                 <Checkbox
@@ -406,7 +413,7 @@ export default function Products() {
         </button>
         {expandedSections.distance && (
           <RadioGroup value={distance} onValueChange={setDistance}>
-            {['within-1km', 'within-2km', 'within-5km', 'within-10km', '10km+', 'any'].map(dist => (
+            {['within-1km', 'within-5km', 'any'].map(dist => (
               <div key={dist} className="flex items-center space-x-2">
                 <RadioGroupItem value={dist} id={`distance-${dist}`} />
                 <Label htmlFor={`distance-${dist}`} className="text-sm cursor-pointer">
@@ -427,10 +434,46 @@ export default function Products() {
     </div>
   );
 
+  const CategoriesSidebar = () => (
+    <div className="space-y-6">
+      <div className="border-b pb-4">
+        <button
+          onClick={() => toggleSection('categories')}
+          className="flex items-center justify-between w-full text-left mb-3"
+        >
+          <h3 className="font-semibold">Categories</h3>
+          {expandedSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+        {expandedSections.categories && (
+          <div className="space-y-2">
+            {categories.map(category => (
+              <div key={category} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`category-${category}`}
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedCategories(prev => [...prev, category]);
+                    } else {
+                      setSelectedCategories(prev => prev.filter(c => c !== category));
+                    }
+                  }}
+                />
+                <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                  {category}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
@@ -447,6 +490,14 @@ export default function Products() {
           </BreadcrumbList>
         </Breadcrumb>
 
+        <div className='lg:flex flex-wrap justify-between mb-6 hidden'>
+          {categories.map((category) => (
+            <Button variant='outline'>
+              {category}
+            </Button>
+          ))}
+        </div>
+
         <div className="flex gap-6">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
@@ -460,16 +511,16 @@ export default function Products() {
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-bold">
+                <h1 className="text-xl font-bold">
                   {filteredProducts.length} products from {uniqueShops} {uniqueShops === 1 ? 'shop' : 'shops'}
                 </h1>
-                
+
                 {/* Mobile Filter Button */}
                 <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="lg:hidden">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filters
+                      <Filter className="h-4 w-4" />
+
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 overflow-y-auto">
@@ -478,6 +529,23 @@ export default function Products() {
                     </SheetHeader>
                     <div className="mt-6">
                       <FilterSidebar />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                {/* Mobile Categories Button */}
+                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="lg:hidden">
+                      Categories
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80 overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Categories</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <CategoriesSidebar />
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -504,14 +572,13 @@ export default function Products() {
 
                 {/* Sort Dropdown */}
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48 rounded-none">
+                  <SelectTrigger className="w-full md:w-48 rounded-none">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="relevance">Relevance</SelectItem>
                     <SelectItem value="price-low">Price: Low to High</SelectItem>
                     <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="rating">Rating: High to Low</SelectItem>
                     <SelectItem value="newest">Newest First</SelectItem>
                   </SelectContent>
                 </Select>
@@ -554,7 +621,7 @@ export default function Products() {
                 </Button>
               </div>
             ) : (
-              <div className={viewMode === 'grid' 
+              <div className={viewMode === 'grid'
                 ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
                 : 'space-y-4'
               }>
@@ -577,9 +644,9 @@ export default function Products() {
       </main>
 
       <Footer />
-      <ShopFilterModal 
-        open={isShopFilterOpen} 
-        onOpenChange={setIsShopFilterOpen} 
+      <ShopFilterModal
+        open={isShopFilterOpen}
+        onOpenChange={setIsShopFilterOpen}
       />
     </div>
   );

@@ -33,7 +33,7 @@ export const Header = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search products or shops..."
+                placeholder="Search products"
                 className="w-full pl-10"
               />
             </div>
@@ -110,7 +110,7 @@ export const Header = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search products or shops..."
+              placeholder="Search products"
               className="w-full pl-10"
             />
           </div>
