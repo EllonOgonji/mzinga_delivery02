@@ -48,3 +48,12 @@ config :phoenix, :json_library, Jason
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+# Default CORS settings (development-friendly). Override in runtime.exs
+config :cors_plug,
+  origin: ["http://localhost:8080", "http://localhost:3000"],
+  max_age: 86_400,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  headers: ["authorization", "content-type", "accept"],
+  expose: ["authorization"],
+  credentials: true
