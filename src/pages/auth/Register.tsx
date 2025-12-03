@@ -17,7 +17,6 @@ import { mockProducts } from '@/data/mockData';
 const Login = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
-
     const [formData, setFormData] = useState({
         full_name: '',
         email: '',
@@ -50,20 +49,26 @@ const Login = () => {
         }).then(async (response) => {
             if (!response.ok) {
                 const errorData = await response.json();
+                console.log("Response not okay", errorData);
                 throw new Error(errorData.message || 'Registration failed');
             }
 
             return response.json();
-        }).then((data) => {
+        }).then((res) => {
+            console.log(res)
+
             toast({
                 title: "Success!",
-                description: `Successfully registered as ${data.user.role}.`,
+                description: `Successfully registered as ${res.data.user.role}.`,
             });
-            localStorage.setItem('token', data.user.token);
-            localStorage.setItem('role', data.user.role);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+
+            localStorage.setItem('token', res.data.token);
+            localStorage.setItem('role', res.data.user.role);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+
+            res.data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
         }).catch((error) => {
+            console.log(error);
             toast({
                 title: "Error",
                 description: error.message,
