@@ -9,8 +9,14 @@ defmodule MzingaDeliveryWeb.AuthController do
   @doc """
   Register a new user
   POST /api/auth/register
+  Accepts payload in two shapes:
+    - {"user": {...user fields...}}
+    - {...user fields...}
   """
-  def register(conn, %{"user" => user_params}) do
+  def register(conn, params) do
+    # Accept both wrapped ({"user": {...}}) and unwrapped ({...}) payloads
+    user_params = params["user"] || params
+
     case Accounts.create_user(user_params) do
       {:ok, user} ->
         {:ok, token, _claims} = Guardian.encode_and_sign(user)
