@@ -21,6 +21,15 @@ if File.exists?(".env") do
     end
   end)
 end
+#
+# Configure CORS origins at runtime. Set `CORS_ALLOWED_ORIGINS` as a comma
+# separated list (example: "http://localhost:8080,https://mzinga-delivery.vercel.app").
+# If the env var is set, it will override the default origins in config/config.exs.
+cors_allowed = System.get_env("CORS_ALLOWED_ORIGINS")
+if cors_allowed && cors_allowed != "" do
+  origins = cors_allowed |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
+  config :cors_plug, origin: origins, credentials: true
+end
 
 # ## Using releases
 #
