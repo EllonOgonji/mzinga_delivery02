@@ -22,6 +22,7 @@ defmodule MzingaDeliveryWeb.StoreJSON do
       logo: store.logo,
       banner: store.banner,
       category: store.category,
+      is_verified: store.is_verified,
       vendor: %{
         id: store.vendor.id,
         full_name: store.vendor.full_name,

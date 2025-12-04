@@ -30,6 +30,7 @@ defmodule MzingaDelivery.Stores.StoreFilters do
     |> filter_by_status(params)
     |> filter_by_min_rating(params)
     |> filter_by_metadata(params)
+    |> filter_by_verification(params)
   end
 
   # Name filter
@@ -120,6 +121,8 @@ defmodule MzingaDelivery.Stores.StoreFilters do
 
   defp parse_decimal(nil), do: nil
 
+  defp parse_decimal(%Decimal{} = v), do: v
+
   defp parse_decimal(v) when is_binary(v) do
     case Decimal.parse(v) do
       {d, _} -> d
@@ -127,6 +130,19 @@ defmodule MzingaDelivery.Stores.StoreFilters do
     end
   end
 
-  defp parse_decimal(%Decimal{} = v), do: v
-  defp parse_decimal(v), do: Decimal.new(v)
+  defp parse_decimal(v) do
+    Decimal.new(v)
+  end
+
+  defp filter_by_verification(query, %{"is_verified" => "true"}) do
+    from s in query,
+      where: s.is_verified == true
+  end
+
+  defp filter_by_verification(query, %{"is_verified" => "false"}) do
+    from s in query,
+      where: s.is_verified == false
+  end
+
+  defp filter_by_verification(query, _), do: query
 end

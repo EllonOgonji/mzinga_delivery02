@@ -11,6 +11,7 @@ defmodule MzingaDelivery.Stores.Store do
     field :logo, :string
     field :banner, :string
     field :category, :string
+    field :is_verified, :boolean, default: false
 
     belongs_to :vendor, MzingaDelivery.Accounts.User
     has_many :products, MzingaDelivery.Stores.Product
@@ -34,5 +35,21 @@ defmodule MzingaDelivery.Stores.Store do
     ])
     |> foreign_key_constraint(:vendor_id)
     |> unique_constraint(:name)
+  end
+
+  @doc """
+  Changeset for updating store verification status(admin only)
+  """
+  def verify_changeset(store, attrs) do
+    store
+    |> cast(attrs, [:is_verified])
+    |> validate_required([:is_verified])
+  end
+
+  @doc """
+  Changeset for verification - alias for verify_changeset
+  """
+  def verification_changeset(store, attrs) do
+    verify_changeset(store, attrs)
   end
 end
