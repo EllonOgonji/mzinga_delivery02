@@ -10,21 +10,23 @@ defmodule MzingaDeliveryWeb.Router do
     plug MzingaDeliveryWeb.Auth.Pipeline
   end
 
-  # health check route
+  # Health Check
+
   scope "/", MzingaDeliveryWeb do
     pipe_through :api
     get "/", HealthController, :index
   end
 
   # PUBLIC API ROUTES
+
   scope "/api", MzingaDeliveryWeb do
     pipe_through :api
 
-    # product filters
+    # Product filters
     get "/products/filter", ProductFilterController, :filter
     get "/products/filter/options", ProductFilterController, :filter_options
 
-    # stores filter
+    # Store filter
     get "/stores/filter", StoreFilterController, :filter
 
     # Auth public endpoints
@@ -33,9 +35,13 @@ defmodule MzingaDeliveryWeb.Router do
 
     # M-Pesa callback
     post "/payments/callback", PaymentController, :mpesa_callback
+
+    # PUBLIC endpoint: Verified stores
+    get "/stores/verified", StoreController, :verified
   end
 
-  # PROTECTED API ROUTES
+  # PROTECTED API ROUTES (AUTH REQUIRED)
+
   scope "/api", MzingaDeliveryWeb do
     pipe_through [:api, :auth]
 
@@ -43,8 +49,14 @@ defmodule MzingaDeliveryWeb.Router do
     get "/auth/me", AuthController, :me
     post "/auth/logout", AuthController, :logout
 
-    # Stores
+    # Store management
     resources "/stores", StoreController, only: [:index, :show, :create, :update, :delete]
+
+    # Store verification (admin-only should be checked inside controller)
+    patch "/stores/:id/verify", StoreController, :verify
+    patch "/stores/:id/unverify", StoreController, :unverify
+
+    # Store products
     get "/stores/:store_id/products", ProductController, :index
 
     # Products

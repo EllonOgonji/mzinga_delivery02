@@ -6,8 +6,8 @@ defmodule MzingaDeliveryWeb.StoreController do
 
   action_fallback MzingaDeliveryWeb.FallbackController
 
-  #only admin can create/update/delete stores
-  plug :ensure_admin when action in [:create, :update, :delete]
+  # only admin can create/update/delete stores
+  plug :ensure_admin when action in [:create, :update, :delete, :verify, :unverify]
 
   @doc """
   Lists all stores.(public)
@@ -56,49 +56,72 @@ defmodule MzingaDeliveryWeb.StoreController do
   Update store(admin only)
   PATCH api/stores/:id
   """
-def update(conn, %{"id" => id, "store" => store_params}) do
-  with {:ok, store} <- Stores.get_store!(id),
-       {:ok, updated_store} <- Stores.update_store(store, store_params) do
-    render(conn, "show.json", store: updated_store)
-  else
-    {:error, :not_found} ->
-      conn
-      |> put_status(:not_found)
-      |> json(%{error: "Store not found"})
-    {:error, changeset} ->
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render("error.json", changeset: changeset)
-  end
-end
-
-      @doc """
-      Delete store(admin only)
-      DELETE api/stores/:id
-      """
-def delete(conn, %{"id" => id}) do
-  with {:ok, store} <- Stores.get_store!(id),
-       {:ok, _store} <- Stores.delete_store(store) do
-    send_resp(conn, :no_content, "")
-  else
-    {:error, :not_found} ->
-      conn
-      |> put_status(:not_found)
-      |> json(%{error: "Store not found"})
-  end
-end
-
-    #authorization helper
-    defp ensure_admin(conn, _opts) do
-      user = Guardian.Plug.current_resource(conn)
-
-      if user && user.role == "admin" do
+  def update(conn, %{"id" => id, "store" => store_params}) do
+    with {:ok, store} <- Stores.get_store!(id),
+         {:ok, updated_store} <- Stores.update_store(store, store_params) do
+      render(conn, "show.json", store: updated_store)
+    else
+      {:error, :not_found} ->
         conn
-      else
+        |> put_status(:not_found)
+        |> json(%{error: "Store not found"})
+
+      {:error, changeset} ->
         conn
-        |> put_status(:forbidden)
-        |> json(%{error: "Admin access required"})
-        |> halt()
-      end
+        |> put_status(:unprocessable_entity)
+        |> render("error.json", changeset: changeset)
     end
+  end
+
+  @doc """
+  Delete store(admin only)
+  DELETE api/stores/:id
+  """
+  def delete(conn, %{"id" => id}) do
+    with {:ok, store} <- Stores.get_store!(id),
+         {:ok, _store} <- Stores.delete_store(store) do
+      send_resp(conn, :no_content, "")
+    else
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Store not found"})
+    end
+  end
+
+  # authorization helper
+  defp ensure_admin(conn, _opts) do
+    user = Guardian.Plug.current_resource(conn)
+
+    if user && user.role == "admin" do
+      conn
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Admin access required"})
+      |> halt()
+    end
+  end
+
+  @doc """
+  Verify store(admin only)
+  PATCH api/stores/:id/verify
+  """
+  def verify(conn, %{"id" => id}) do
+    with {:ok, store} <- Stores.get_store!(id),
+         {:ok, verified_store} <- Stores.verify_store(store) do
+      conn
+      |> put_status(:ok)
+      |> render(:show, store: verified_store)
+    end
+  end
+
+  @doc """
+  List only verified stores
+  GET /api/stores/verified
+  """
+  def verified(conn, _params) do
+    stores = Stores.list_verified_stores()
+    render(conn, :index, stores: stores)
+  end
 end

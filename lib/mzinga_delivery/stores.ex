@@ -203,4 +203,41 @@ defmodule MzingaDelivery.Stores do
     })
     |> Repo.one()
   end
+
+  @doc """
+  Returns List of verified stores only.
+  """
+  def list_verified_stores do
+    Store
+    |> where([s], s.is_verified == true and s.status == "Open")
+    |> preload(:vendor)
+    |> Repo.all()
+  end
+
+  @doc """
+  Verifies a store (admin only).
+  """
+  def verify_store(%Store{} = store) do
+    store
+    |> Store.verify_changeset(%{is_verified: true})
+    |> Repo.update()
+  end
+
+  @doc """
+  Unverify Store (admin only).
+  """
+  def unverify_store(%Store{} = store) do
+    store
+    |> Store.verify_changeset(%{is_verified: false})
+    |> Repo.update()
+  end
+
+  @doc """
+  Toggle store verification status.
+  """
+  def toggle_verification(%Store{} = store) do
+    store
+    |> Store.verification_changeset(%{is_verified: !store.is_verified})
+    |> Repo.update()
+  end
 end
