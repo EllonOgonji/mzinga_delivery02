@@ -22,7 +22,7 @@ defmodule MzingaDeliveryWeb.Vendor.StoreJSON do
       is_verified: store.is_verified,
       logo: store.logo,
       banner: store.banner,
-      category: store.category,
+      category: store.category || "General",
       rejection_reason: store.rejection_reason,
       approved_at: store.approved_at,
       rejected_at: store.rejected_at,
