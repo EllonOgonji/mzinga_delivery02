@@ -24,14 +24,14 @@ defmodule MzingaDeliveryWeb.OrderJSON do
       customer: %{
         id: order.customer.id,
         full_name: order.customer.full_name,
-        phone: order.customer.phone,
+        phone: order.customer.phone_number,
         email: order.customer.email
       },
       store: %{
         id: order.store.id,
         name: order.store.name,
         address: order.store.address,
-        phone: order.store.vendor.phone
+        phone: order.store.vendor.phone_number
       },
       items: Enum.map(order.order_items, &order_item_json/1),
       order_status: get_order_status(order.order_items),
