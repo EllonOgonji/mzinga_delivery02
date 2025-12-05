@@ -111,7 +111,7 @@ defmodule MzingaDeliveryWeb.OrderController do
           })
 
         # Initiate M-Pesa STK Push
-        case MpesaService.initiate_stk_push(user.phone, order.total_price, order.id) do
+        case MpesaService.initiate_stk_push(user.phone_number, order.total_price, order.id) do
           {:ok, mpesa_response} ->
             Logger.info("M-Pesa STK Push initiated for order #{order.id}")
 
@@ -129,7 +129,7 @@ defmodule MzingaDeliveryWeb.OrderController do
               %{
                 order_id: order.id,
                 customer_name: user.full_name,
-                customer_phone: user.phone,
+                customer_phone: user.phone_number,
                 total: Decimal.to_float(order.total_price),
                 items_count: length(order.order_items),
                 timestamp: DateTime.utc_now()
@@ -139,7 +139,8 @@ defmodule MzingaDeliveryWeb.OrderController do
             # Save notification to database for vendor
             Notifications.create_notification(%{
               user_id: store.vendor_id,
-              message: "New order ##{order.id} from #{user.full_name} - KES #{Decimal.to_float(order.total_price)}",
+              message:
+                "New order ##{order.id} from #{user.full_name} - KES #{Decimal.to_float(order.total_price)}",
               type: "new_order"
             })
 
@@ -261,7 +262,8 @@ defmodule MzingaDeliveryWeb.OrderController do
       # Save notification to database for customer
       Notifications.create_notification(%{
         user_id: order.customer_id,
-        message: "Your order ##{order.id} from #{order.store.name} has been rejected. Please contact the store for details.",
+        message:
+          "Your order ##{order.id} from #{order.store.name} has been rejected. Please contact the store for details.",
         type: "order_rejected"
       })
 
@@ -291,7 +293,6 @@ defmodule MzingaDeliveryWeb.OrderController do
         |> json(%{error: "Cannot reject order in current status"})
     end
   end
-
 
   # Check if user can view the order
   defp can_view_order?(user, order) do
