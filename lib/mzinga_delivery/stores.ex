@@ -69,6 +69,13 @@ defmodule MzingaDelivery.Stores do
     %Store{}
     |> Store.vendor_create_changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, store} ->
+        {:ok, Repo.preload(store, [:vendor, :approved_by, :rejected_by])}
+
+      error ->
+        error
+    end
   end
 
   def list_vendor_stores(vendor_id) do
