@@ -1,53 +1,96 @@
 defmodule MzingaDelivery.Stores.StoreFilters do
   @moduledoc """
   Dynamic filtering system for stores.
-  Supports name, status, minimum rating, metadata, sorting, pagination.
+  Supports name, category, status, minimum rating, metadata, verification, sorting, pagination.
   """
 
   import Ecto.Query, warn: false
   alias MzingaDelivery.Repo
   alias MzingaDelivery.Stores.{Store, Product}
 
-  # Public API
+  @doc """
+  Filters stores based on provided parameters.
+
+  ## Parameters
+    - name: string (partial match)
+    - category: string (exact match or nil)
+    - status: string
+    - min_rating: decimal
+    - is_verified: boolean ("true" or "false")
+    - metadata: map (JSONB containment)
+    - sort_by: string (name_asc, name_desc, rating_desc, newest)
+    - limit: integer (default: 50)
+    - offset: integer (default: 0)
+  """
   def filter_stores(params \\ %{}) do
     Store
     |> build_query(params)
     |> apply_sorting(params)
     |> apply_pagination(params)
+    # Always preload vendor for JSON rendering
+    |> preload(:vendor)
     |> Repo.all()
   end
 
+  @doc """
+  Count total stores matching filters.
+  """
   def count_filtered_stores(params \\ %{}) do
     Store
     |> build_query(params)
     |> Repo.aggregate(:count, :id)
   end
 
+  # ========== PRIVATE FUNCTIONS ==========
+
   # Build query with filters
   defp build_query(query, params) do
     query
     |> filter_by_name(params)
+    |> filter_by_category(params)
     |> filter_by_status(params)
+    |> filter_by_verification(params)
     |> filter_by_min_rating(params)
     |> filter_by_metadata(params)
-    |> filter_by_verification(params)
   end
 
-  # Name filter
-  defp filter_by_name(query, %{"name" => name}) when name != "" do
-    from s in query, where: ilike(s.name, ^"%#{name}%")
+  # Name filter (partial match, case-insensitive)
+  defp filter_by_name(query, %{"name" => name}) when is_binary(name) and name != "" do
+    pattern = "%#{name}%"
+    from s in query, where: ilike(s.name, ^pattern)
   end
 
   defp filter_by_name(query, _), do: query
 
+  # Category filter
+  defp filter_by_category(query, %{"category" => category})
+       when is_binary(category) and category != "" do
+    from s in query,
+      where: s.category == ^category or is_nil(s.category)
+  end
+
+  defp filter_by_category(query, _), do: query
+
   # Status filter
-  defp filter_by_status(query, %{"status" => status}) when status != "" do
+  defp filter_by_status(query, %{"status" => status}) when is_binary(status) and status != "" do
     from s in query, where: s.status == ^status
   end
 
   defp filter_by_status(query, _), do: query
 
-  # Minimum rating filter: join products and compute average of per-product averages
+  # Verification filter
+  defp filter_by_verification(query, %{"is_verified" => "true"}) do
+    from s in query, where: s.is_verified == true
+  end
+
+  defp filter_by_verification(query, %{"is_verified" => "false"}) do
+    from s in query, where: s.is_verified == false
+  end
+
+  defp filter_by_verification(query, _), do: query
+
+  # Minimum rating filter
+  # Calculates average rating from products associated with the store
   defp filter_by_min_rating(query, %{"min_rating" => rating}) when rating not in [nil, ""] do
     case parse_decimal(rating) do
       nil ->
@@ -55,12 +98,12 @@ defmodule MzingaDelivery.Stores.StoreFilters do
 
       parsed ->
         from s in query,
-          join: p in Product,
+          left_join: p in Product,
           on: p.store_id == s.id,
           group_by: s.id,
           having:
             fragment(
-              "COALESCE(AVG((SELECT AVG(r) FROM unnest(?::numeric[]) r)), 0) >= ?",
+              "COALESCE(AVG((SELECT COALESCE(AVG(rating), 0) FROM unnest(?::numeric[]) AS rating)), 0) >= ?",
               p.ratings,
               ^parsed
             )
@@ -69,7 +112,8 @@ defmodule MzingaDelivery.Stores.StoreFilters do
 
   defp filter_by_min_rating(query, _), do: query
 
-  # Metadata filter
+  # Metadata filter (JSONB containment)
+  # Note: Requires 'metadata' column to exist as JSONB in stores table
   defp filter_by_metadata(query, %{"metadata" => meta}) when is_map(meta) and meta != %{} do
     from s in query,
       where: fragment("? @> ?::jsonb", s.metadata, ^Jason.encode!(meta))
@@ -77,27 +121,37 @@ defmodule MzingaDelivery.Stores.StoreFilters do
 
   defp filter_by_metadata(query, _), do: query
 
-  # Sorting
-  defp apply_sorting(query, %{"sort_by" => "name_asc"}),
-    do: from(s in query, order_by: [asc: s.name])
+  # ========== SORTING ==========
 
-  defp apply_sorting(query, %{"sort_by" => "name_desc"}),
-    do: from(s in query, order_by: [desc: s.name])
+  defp apply_sorting(query, %{"sort_by" => "name_asc"}) do
+    from s in query, order_by: [asc: s.name]
+  end
+
+  defp apply_sorting(query, %{"sort_by" => "name_desc"}) do
+    from s in query, order_by: [desc: s.name]
+  end
 
   defp apply_sorting(query, %{"sort_by" => "rating_desc"}) do
     from s in query,
-      join: p in Product,
+      left_join: p in Product,
       on: p.store_id == s.id,
       group_by: s.id,
       order_by: [
-        desc: fragment("COALESCE(AVG((SELECT AVG(r) FROM unnest(?::numeric[]) r)), 0)", p.ratings)
+        desc:
+          fragment(
+            "COALESCE(AVG((SELECT COALESCE(AVG(rating), 0) FROM unnest(?::numeric[]) AS rating)), 0)",
+            p.ratings
+          )
       ]
   end
 
-  # Default sorting
-  defp apply_sorting(query, _), do: from(s in query, order_by: [desc: s.inserted_at])
+  # Default sorting: newest first
+  defp apply_sorting(query, _) do
+    from s in query, order_by: [desc: s.inserted_at]
+  end
 
-  # Pagination
+  # ========== PAGINATION ==========
+
   defp apply_pagination(query, params) do
     limit = parse_integer(params["limit"]) || 50
     offset = parse_integer(params["offset"]) || 0
@@ -107,42 +161,31 @@ defmodule MzingaDelivery.Stores.StoreFilters do
     |> offset(^offset)
   end
 
-  # Helpers
+  # ========== HELPERS ==========
+
   defp parse_integer(nil), do: nil
+  defp parse_integer(v) when is_integer(v), do: v
 
   defp parse_integer(v) when is_binary(v) do
     case Integer.parse(v) do
       {x, _} -> x
-      _ -> nil
+      :error -> nil
     end
   end
 
-  defp parse_integer(v), do: v
+  defp parse_integer(_), do: nil
 
   defp parse_decimal(nil), do: nil
-
   defp parse_decimal(%Decimal{} = v), do: v
+  defp parse_decimal(v) when is_float(v), do: Decimal.from_float(v)
+  defp parse_decimal(v) when is_integer(v), do: Decimal.new(v)
 
   defp parse_decimal(v) when is_binary(v) do
     case Decimal.parse(v) do
       {d, _} -> d
-      _ -> nil
+      :error -> nil
     end
   end
 
-  defp parse_decimal(v) do
-    Decimal.new(v)
-  end
-
-  defp filter_by_verification(query, %{"is_verified" => "true"}) do
-    from s in query,
-      where: s.is_verified == true
-  end
-
-  defp filter_by_verification(query, %{"is_verified" => "false"}) do
-    from s in query,
-      where: s.is_verified == false
-  end
-
-  defp filter_by_verification(query, _), do: query
+  defp parse_decimal(_), do: nil
 end

@@ -1,15 +1,26 @@
 defmodule MzingaDeliveryWeb.StoreJSON do
+  @doc """
+  Renders list of stores.
+  """
   def index(%{stores: stores}) do
     %{data: Enum.map(stores, &store_json/1)}
   end
 
+  @doc """
+  Renders single store.
+  """
   def show(%{store: store}) do
     %{data: store_json(store)}
   end
 
+  @doc """
+  Renders validation errors.
+  """
   def error(%{changeset: changeset}) do
     %{errors: translate_errors(changeset)}
   end
+
+  # ========== PRIVATE HELPERS ==========
 
   defp store_json(store) do
     %{
@@ -21,15 +32,19 @@ defmodule MzingaDeliveryWeb.StoreJSON do
       status: store.status,
       logo: store.logo,
       banner: store.banner,
-      category: store.category,
+      category: store.category || "General",
       is_verified: store.is_verified,
-      vendor: %{
-        id: store.vendor.id,
-        full_name: store.vendor.full_name,
-        phone: store.vendor.phone
-      },
+      vendor: vendor_json(store.vendor),
       inserted_at: store.inserted_at,
       updated_at: store.updated_at
+    }
+  end
+
+  defp vendor_json(vendor) do
+    %{
+      id: vendor.id,
+      full_name: vendor.full_name,
+      phone: vendor.phone
     }
   end
 
