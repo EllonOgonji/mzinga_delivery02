@@ -41,6 +41,7 @@ defmodule MzingaDelivery.Stores.Store do
     |> put_change(:is_verified, false)
     |> foreign_key_constraint(:vendor_id)
     |> unique_constraint(:name)
+    |> check_constraint(:status, name: :status_must_be_valid, message: "must be a valid status")
   end
 
   @doc """
@@ -65,6 +66,7 @@ defmodule MzingaDelivery.Stores.Store do
     |> validate_inclusion(:category, @valid_categories, allow_nil: true)
     |> foreign_key_constraint(:vendor_id)
     |> unique_constraint(:name)
+    |> check_constraint(:status, name: :status_must_be_valid, message: "must be a valid status")
   end
 
   @doc """
