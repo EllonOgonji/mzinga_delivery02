@@ -28,7 +28,8 @@ defmodule MzingaDeliveryWeb.Vendor.StoreControllerTest do
       latitude: -1.2,
       longitude: 36.8,
       logo: "http://example.com/logo.png",
-      banner: "http://example.com/banner.png"
+      banner: "http://example.com/banner.png",
+      category: "Liquor Store"
     }
 
     conn = post(conn, ~p"/api/vendor/stores", store: store_params)

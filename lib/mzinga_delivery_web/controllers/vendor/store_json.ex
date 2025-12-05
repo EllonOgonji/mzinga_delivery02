@@ -29,7 +29,7 @@ defmodule MzingaDeliveryWeb.Vendor.StoreJSON do
       vendor: %{
         id: store.vendor.id,
         full_name: store.vendor.full_name,
-        phone: store.vendor.phone
+        phone: store.vendor.phone_number
       },
       inserted_at: store.inserted_at,
       updated_at: store.updated_at
