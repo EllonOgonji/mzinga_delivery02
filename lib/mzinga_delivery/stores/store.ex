@@ -26,7 +26,7 @@ defmodule MzingaDelivery.Stores.Store do
   end
 
   @valid_statuses ~w(pending approved rejected active inactive suspended)
-  @valid_categories ~w(Liquor\ Store Wine\ Shop Beer\ Depot Spirits\ Outlet General)
+  # @valid_categories ~w(Liquor\ Store Wine\ Shop Beer\ Depot Spirits\ Outlet General)
 
   @doc """
   Changeset for vendor creating a store.
@@ -36,7 +36,7 @@ defmodule MzingaDelivery.Stores.Store do
     store
     |> cast(attrs, [:vendor_id, :name, :address, :latitude, :longitude, :logo, :banner, :category])
     |> validate_required([:vendor_id, :name, :address, :category])
-    |> validate_inclusion(:category, @valid_categories)
+    # |> validate_inclusion(:category, @valid_categories)
     |> put_change(:status, "pending")
     |> put_change(:is_verified, false)
     |> foreign_key_constraint(:vendor_id)
@@ -62,7 +62,7 @@ defmodule MzingaDelivery.Stores.Store do
     ])
     |> validate_required([:vendor_id, :name, :address])
     |> validate_inclusion(:status, @valid_statuses)
-    |> validate_inclusion(:category, @valid_categories)
+    # |> validate_inclusion(:category, @valid_categories)
     |> foreign_key_constraint(:vendor_id)
     |> unique_constraint(:name)
   end
