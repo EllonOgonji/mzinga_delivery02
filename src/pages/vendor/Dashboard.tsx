@@ -19,8 +19,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { getVendorShops } from "@/data/shopData";
+
+type Shop = {
+  id : number;
+	vendor_id: number;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  status: string;
+  inserted_at: string;
+  updated_at: string;
+  logo: string;
+  banner: string;
+  category: string;
+  metadata: Record<string, any>;
+  is_verified: boolean;
+  rejection_reason: string;
+  approved_at: string;
+  approved_by_id: number;
+  rejected_at: string;
+  rejected_by_id: number;
+}
 
 const Dashboard = () => {
+  const [userData, setUserData] = useState(JSON.parse(localStorage.getItem("user")))
+  const { data: shopData } = useQuery({
+    queryKey: ['store', 'index', userData.id],
+    queryFn: () => getVendorShops(userData.id)
+  });
+
   // Mock data
   const stats = [
     {
@@ -56,6 +87,28 @@ const Dashboard = () => {
     },
   ];
 
+  // const shopData?: Shop = {
+  //   id: 1,
+  //   vendor_id: userData.id,
+  //   name: "Mama Yao",
+  //   address: "Lurambi",
+  //   latitude: -1.2921,
+  //   longitude: 36.8219,
+  //   status: "open",
+  //   inserted_at: "2024-01-15T10:00:00Z",
+  //   updated_at: "2024-03-10T12:00:00Z",
+  //   logo: "https://example.com/logo.png",
+  //   banner: "https://example.com/banner.png",
+  //   category: "alcogol and beverages",
+  //   metadata: {},
+  //   is_verified: true,
+  //   rejection_reason: "",
+  //   approved_at: "2024-01-20T09:00:00Z",
+  //   approved_by_id: 2,
+  //   rejected_at: "",
+  //   rejected_by_id: 0,
+  // };
+
   const recentOrders = [
     {
       id: "#CST123456",
@@ -84,13 +137,13 @@ const Dashboard = () => {
   ];
 
   const lowStockProducts = [
-    { id: 1, name: "Fresh Tomatoes", image: "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=100", stock: 5 },
-    { id: 2, name: "Bananas", image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=100", stock: 3 },
+    // { id: 1, name: "Fresh Tomatoes", image: "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=100", stock: 5 },
+    // { id: 2, name: "Bananas", image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=100", stock: 3 },
   ];
 
   const pendingReviews = [
-    { customer: "Sarah Wilson", rating: 5, text: "Great quality products! Fast delivery.", product: "Organic Apples" },
-    { customer: "Mike Brown", rating: 4, text: "Good service, will order again.", product: "Fresh Milk" },
+    // { customer: "Sarah Wilson", rating: 5, text: "Great quality products! Fast delivery.", product: "Organic Apples" },
+    // { customer: "Mike Brown", rating: 4, text: "Good service, will order again.", product: "Fresh Milk" },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -109,11 +162,20 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Welcome back, Fresh Foods Market!</h1>
-            <p className="text-muted-foreground mt-1">March 15, 2024</p>
+            <h1 className="text-3xl font-bold">Welcome back, {userData?.full_name} !</h1>
+            <p className="text-muted-foreground mt-1">{new Date().toLocaleDateString()}</p>
             <div className="mt-2 flex items-center gap-2">
-              <Badge className="bg-green-500">Your shop is Open</Badge>
-              <Button variant="outline" size="sm">Close Shop</Button>
+              {shopData?.status == "open" ? 
+              (
+                <>
+                  <Badge className="bg-green-500">Your shop is Open</Badge>
+                  <Button variant="outline" size="sm">Close Shop</Button>
+                </>
+              ) : 
+              (<>
+                <Badge className="bg-red-500">Your shop is Closed</Badge>
+                <Button variant="outline" size="sm">Open Shop</Button>
+              </>)}
             </div>
           </div>
           <Select defaultValue="week">

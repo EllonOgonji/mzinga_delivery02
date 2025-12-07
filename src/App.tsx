@@ -29,6 +29,8 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ToastFromLocation from "./components/LocationToastHandler";
+import VendorProfileForm from "./pages/vendor/ProfileForm";
+import VendorProfile from "./pages/vendor/Profile";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +85,8 @@ const App = () => (
                   <Route path="/vendor/products" element={<VendorProducts />} />
                   <Route path="/vendor/products/:id" element={<VendorProductForm />} />
                   <Route path="/vendor/orders" element={<VendorOrders />} />
+                  <Route path="/vendor/shop-profile/edit" element={<VendorProfileForm />} />
+                  <Route path="/vendor/shop-profile" element={<VendorProfile />} />
                 </Route>
 
                 <Route element={<ProtectedRoute requiredRole="admin" />}>

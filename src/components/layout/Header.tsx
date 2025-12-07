@@ -2,6 +2,7 @@ import { ShoppingBag, Heart, User, Sun, Moon, Search, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
+import useAuth from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,7 @@ import {
 
 export const Header = () => {
   const { isDark, toggleTheme } = useTheme();
+  const {logout} = useAuth();
   const { cartCount } = useCart();
 
   return (
@@ -93,7 +95,7 @@ export const Header = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 

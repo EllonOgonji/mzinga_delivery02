@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import useAuth from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { getVendorShops } from "@/data/shopData";
 
 interface VendorLayoutProps {
   children: ReactNode;
@@ -27,17 +30,21 @@ const navigation = [
 ];
 
 export const VendorLayout = ({ children }: VendorLayoutProps) => {
+  const {logout, user} = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: shopData } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
+    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
+  });
 
   // Mock data - replace with actual data
-  const shopName = "Fresh Foods Market";
+  const shopName = shopData?.name
   const notificationCount = 5;
 
   const handleLogout = () => {
-    // Add logout logic here
-    navigate("/");
+    logout();
   };
 
   const Sidebar = () => (

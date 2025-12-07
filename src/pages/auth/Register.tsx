@@ -14,6 +14,12 @@ import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { mockProducts } from '@/data/mockData';
 
+type Response = {
+    success: boolean,
+    data?: any,
+    message?: string
+}
+
 const Login = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -54,7 +60,7 @@ const Login = () => {
             }
 
             return response.json();
-        }).then((res) => {
+        }).then(async (res) => {
             console.log(res)
 
             toast({
@@ -66,7 +72,21 @@ const Login = () => {
             localStorage.setItem('role', res.data.user.role);
             localStorage.setItem('user', JSON.stringify(res.data.user));
 
-            res.data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+            if (res.data.user.role === 'vendor') {
+                const response = await createVendorStore(res.data.token);
+                if (!response.success) {
+                    toast({
+                        title: "Error",
+                        description: `Vendor store creation failed: ${response.message}`,
+                        variant: "destructive",
+                    });
+                    console.log("Vendor store creation failed");
+                    return;
+                }
+                navigate('/vendor/dashboard')
+            }else{
+                navigate('/')
+            }
         }).catch((error) => {
             console.log(error);
             toast({
@@ -80,6 +100,49 @@ const Login = () => {
         // Validate then redirect
         // navigate('/vendor/products');
     };
+
+    const createVendorStore = async (token): Promise<Response> => {
+        return fetch(`${import.meta.env.VITE_BASE_URL}/api/vendor/stores`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(
+               {
+                    
+                    "store": {
+                    "name": "Mama Yao Liquor Store",
+                    "address": "Lurambi",
+                    "latitude": -1.286389,
+                    "longitude": 36.817223,
+                    "category": "Liquor Store",
+                    "logo": "https://imgs.search.brave.com/cHGH-sr8bodhPwBN8sLr2WN-5hpfY8GV6sDEtGdZMGE/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly90aHVt/YnMuZHJlYW1zdGlt/ZS5jb20vYi9iYW5u/ZXItbGlxdW9yLXN0/b3JlLWdyYXBlcy1j/cm93bi12ZWN0b3It/YmFkZ2UtbGFiZWwt/aGFuZC1kcmF3bi1i/dW5jaGVzLWluc2Ny/aXB0aW9ucy1yZXRy/by1zdHlsZS1vdmFs/LWZyYW1lLTIwOTYy/ODQ5MC5qcGc",
+                    "banner": "https://imgs.search.brave.com/nBH4o-TzIGoyMZwITrUSXHau877WmIWtlP2QQCtX-PQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzL2RmLzJk/L2ZmL2RmMmRmZmY4/ODlmYzE4MWY3MmY3/NzQ1YTUyOGMyZjVk/LmpwZw"
+                    }
+                }
+            ),
+        }).then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.log("Store creation response not okay", errorData);
+                throw new Error(errorData.message || 'Store creation failed');
+            }
+
+            return response.json();
+        }).then((data) => {
+            return {
+                success: true,
+                data: data
+            }
+        }).catch((error) => {
+           return {
+                success: false,
+                message: error.message
+            }
+        })
+    }
 
     return (
         <div className="h-[100vh] w-full flex flex-col justify-center items-center">
