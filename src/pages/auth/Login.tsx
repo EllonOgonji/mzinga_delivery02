@@ -1,25 +1,15 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { VendorLayout } from '@/components/vendor/VendorLayout';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { mockProducts } from '@/data/mockData';
 
 const Login = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
-
     const [loginType, setLoginType] = useState('customer')
-
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -44,7 +34,7 @@ const Login = () => {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({user: formData}),
+            body: JSON.stringify(formData),
         }).then(async (response) => {
             if (!response.ok) {
                 const errorData = await response.json();
@@ -52,22 +42,22 @@ const Login = () => {
             }
 
             return response.json();
-        }).then((data) => {
+        }).then((res) => {
             toast({
                 title: "Success!",
-                description: `Successfully logged in as ${data.user.role}.`,
+                description: `Successfully logged in as ${res.data.user.role}.`,
             });
 
-            localStorage.setItem('token', data.user.token);
-            localStorage.setItem('role', data.user.role);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', res.data.token);
+            localStorage.setItem('role', res.data.user.role);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
 
-            if(data.user.role == loginType){
-                data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+            if(res.data.user.role == loginType){
+                res.data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
             }else{
                 toast({
                     title: "Error",
-                    description: `You are trying to login as a ${loginType} but your account is registered as a ${data.user.role}.`,
+                    description: `You are trying to login as a ${loginType} but your account is registered as a ${res.data.user.role}.`,
                     variant: "destructive",
                 });
                 return;
