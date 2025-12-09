@@ -35,6 +35,9 @@ defmodule MzingaDeliveryWeb.Router do
     get "/products/filter", ProductFilterController, :filter
     get "/products/filter/options", ProductFilterController, :filter_options
 
+    # Public Product Show
+    get "/products/:id", ProductController, :show
+
     # Store filters
     get "/stores/filter", StoreFilterController, :filter
     get "/stores/filter/options", StoreFilterController, :filter_options
@@ -61,6 +64,9 @@ defmodule MzingaDeliveryWeb.Router do
     get "/notifications/unread", NotificationController, :unread
     patch "/notifications/:id/read", NotificationController, :mark_as_read
     patch "/notifications/read_all", NotificationController, :mark_all_as_read
+
+    # Products
+    resources "/products", ProductController, only: [:create, :update, :delete]
   end
 
   # vendor routes
