@@ -183,6 +183,13 @@ defmodule MzingaDelivery.Stores do
     |> Repo.all()
   end
 
+  def list_available_products do
+    Product
+    |> where([p], p.available == true)
+    |> preload(:store)
+    |> Repo.all()
+  end
+
   def get_product(id) do
     Product
     |> preload(:store)

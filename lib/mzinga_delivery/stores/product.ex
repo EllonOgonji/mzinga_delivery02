@@ -13,6 +13,7 @@ defmodule MzingaDelivery.Stores.Product do
     field :ratings, {:array, :decimal}, default: []
     field :specifications, :map, default: %{}
     field :status, :string, default: "active"
+    field :available, :boolean, default: true
 
     belongs_to :store, MzingaDelivery.Stores.Store
     has_many :order_items, MzingaDelivery.Orders.OrderItem
@@ -34,7 +35,8 @@ defmodule MzingaDelivery.Stores.Product do
       :compare_at_price,
       :ratings,
       :specifications,
-      :status
+      :status,
+      :available
     ])
     |> validate_required([:store_id, :name, :price, :stock])
     |> validate_number(:price, greater_than: 0)

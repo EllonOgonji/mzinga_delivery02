@@ -27,6 +27,7 @@ defmodule MzingaDeliveryWeb.Router do
     # Public stores (only approved)
     get "/stores", StoreController, :index
     get "/stores/:id", StoreController, :show
+    get "/products", ProductController, :index_all
 
     # Products by store
     get "/stores/:store_id/products", ProductController, :index
