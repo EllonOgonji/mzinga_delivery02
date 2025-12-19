@@ -18,6 +18,15 @@ defmodule MzingaDeliveryWeb.ProductController do
   end
 
   @doc """
+  List all available products (public)
+  GET /api/products
+  """
+  def index_all(conn, _params) do
+    products = Stores.list_available_products()
+    render(conn, "index.json", products: products)
+  end
+
+  @doc """
   Get single product (public)
   GET /api/products/:id
   """
@@ -114,13 +123,17 @@ defmodule MzingaDeliveryWeb.ProductController do
 
   defp get_store_id_from_params(conn) do
     case conn.params do
-      %{"product" => %{"store_id" => store_id}} -> store_id
+      %{"product" => %{"store_id" => store_id}} ->
+        store_id
+
       %{"id" => product_id} ->
         case Stores.get_product(product_id) do
           nil -> nil
           product -> product.store_id
         end
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 end
