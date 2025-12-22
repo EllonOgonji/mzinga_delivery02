@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: mzinga_delivery
+    runtime: elixir
+    plan: free
+    buildCommand: mix deps.get --only prod && MIX_ENV=prod mix compile
+    startCommand: MIX_ENV=prod mix ecto.migrate && MIX_ENV=prod mix phx.server
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY_BASE
+        sync: false
+      - key: GUARDIAN_SECRET_KEY
+        sync: false
+      - key: PHX_HOST
+        value: mzinga-delivery.onrender.com
+      - key: POOL_SIZE
+        value: 10
+      - key: MPESA_API_URL
+        sync: false
+      - key: MPESA_SHORTCODE
+        sync: false
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_CALLBACK_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
