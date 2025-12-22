@@ -20,7 +20,8 @@ defmodule MzingaDeliveryWeb.StoreFilterController do
       id: store.id,
       name: store.name,
       status: store.status,
-      metadata: store.metadata,
+      category: store.category,
+      is_verified: store.is_verified,
       inserted_at: store.inserted_at,
       updated_at: store.updated_at
     }

@@ -26,6 +26,10 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Public stores (only approved)
     get "/stores", StoreController, :index
+
+    # Store filters
+    get "/stores/filter", StoreFilterController, :filter
+    get "/stores/filter/options", StoreFilterController, :filter_options
     get "/stores/:id", StoreController, :show
     get "/products", ProductController, :index_all
 
@@ -38,10 +42,6 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Public Product Show
     get "/products/:id", ProductController, :show
-
-    # Store filters
-    get "/stores/filter", StoreFilterController, :filter
-    get "/stores/filter/options", StoreFilterController, :filter_options
 
     # M-Pesa callback
     post "/payments/callback", PaymentController, :mpesa_callback

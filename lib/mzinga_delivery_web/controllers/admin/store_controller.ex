@@ -21,6 +21,61 @@ defmodule MzingaDeliveryWeb.Admin.StoreController do
   end
 
   @doc """
+  Create a new store (admin)
+  POST /api/admin/stores
+  """
+  def create(conn, %{"store" => store_params}) do
+    case Stores.create_store(store_params) do
+      {:ok, store} ->
+        conn
+        |> put_status(:created)
+        |> render(:show, store: store)
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, changeset: changeset)
+    end
+  end
+
+  @doc """
+  Update a store (admin)
+  PATCH /api/admin/stores/:id
+  """
+  def update(conn, %{"id" => id, "store" => store_params}) do
+    with store when not is_nil(store) <- Stores.get_store(id),
+         {:ok, updated_store} <- Stores.update_store(store, store_params) do
+      render(conn, :show, store: updated_store)
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Store not found"})
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, changeset: changeset)
+    end
+  end
+
+  @doc """
+  Delete a store (admin)
+  DELETE /api/admin/stores/:id
+  """
+  def delete(conn, %{"id" => id}) do
+    with store when not is_nil(store) <- Stores.get_store(id),
+         {:ok, _store} <- Stores.delete_store(store) do
+      send_resp(conn, :no_content, "")
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Store not found"})
+    end
+  end
+
+  @doc """
   Approve a store
   PATCH /api/admin/stores/:id/approve
   """
@@ -71,6 +126,7 @@ defmodule MzingaDeliveryWeb.Admin.StoreController do
     end
   end
 
+  # Rejection reason validation helper
   def reject(conn, %{"id" => _id}) do
     conn
     |> put_status(:bad_request)
