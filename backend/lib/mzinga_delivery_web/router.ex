@@ -23,6 +23,7 @@ defmodule MzingaDeliveryWeb.Router do
     # Auth
     post "/auth/register", AuthController, :register
     post "/auth/login", AuthController, :login
+    post "/debug/migrate", AuthController, :migrate
 
     # Public stores (only approved)
     get "/stores", StoreController, :index
