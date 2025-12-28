@@ -200,4 +200,33 @@ defmodule MzingaDelivery.Orders do
   def delete_order(%Order{} = order) do
     Repo.delete(order)
   end
+
+  @doc """
+  Assigns a rider to an order.
+  """
+  def assign_rider(%Order{} = order, rider_id) do
+    order
+    |> Order.changeset(%{rider_id: rider_id, delivery_status: "assigned"})
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates delivery status.
+  """
+  def update_delivery_status(%Order{} = order, status) do
+    order
+    |> Order.changeset(%{delivery_status: status})
+    |> Repo.update()
+  end
+
+  @doc """
+  List deliveries for a rider.
+  """
+  def list_rider_deliveries(rider_id) do
+    Order
+    |> where([o], o.rider_id == ^rider_id)
+    |> preload([:customer, :store, :order_items])
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+  end
 end

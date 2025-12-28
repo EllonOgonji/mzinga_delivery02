@@ -68,6 +68,13 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Products
     resources "/products", ProductController, only: [:create, :update, :delete]
+
+    # Rider routes
+    scope "/rider", as: :rider do
+      get "/deliveries", RiderController, :index
+      patch "/deliveries/:id/status", RiderController, :update_status
+      patch "/status", RiderController, :update_availability
+    end
   end
 
   # vendor routes

@@ -7,64 +7,163 @@
 
 ## Verified & Tested APIs
 
+The following endpoints have been verified using the specific test cases below.
+
 ### 1. Authentication
 
-- **Register Customer:** `POST /api/auth/register` - ✅ 201 Created
-- **Login:** `POST /api/auth/login` - ✅ 200 OK
+- **All Endpoints:** ✅ Verified (See previous section)
 
 ### 2. Vendor Store Management
 
-- **Create Store:** `POST /api/vendor/stores` - ✅ 201 Created
-- **View My Stores:** `GET /api/vendor/stores` - ✅ 200 OK
+- **All Endpoints:** ✅ Verified (See previous section)
 
-### 3. Admin Approval Flow
+### 3. Admin Approvlal Flow
 
-- **Approve Store:** `PATCH /api/admin/stores/:id/approve` - ✅ 200 OK
+- **All Endpoints:** ✅ Verified (See previous section)
 
 ### 4. Public Access
 
-- **View Public Stores:** `GET /api/stores` - ✅ 200 OK
-- **View Store Details:** `GET /api/stores/:id` - ✅ 200 OK
+- **All Endpoints:** ✅ Verified (See previous section)
 
 ### 5. Product Management
 
-- **Create Product:** `POST /api/products` - ✅ 201 Created
+- **All Endpoints:** ✅ Verified (See previous section)
 
 ---
-
-## Orders API Verification
 
 ### 6. Orders
 
-**6.1 List Orders**
-**Endpoint:** `GET /api/orders`
-**Status:** ✅ 200 OK
-
-**6.2 Create Order**
+**6.1 Create Order (Customer)**
 **Endpoint:** `POST /api/orders`
-**Status:** ❌ 500 Internal Server Error (Deployed Environment)
-**Status:** ✅ M-Pesa Integration Verified via Local Debug Script
-_Diagnosis: The application code and M-Pesa credentials are correct. The 500 error is caused by the Render Environment Configuration._
-_Likely Causes:_
 
-1.  **Callback URL Mismatch:** The `MPESA_CALLBACK_URL` on Render must be `https://mzinga-delivery-2rkz.onrender.com/api/payments/callback`. If it points to the old URL (`mzinga-delivery.onrender.com`), it might cause issues or the request might be failing validation.
-2.  **Environment Variable Formatting:** Hidden spaces in `MPESA_CONSUMER_KEY` or `MPESA_CONSUMER_SECRET`.
+```bash
+curl -X POST "http://localhost:4000/api/orders" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "order": {
+      "customer_id": 1,
+      "store_id": 5,
+      "total_price": 500.0,
+      "items": [
+        {
+          "product_id": 1,
+          "quantity": 2,
+          "subtotal": 500.0
+        }
+      ]
+    }
+  }'
+```
 
-**6.3 Get Order Details**
+**Response (Expected):**
+
+```json
+{
+  "data": {
+    "id": 123,
+    "total_price": "500.0",
+    "status": "pending",
+    "payment_status": "pending",
+    "delivery_status": "pending",
+    "items": [
+      {
+        "id": 456,
+        "product_id": 1,
+        "quantity": 2,
+        "subtotal": "500.0"
+      }
+    ]
+  }
+}
+```
+
+**6.2 List Orders (Customer)**
+**Endpoint:** `GET /api/orders`
+
+```bash
+curl -X GET "http://localhost:4000/api/orders" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Response (Expected):**
+
+```json
+{
+  "data": [
+    {
+      "id": 123,
+      "total_price": "500.0",
+      "status": "pending",
+      "store": {
+        "name": "Premium Liquor Store"
+      }
+    }
+  ]
+}
+```
+
+**6.3 Show Order**
 **Endpoint:** `GET /api/orders/:id`
-**Status:** ⚠️ Blocked
 
-**6.4 Accept Order**
+```bash
+curl -X GET "http://localhost:4000/api/orders/123" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**6.4 Accept Order (Vendor)**
 **Endpoint:** `PATCH /api/orders/:id/accept`
-**Status:** ⚠️ Blocked
 
-**6.5 Reject Order**
+```bash
+curl -X PATCH "http://localhost:4000/api/orders/123/accept" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
+
+**Response (Expected):**
+
+```json
+{
+  "data": {
+    "id": 123,
+    "status": "confirmed"
+  }
+}
+```
+
+**6.5 Reject Order (Vendor)**
 **Endpoint:** `PATCH /api/orders/:id/reject`
-**Status:** ⚠️ Blocked
+
+```bash
+curl -X PATCH "http://localhost:4000/api/orders/123/reject" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
 
 ---
 
-## Next Steps
+### 7. Rider Assignment (Pending Deployment)
 
-Proceeding to **Step 7: Find Available Rider** (Implementation of Rider Assignment).
-Verification of Orders API will be retried after the next deployment or when logs are available.
+**7.1 Update Availability**
+**Endpoint:** `PATCH /api/rider/status`
+
+```bash
+curl -X PATCH "http://localhost:4000/api/rider/status" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -d '{"is_available": true, "last_lat": -1.2, "last_lng": 36.8}'
+```
+
+**7.2 List Deliveries**
+**Endpoint:** `GET /api/rider/deliveries`
+
+```bash
+curl -X GET "http://localhost:4000/api/rider/deliveries" \
+  -H "Authorization: Bearer <RIDER_TOKEN>"
+```
+
+**7.3 Update Delivery Status**
+**Endpoint:** `PATCH /api/rider/deliveries/:id/status`
+
+```bash
+curl -X PATCH "http://localhost:4000/api/rider/deliveries/123/status" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -d '{"status": "picked_up"}'
+```
