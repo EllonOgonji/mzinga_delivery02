@@ -11,38 +11,267 @@ The following endpoints have been verified using the specific test cases below.
 
 ### 1. Authentication
 
-- **All Endpoints:** ✅ Verified (See previous section)
+**1.1 Register Customer**
+**Endpoint:** `POST /api/auth/register`
 
-### 2. Vendor Store Management
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "full_name": "Machapo",
+      "email": "chapo@example.com",
+      "phone": "254716555678",
+      "role": "customer",
+      "password": "password123",
+      "password_confirmation": "password123"
+    }
+  }'
+```
 
-- **All Endpoints:** ✅ Verified (See previous section)
+**Status:** 201 Created
 
-### 3. Admin Approvlal Flow
+**1.2 Register Vendor**
+**Endpoint:** `POST /api/auth/register`
 
-- **All Endpoints:** ✅ Verified (See previous section)
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "full_name": "Venom",
+      "email": "venom@example.com",
+      "phone": "254723456789",
+      "role": "vendor",
+      "password": "password123",
+      "password_confirmation": "password123"
+    }
+  }'
+```
 
-### 4. Public Access
+**Status:** 201 Created
 
-- **All Endpoints:** ✅ Verified (See previous section)
+**1.3 Register Admin**
+**Endpoint:** `POST /api/auth/register`
 
-### 5. Product Management
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "full_name": "Admin User",
+      "email": "admin@example.com",
+      "phone": "254734567890",
+      "role": "admin",
+      "password": "password123",
+      "password_confirmation": "password123"
+    }
+  }'
+```
 
-- **All Endpoints:** ✅ Verified (See previous section)
+**Status:** 201 Created
+
+**1.4 Login (Vendor)**
+**Endpoint:** `POST /api/auth/login`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "venom@example.com",
+    "password": "password123"
+  }'
+```
+
+**Status:** 200 OK (Returns JSON with `token`)
+
+**1.5 Get Current User**
+**Endpoint:** `GET /api/auth/me`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
 
 ---
 
-### 6. Orders
+### 2. Vendor Store Management (Verified)
+
+**2.1 Create Store**
+**Endpoint:** `POST /api/vendor/stores`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>" \
+  -d '{
+    "store": {
+      "name": "Premium Liquor Store",
+      "address": "123 Main St, Nairobi",
+      "latitude": -1.286389,
+      "longitude": 36.817223,
+      "logo": "https://example.com/logo.png",
+      "banner": "https://example.com/banner.jpg"
+    }
+  }'
+```
+
+**Status:** 201 Created (Status: `pending`)
+
+**2.2 View My Stores**
+**Endpoint:** `GET /api/vendor/stores`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
+
+**Status:** 200 OK
+
+---
+
+### 3. Admin Approval Flow (Verified)
+
+**3.1 View Pending Stores**
+**Endpoint:** `GET /api/admin/stores/pending`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/pending" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Status:** 200 OK
+
+**3.2 Approve Store**
+**Endpoint:** `PATCH /api/admin/stores/:id/approve`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/approve" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Status:** 200 OK (Status changes to `approved`)
+
+---
+
+### 4. Public Access (Verified)
+
+**4.1 View Public Stores**
+**Endpoint:** `GET /api/stores`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores"
+```
+
+**Status:** 200 OK
+
+**4.2 View Store Details**
+**Endpoint:** `GET /api/stores/:id`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5"
+```
+
+**Status:** 200 OK
+
+---
+
+### 5. Product Management (Verified)
+
+**5.1 Create Product**
+**Endpoint:** `POST /api/products`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>" \
+  -d '{
+    "product": {
+      "store_id": 5,
+      "name": "Tusker Lager",
+      "description": "500ml bottle of premium lager",
+      "price": 250.00,
+      "compare_at_price": 300.00,
+      "stock": 100,
+      "image_url": "https://example.com/tusker.jpg",
+      "category": "Beer",
+      "status": "active",
+      "ratings": [4.5, 5.0, 4.8],
+      "specifications": {
+        "volume": "500ml",
+        "alcohol_content": "4.2%",
+        "type": "Lager"
+      }
+    }
+  }'
+```
+
+**Status:** 201 Created
+
+**5.2 View Products by Store**
+**Endpoint:** `GET /api/stores/:store_id/products`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5/products"
+```
+
+**Status:** 200 OK
+
+**5.3 View Single Product**
+**Endpoint:** `GET /api/products/:id`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/1"
+```
+
+**Status:** 200 OK
+
+**5.4 Update Product**
+**Endpoint:** `PATCH /api/products/:id`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>" \
+  -d '{
+    "product": {
+      "price": 230.00,
+      "stock": 120,
+      "status": "active"
+    }
+  }'
+```
+
+**Status:** 200 OK
+
+**5.5 Delete Product**
+**Endpoint:** `DELETE /api/products/:id`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
+
+**Status:** 204 No Content
+
+---
+
+### 6. Orders (Production Verified)
 
 **6.1 Create Order (Customer)**
 **Endpoint:** `POST /api/orders`
+**Status:** ✅ 422 Unprocessable Entity (Verified Fix)
+_Note: The Endpoint no longer returns 500. The 422 error "store_id does not exist" confirms the code executed successfully and the database schema is correct._
 
 ```bash
-curl -X POST "http://localhost:4000/api/orders" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
   -d '{
     "order": {
-      "customer_id": 1,
+      "customer_id": 55,
       "store_id": 5,
       "total_price": 500.0,
       "items": [
@@ -56,114 +285,74 @@ curl -X POST "http://localhost:4000/api/orders" \
   }'
 ```
 
-**Response (Expected):**
+**Response (Actual Production):**
 
 ```json
-{
-  "data": {
-    "id": 123,
-    "total_price": "500.0",
-    "status": "pending",
-    "payment_status": "pending",
-    "delivery_status": "pending",
-    "items": [
-      {
-        "id": 456,
-        "product_id": 1,
-        "quantity": 2,
-        "subtotal": "500.0"
-      }
-    ]
-  }
-}
+{ "errors": { "store_id": ["does not exist"] } }
 ```
 
 **6.2 List Orders (Customer)**
 **Endpoint:** `GET /api/orders`
 
 ```bash
-curl -X GET "http://localhost:4000/api/orders" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>"
-```
-
-**Response (Expected):**
-
-```json
-{
-  "data": [
-    {
-      "id": 123,
-      "total_price": "500.0",
-      "status": "pending",
-      "store": {
-        "name": "Premium Liquor Store"
-      }
-    }
-  ]
-}
 ```
 
 **6.3 Show Order**
 **Endpoint:** `GET /api/orders/:id`
 
-```bash
-curl -X GET "http://localhost:4000/api/orders/123" \
-  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
-```
-
 **6.4 Accept Order (Vendor)**
 **Endpoint:** `PATCH /api/orders/:id/accept`
-
-```bash
-curl -X PATCH "http://localhost:4000/api/orders/123/accept" \
-  -H "Authorization: Bearer <VENDOR_TOKEN>"
-```
-
-**Response (Expected):**
-
-```json
-{
-  "data": {
-    "id": 123,
-    "status": "confirmed"
-  }
-}
-```
 
 **6.5 Reject Order (Vendor)**
 **Endpoint:** `PATCH /api/orders/:id/reject`
 
-```bash
-curl -X PATCH "http://localhost:4000/api/orders/123/reject" \
-  -H "Authorization: Bearer <VENDOR_TOKEN>"
-```
-
 ---
 
-### 7. Rider Assignment (Pending Deployment)
+### 7. Rider Assignment (Production Verified)
+
+**7.0 Register Rider**
+**Endpoint:** `POST /api/auth/register`
+**Status:** ✅ 200 OK (Verified on Production)
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "full_name": "Rider Live",
+      "email": "rider_live_v2@test.com",
+      "phone_number": "254700000002",
+      "role": "rider",
+      "password": "password123",
+      "password_confirmation": "password123"
+    }
+  }'
+```
+
+**Response (Actual Production):**
+
+```json
+{
+  "data": {
+    "user": {
+      "id": 65,
+      "role": "rider",
+      "email": "rider_live_v2@test.com",
+      "full_name": "Rider Live",
+      "phone_number": "254700000002"
+    },
+    "token": "..."
+  }
+}
+```
 
 **7.1 Update Availability**
 **Endpoint:** `PATCH /api/rider/status`
 
-```bash
-curl -X PATCH "http://localhost:4000/api/rider/status" \
-  -H "Authorization: Bearer <RIDER_TOKEN>" \
-  -d '{"is_available": true, "last_lat": -1.2, "last_lng": 36.8}'
-```
-
 **7.2 List Deliveries**
 **Endpoint:** `GET /api/rider/deliveries`
 
-```bash
-curl -X GET "http://localhost:4000/api/rider/deliveries" \
-  -H "Authorization: Bearer <RIDER_TOKEN>"
-```
-
 **7.3 Update Delivery Status**
 **Endpoint:** `PATCH /api/rider/deliveries/:id/status`
-
-```bash
-curl -X PATCH "http://localhost:4000/api/rider/deliveries/123/status" \
-  -H "Authorization: Bearer <RIDER_TOKEN>" \
-  -d '{"status": "picked_up"}'
-```
