@@ -80,96 +80,110 @@ defmodule MzingaDeliveryWeb.OrderController do
   }
   """
   def create(conn, %{"order" => order_params}) do
-    user = Guardian.Plug.current_resource(conn)
+    try do
+      user = Guardian.Plug.current_resource(conn)
 
-    Logger.info("Creating order for user #{user.id}")
+      Logger.info("Creating order for user #{user.id}")
 
-    # Add customer_id to order params
-    order_params = Map.put(order_params, "customer_id", user.id)
+      # Add customer_id to order params
+      order_params = Map.put(order_params, "customer_id", user.id)
 
-    # Calculate total from items
-    items = Map.get(order_params, "items", [])
+      # Calculate total from items
+      items = Map.get(order_params, "items", [])
 
-    total_price =
-      Enum.reduce(items, Decimal.new(0), fn item, acc ->
-        subtotal = item["subtotal"] || 0
-        Decimal.add(acc, Decimal.new(to_string(subtotal)))
-      end)
+      total_price =
+        Enum.reduce(items, Decimal.new(0), fn item, acc ->
+          subtotal = item["subtotal"] || 0
+          Decimal.add(acc, Decimal.new(to_string(subtotal)))
+        end)
 
-    order_params = Map.put(order_params, "total_price", total_price)
+      order_params = Map.put(order_params, "total_price", total_price)
 
-    case Orders.create_order_with_items(order_params) do
-      {:ok, order} ->
-        Logger.info("Order #{order.id} created successfully")
+      case Orders.create_order_with_items(order_params) do
+        {:ok, order} ->
+          Logger.info("Order #{order.id} created successfully")
 
-        # Create payment record
-        {:ok, payment} =
-          Payments.create_payment(%{
-            order_id: order.id,
-            amount: order.total_price,
-            status: "pending"
-          })
-
-        # Initiate M-Pesa STK Push
-        case MpesaService.initiate_stk_push(user.phone_number, order.total_price, order.id) do
-          {:ok, mpesa_response} ->
-            Logger.info("M-Pesa STK Push initiated for order #{order.id}")
-
-            # Update payment with checkout_request_id
-            checkout_request_id = mpesa_response["CheckoutRequestID"]
-            Payments.update_payment(payment, %{transaction_id: checkout_request_id})
-
-            # Get store with vendor info
-            store = Stores.get_store(order.store_id)
-
-            # Broadcast to store owner via WebSocket
-            MzingaDeliveryWeb.Endpoint.broadcast(
-              "notifications:store_#{order.store_id}",
-              "new_order",
-              %{
-                order_id: order.id,
-                customer_name: user.full_name,
-                customer_phone: user.phone_number,
-                total: Decimal.to_float(order.total_price),
-                items_count: length(order.order_items),
-                timestamp: DateTime.utc_now()
-              }
-            )
-
-            # Save notification to database for vendor
-            Notifications.create_notification(%{
-              user_id: store.vendor_id,
-              message:
-                "New order ##{order.id} from #{user.full_name} - KES #{Decimal.to_float(order.total_price)}",
-              type: "new_order"
-            })
-
-            Logger.info("Notification sent to vendor #{store.vendor_id} for order #{order.id}")
-
-            conn
-            |> put_status(:created)
-            |> render("show.json", order: order, mpesa_response: mpesa_response)
-
-          {:error, reason} ->
-            Logger.error("M-Pesa STK Push failed for order #{order.id}: #{inspect(reason)}")
-
-            # Payment initiation failed, but order is created
-            conn
-            |> put_status(:unprocessable_entity)
-            |> json(%{
-              error: "Payment initiation failed",
-              reason: reason,
+          # Create payment record
+          {:ok, payment} =
+            Payments.create_payment(%{
               order_id: order.id,
-              message: "Order created but payment failed. Please retry payment."
+              amount: order.total_price,
+              status: "pending"
             })
-        end
 
-      {:error, changeset} ->
-        Logger.error("Order creation failed: #{inspect(changeset.errors)}")
+          # Initiate M-Pesa STK Push
+          case MpesaService.initiate_stk_push(user.phone_number, order.total_price, order.id) do
+            {:ok, mpesa_response} ->
+              Logger.info("M-Pesa STK Push initiated for order #{order.id}")
+
+              # Update payment with checkout_request_id
+              checkout_request_id = mpesa_response["CheckoutRequestID"]
+              Payments.update_payment(payment, %{transaction_id: checkout_request_id})
+
+              # Get store with vendor info
+              store = Stores.get_store(order.store_id)
+
+              # Broadcast to store owner via WebSocket
+              MzingaDeliveryWeb.Endpoint.broadcast(
+                "notifications:store_#{order.store_id}",
+                "new_order",
+                %{
+                  order_id: order.id,
+                  customer_name: user.full_name,
+                  customer_phone: user.phone_number,
+                  total: Decimal.to_float(order.total_price),
+                  items_count: length(order.order_items),
+                  timestamp: DateTime.utc_now()
+                }
+              )
+
+              # Save notification to database for vendor
+              Notifications.create_notification(%{
+                user_id: store.vendor_id,
+                message:
+                  "New order ##{order.id} from #{user.full_name} - KES #{Decimal.to_float(order.total_price)}",
+                type: "new_order"
+              })
+
+              Logger.info("Notification sent to vendor #{store.vendor_id} for order #{order.id}")
+
+              conn
+              |> put_status(:created)
+              |> render("show.json", order: order, mpesa_response: mpesa_response)
+
+            {:error, reason} ->
+              Logger.error("M-Pesa STK Push failed for order #{order.id}: #{inspect(reason)}")
+
+              # Payment initiation failed, but order is created
+              conn
+              |> put_status(:unprocessable_entity)
+              |> json(%{
+                error: "Payment initiation failed",
+                reason: reason,
+                order_id: order.id,
+                message: "Order created but payment failed. Please retry payment."
+              })
+          end
+
+        {:error, changeset} ->
+          Logger.error("Order creation failed: #{inspect(changeset.errors)}")
+
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render("error.json", changeset: changeset)
+      end
+    rescue
+      e ->
+        Logger.error("CRITICAL ERROR in create order: #{inspect(e)}")
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
 
         conn
-        |> put_status(:unprocessable_entity)
-        |> render("error.json", changeset: changeset)
+        |> put_status(:internal_server_error)
+        |> json(%{
+          error: "Internal Server Error (Debug Mode)",
+          exception: inspect(e),
+          stacktrace: Exception.format_stacktrace(__STACKTRACE__)
+        })
     end
   end
 
