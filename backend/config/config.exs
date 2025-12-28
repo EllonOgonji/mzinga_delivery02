@@ -11,8 +11,6 @@ config :mzinga_delivery, MzingaDelivery.Auth.Guardian,
   issuer: "mzinga_delivery",
   secret_key: System.get_env("GUARDIAN_SECRET_KEY")
 
-
-
 config :mzinga_delivery,
   ecto_repos: [MzingaDelivery.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]

@@ -25,7 +25,9 @@ defmodule MzingaDelivery.Accounts.User do
     |> cast(attrs, [:full_name, :email, :phone_number, :role, :password, :password_confirmation])
     |> validate_required([:full_name, :email, :phone_number, :role, :password])
     |> validate_format(:email, ~r/@/)
-    |> validate_format(:phone_number, ~r/^254\d{9}$/, message: "must be valid Kenyan number (254...)")
+    |> validate_format(:phone_number, ~r/^254\d{9}$/,
+      message: "must be valid Kenyan number (254...)"
+    )
     |> validate_length(:password, min: 6)
     |> validate_confirmation(:password)
     |> unique_constraint(:email)
