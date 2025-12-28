@@ -111,7 +111,14 @@ defmodule MzingaDeliveryWeb.OrderController do
           })
 
         # Initiate M-Pesa STK Push
-        case MpesaService.initiate_stk_push(user.phone_number, order.total_price, order.id) do
+        mpesa_result =
+          try do
+            MpesaService.initiate_stk_push(user.phone_number, order.total_price, order.id)
+          rescue
+            e -> {:error, "Exception: #{Exception.message(e)}"}
+          end
+
+        case mpesa_result do
           {:ok, mpesa_response} ->
             Logger.info("M-Pesa STK Push initiated for order #{order.id}")
 
