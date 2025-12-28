@@ -10,6 +10,9 @@ defmodule MzingaDelivery.Accounts.User do
     field :password_hash, :string
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
+    field :is_available, :boolean, default: false
+    field :last_lat, :float
+    field :last_lng, :float
 
     # Associations
     has_many :stores, MzingaDelivery.Stores.Store, foreign_key: :vendor_id
@@ -22,7 +25,17 @@ defmodule MzingaDelivery.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:full_name, :email, :phone_number, :role, :password, :password_confirmation])
+    |> cast(attrs, [
+      :full_name,
+      :email,
+      :phone_number,
+      :role,
+      :password,
+      :password_confirmation,
+      :is_available,
+      :last_lat,
+      :last_lng
+    ])
     |> validate_required([:full_name, :email, :phone_number, :role, :password])
     |> validate_format(:email, ~r/@/)
     |> validate_format(:phone_number, ~r/^254\d{9}$/,
@@ -38,7 +51,7 @@ defmodule MzingaDelivery.Accounts.User do
   # Update changeset (without requiring password)
   def update_changeset(user, attrs) do
     user
-    |> cast(attrs, [:full_name, :email, :phone_number])
+    |> cast(attrs, [:full_name, :email, :phone_number, :is_available, :last_lat, :last_lng])
     |> validate_required([:full_name, :email, :phone_number])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email)
