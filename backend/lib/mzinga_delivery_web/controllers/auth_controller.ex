@@ -76,7 +76,26 @@ defmodule MzingaDeliveryWeb.AuthController do
   end
 
   def migrate(conn, _params) do
+    app = :mzinga_delivery
+    priv_dir = Application.app_dir(app, "priv/repo/migrations")
+
+    files =
+      case File.ls(priv_dir) do
+        {:ok, list} -> list
+        {:error, reason} -> "Error: #{inspect(reason)}"
+      end
+
     MzingaDelivery.Release.migrate()
-    json(conn, %{status: "migrated"})
+
+    repo = MzingaDelivery.Repo
+    migrations = Ecto.Migrator.migrations(repo)
+
+    json(conn, %{
+      status: "attempted",
+      priv_dir: priv_dir,
+      files: files,
+      migrations:
+        Enum.map(migrations, fn {status, version, _migration} -> "#{status}: #{version}" end)
+    })
   end
 end
