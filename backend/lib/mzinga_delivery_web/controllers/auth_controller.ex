@@ -74,4 +74,9 @@ defmodule MzingaDeliveryWeb.AuthController do
     |> put_status(:ok)
     |> json(%{message: "Logged out successfully"})
   end
+
+  def migrate(conn, _params) do
+    MzingaDelivery.Release.migrate()
+    json(conn, %{status: "migrated"})
+  end
 end
