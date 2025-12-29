@@ -258,55 +258,16 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 ---
 
-### 6. Orders (Production Verified)
+### 6. Orders (Production Report)
 
 **6.1 Create Order (Customer)**
 **Endpoint:** `POST /api/orders`
-**Status:** ✅ 422 Unprocessable Entity (Verified Fix)
-_Note: The Endpoint no longer returns 500. The 422 error "store_id does not exist" confirms the code executed successfully and the database schema is correct._
-
-```bash
-curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
-  -d '{
-    "order": {
-      "customer_id": 55,
-      "store_id": 5,
-      "total_price": 500.0,
-      "items": [
-        {
-          "product_id": 1,
-          "quantity": 2,
-          "subtotal": 500.0
-        }
-      ]
-    }
-  }'
-```
-
-**Response (Actual Production):**
-
-```json
-{ "errors": { "store_id": ["does not exist"] } }
-```
+**Status:** ❌ Failed (Environment Transaction Logic)
+_Diagnosis: The database now has the correct schema (via diagnostics), but the code hits a `in_failed_sql_transaction` error during execution. This indicates a deeper issue with transaction handling in the production environment that cannot be resolved without server access/logs._
 
 **6.2 List Orders (Customer)**
 **Endpoint:** `GET /api/orders`
-
-```bash
-curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
-  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
-```
-
-**6.3 Show Order**
-**Endpoint:** `GET /api/orders/:id`
-
-**6.4 Accept Order (Vendor)**
-**Endpoint:** `PATCH /api/orders/:id/accept`
-
-**6.5 Reject Order (Vendor)**
-**Endpoint:** `PATCH /api/orders/:id/reject`
+**Status:** ⚠️ Untested (Blocked by Order Creation failure)
 
 ---
 
@@ -316,18 +277,18 @@ curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
 **Endpoint:** `POST /api/auth/register`
 **Status:** ✅ 200 OK (Verified on Production)
 
+**7.1 Update Availability**
+**Endpoint:** `PATCH /api/rider/status`
+**Status:** ✅ 200 OK (Verified on Production)
+
 ```bash
-curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/register" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
   -d '{
-    "user": {
-      "full_name": "Rider Live",
-      "email": "rider_live_v2@test.com",
-      "phone_number": "254700000002",
-      "role": "rider",
-      "password": "password123",
-      "password_confirmation": "password123"
-    }
+    "is_available": true,
+    "last_lat": -1.2921,
+    "last_lng": 36.8219
   }'
 ```
 
@@ -336,23 +297,22 @@ curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/register" \
 ```json
 {
   "data": {
-    "user": {
-      "id": 65,
-      "role": "rider",
-      "email": "rider_live_v2@test.com",
-      "full_name": "Rider Live",
-      "phone_number": "254700000002"
-    },
-    "token": "..."
+    "id": 65,
+    "role": "rider",
+    "email": "rider_live_v2@test.com",
+    "full_name": "Rider Live",
+    "is_available": true,
+    "last_lat": -1.2921,
+    "last_lng": 36.8219,
+    "phone_number": "254700000002"
   }
 }
 ```
 
-**7.1 Update Availability**
-**Endpoint:** `PATCH /api/rider/status`
-
 **7.2 List Deliveries**
 **Endpoint:** `GET /api/rider/deliveries`
+**Status:** ⏳ Pending
 
 **7.3 Update Delivery Status**
 **Endpoint:** `PATCH /api/rider/deliveries/:id/status`
+**Status:** ⏳ Pending

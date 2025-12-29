@@ -1,1 +1,0 @@
-{"error":"Critical Exception","message":"ERROR 42703 (undefined_column) column \"subtotal\" of relation \"order_items\" does not exist\n\n    query: INSERT INTO \"order_items\" (\"status\",\"order_id\",\"product_id\",\"quantity\",\"subtotal\",\"inserted_at\",\"updated_at\") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING \"id\""}
