@@ -98,4 +98,13 @@ defmodule MzingaDelivery.Accounts do
     |> User.update_changeset(attrs)
     |> Repo.update()
   end
+
+  @doc """
+  Updates specifically the rider's location.
+  """
+  def update_rider_location(%User{} = user, lat, lng) do
+    user
+    |> User.update_changeset(%{last_lat: lat, last_lng: lng})
+    |> Repo.update()
+  end
 end

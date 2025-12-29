@@ -54,6 +54,9 @@ fly secrets set \
   PHX_HOST="your-app-name.fly.dev"
 ```
 
+> [!IMPORTANT] > **Database Configuration**:
+> If you are using Supabase (Transaction Pooler), we have already configured `prepare: :unnamed` in `config/runtime.exs`. This is critical for preventing connection errors.
+
 ---
 
 ## 📦 Step 4: Deploy
