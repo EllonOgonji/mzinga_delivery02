@@ -316,3 +316,38 @@ curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
 **7.3 Update Delivery Status**
 **Endpoint:** `PATCH /api/rider/deliveries/:id/status`
 **Status:** ⏳ Pending
+
+**7.4 Automatic Rider Assignment (Verified Locally)**
+**Trigger:** `POST /api/orders/:id/accept` (Vendor)
+**Status:** ✅ Verified (via `AutoAssignmentVerifier`)
+
+- **Result:** System correctly finds closest/available rider and assigns `rider_id` to order.
+- **Side Effect:** Rider `is_available` becomes `false`.
+
+---
+
+### 8. Real-Time Notifications (Verified Locally)
+
+**8.1 Rider New Delivery Notification**
+**Channel:** `rider:{rider_id}`
+**Event:** `new_delivery`
+**Status:** ✅ Verified
+
+- **Payload:** `{ order_id: 26, pickup_location: "...", ... }`
+- **Trigger:** Successful automatic assignment.
+
+---
+
+### 9. Fixes Pending Deployment
+
+---
+
+### 10. Real-Time Tracking (Verified Locally)
+
+**10.1 Tracking Channel**
+**Channel:** `tracking:{order_id}`
+**Status:** ✅ Verified
+
+- **Authorization:** Checks if user is the Order Owner or Assigned Rider.
+- **Events:** `update_location` (In) -> `location_update` (Broadcast).
+- **Persistence:** Updates Rider's `last_lat/lng` in DB.

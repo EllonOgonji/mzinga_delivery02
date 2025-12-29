@@ -10,6 +10,7 @@ config :mzinga_delivery, MzingaDelivery.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: String.to_integer(System.get_env("DB_POOL_SIZE") || "2"),
   ssl: [verify: :verify_none],
+  prepare: :unnamed,
   socket_options: [:inet]
 
 # For development, we disable any cache and enable

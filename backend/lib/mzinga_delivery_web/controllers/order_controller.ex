@@ -7,6 +7,7 @@ defmodule MzingaDeliveryWeb.OrderController do
   alias MzingaDelivery.Auth.Guardian
   alias MzingaDelivery.Stores
   alias MzingaDelivery.Notifications
+  alias MzingaDelivery.Delivery.RiderService
 
   require Logger
 
@@ -200,8 +201,23 @@ defmodule MzingaDeliveryWeb.OrderController do
 
     with {:ok, order} <- Orders.get_order!(id),
          true <- can_manage_order?(user, order),
-         {:ok, updated_order} <- Orders.accept_order(order) do
+         {:ok, accepted_order} <- Orders.accept_order(order) do
       Logger.info("Order #{id} accepted by user #{user.id}")
+
+      # Attempt to assign rider
+      final_order =
+        case RiderService.assign_rider_to_order(accepted_order) do
+          {:ok, order_with_rider} ->
+            Logger.info("Rider assigned automatically to order #{id}")
+            order_with_rider
+
+          {:error, _reason} ->
+            Logger.warning(
+              "No riders available for order #{id}, status remains 'accepted' but unassigned"
+            )
+
+            accepted_order
+        end
 
       # Broadcast to customer via WebSocket
       MzingaDeliveryWeb.Endpoint.broadcast(
@@ -210,7 +226,11 @@ defmodule MzingaDeliveryWeb.OrderController do
         %{
           order_id: order.id,
           store_name: order.store.name,
-          message: "Your order has been accepted and is being prepared",
+          message:
+            if(final_order.rider_id,
+              do: "Your order is accepted and a rider is assigned!",
+              else: "Your order is accepted and being prepared."
+            ),
           timestamp: DateTime.utc_now()
         }
       )
@@ -224,7 +244,7 @@ defmodule MzingaDeliveryWeb.OrderController do
 
       Logger.info("Notification sent to customer #{order.customer_id} for order #{id}")
 
-      render(conn, "show.json", order: updated_order)
+      render(conn, "show.json", order: final_order)
     else
       {:error, :not_found} ->
         Logger.warning("Order #{id} not found")
