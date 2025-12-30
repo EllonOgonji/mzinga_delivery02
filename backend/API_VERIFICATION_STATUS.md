@@ -351,3 +351,19 @@ curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
 - **Authorization:** Checks if user is the Order Owner or Assigned Rider.
 - **Events:** `update_location` (In) -> `location_update` (Broadcast).
 - **Persistence:** Updates Rider's `last_lat/lng` in DB.
+
+---
+
+### 15. Rating System (Verified Locally)
+
+**15.1 Create Review**
+**Endpoint:** `POST /api/reviews`
+**Status:** ✅ Verified
+
+- **Validation:** Can only rate if `delivery_status` is `delivered`.
+- **Integrity:** One review per order (Unique Constraint).
+- **Linkage:** Automagically links Customer -> Order -> Rider.
+
+```
+
+```
