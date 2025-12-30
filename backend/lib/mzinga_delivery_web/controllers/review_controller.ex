@@ -7,8 +7,6 @@ defmodule MzingaDeliveryWeb.ReviewController do
   action_fallback FallbackController
 
   def create(conn, %{"review" => review_params}) do
-    customer = conn.assigns.current_user
-
     # Check if user is trying to review an order they didn't make?
     # The context fills customer_id from the order, so if they pass a random order_id,
     # we should ideally ensure order.customer_id matches current_user.id.
