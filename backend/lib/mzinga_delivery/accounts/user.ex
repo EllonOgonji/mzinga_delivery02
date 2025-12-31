@@ -13,6 +13,7 @@ defmodule MzingaDelivery.Accounts.User do
     field :is_available, :boolean, default: false
     field :last_lat, :float
     field :last_lng, :float
+    field :distance, :float, virtual: true
 
     # Associations
     has_many :stores, MzingaDelivery.Stores.Store, foreign_key: :vendor_id
