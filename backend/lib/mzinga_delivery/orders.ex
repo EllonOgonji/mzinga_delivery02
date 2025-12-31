@@ -131,7 +131,7 @@ defmodule MzingaDelivery.Orders do
   """
   def update_order_status(%Order{} = order, status) do
     order
-    |> Order.update_status_changeset(%{order_status: status})
+    |> Order.status_changeset(%{order_status: status})
     |> Repo.update()
   end
 
@@ -140,7 +140,7 @@ defmodule MzingaDelivery.Orders do
   """
   def update_payment_status(%Order{} = order, status) do
     order
-    |> Order.update_status_changeset(%{payment_status: status})
+    |> Order.status_changeset(%{payment_status: status})
     |> Repo.update()
   end
 
@@ -228,5 +228,45 @@ defmodule MzingaDelivery.Orders do
     |> preload([:customer, :store, :order_items])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
+  end
+
+  def mark_as_ready(order_id) do
+    order = get_order!(order_id)
+
+    Repo.transaction(fn ->
+      updated_order =
+        order
+        |> Order.status_changeset(%{delivery_status: "ready_for_pickup"})
+        |> Repo.update!()
+
+      # Notify Tracking Channel
+      MzingaDeliveryWeb.Endpoint.broadcast(
+        "tracking:#{order.id}",
+        "order_update",
+        %{status: "ready_for_pickup", message: "Order is ready for pickup!"}
+      )
+
+      updated_order
+    end)
+  end
+
+  def mark_as_picked_up(order_id) do
+    order = get_order!(order_id)
+
+    Repo.transaction(fn ->
+      updated_order =
+        order
+        |> Order.status_changeset(%{delivery_status: "picked_up"})
+        |> Repo.update!()
+
+      # Notify Tracking Channel
+      MzingaDeliveryWeb.Endpoint.broadcast(
+        "tracking:#{order.id}",
+        "order_update",
+        %{status: "picked_up", message: "Rider has picked up your order!"}
+      )
+
+      updated_order
+    end)
   end
 end
