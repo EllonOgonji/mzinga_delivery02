@@ -1,6 +1,6 @@
 # API Verification Status & Examples
 
-**Deployed Base URL:** `https://mzinga-delivery-2rkz.onrender.com`
+**Deployed Base URL:** `https://mzinga-delivery02-t6rg.onrender.com`
 **Local Base URL:** `http://localhost:4000`
 
 ---
@@ -258,143 +258,149 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 ---
 
-### 6. Orders (Production Report)
+### 6. Order Lifecycle (Verified)
 
 **6.1 Create Order (Customer)**
 **Endpoint:** `POST /api/orders`
-**Status:** ❌ Failed (Environment Transaction Logic)
-_Diagnosis: The database now has the correct schema (via diagnostics), but the code hits a `in_failed_sql_transaction` error during execution. This indicates a deeper issue with transaction handling in the production environment that cannot be resolved without server access/logs._
-
-**6.2 List Orders (Customer)**
-**Endpoint:** `GET /api/orders`
-**Status:** ⚠️ Untested (Blocked by Order Creation failure)
-
----
-
-### 7. Rider Assignment (Production Verified)
-
-**7.0 Register Rider**
-**Endpoint:** `POST /api/auth/register`
-**Status:** ✅ 200 OK (Verified on Production)
-
-**7.1 Update Availability**
-**Endpoint:** `PATCH /api/rider/status`
-**Status:** ✅ 200 OK (Verified on Production)
 
 ```bash
-curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
   -d '{
-    "is_available": true,
-    "last_lat": -1.2921,
-    "last_lng": 36.8219
+    "order": {
+      "store_id": 5,
+      "items": [
+        {"product_id": 1, "quantity": 2, "subtotal": 500.00}
+      ]
+    }
   }'
 ```
 
-**Response (Actual Production):**
+**Status:** 201 Created
 
-```json
-{
-  "data": {
-    "id": 65,
-    "role": "rider",
-    "email": "rider_live_v2@test.com",
-    "full_name": "Rider Live",
-    "is_available": true,
-    "last_lat": -1.2921,
-    "last_lng": 36.8219,
-    "phone_number": "254700000002"
-  }
-}
+**6.2 Accept Order (Vendor)**
+**Endpoint:** `PATCH /api/orders/:id/accept`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/accept" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
-**7.2 List Deliveries**
+**Status:** 200 OK
+
+**6.3 Mark Ready (Vendor)**
+**Endpoint:** `PATCH /api/orders/:id/ready`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/ready" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
+
+**Status:** 200 OK (Status -> `ready_for_pickup`)
+
+**6.4 Handover (Vendor)**
+**Endpoint:** `PATCH /api/orders/:id/handover`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/handover" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
+
+**Status:** 200 OK (Status -> `picked_up`)
+
+**6.5 Confirm Delivery (Customer)**
+**Endpoint:** `POST /api/orders/:id/confirm`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/confirm" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Status:** 200 OK
+
+---
+
+### 7. Rider Management (Verified)
+
+**7.1 List Deliveries**
 **Endpoint:** `GET /api/rider/deliveries`
-**Status:** ⏳ Pending
 
-**7.3 Update Delivery Status**
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/rider/deliveries" \
+  -H "Authorization: Bearer <RIDER_TOKEN>"
+```
+
+**Status:** 200 OK
+
+**7.2 Accept Request**
+**Endpoint:** `POST /api/rider/requests/:id/accept`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/requests/1/accept" \
+  -H "Authorization: Bearer <RIDER_TOKEN>"
+```
+
+**Status:** 200 OK
+
+**7.3 Mark Delivered**
 **Endpoint:** `PATCH /api/rider/deliveries/:id/status`
-**Status:** ⏳ Pending
 
-**7.4 Automatic Rider Assignment (Verified Locally)**
-**Trigger:** `POST /api/orders/:id/accept` (Vendor)
-**Status:** ✅ Verified (via `AutoAssignmentVerifier`)
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/deliveries/1/status" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -d '{"status": "delivered"}'
+```
 
-- **Result:** System correctly finds closest/available rider and assigns `rider_id` to order.
-- **Side Effect:** Rider `is_available` becomes `false`.
-
----
-
-### 8. Real-Time Notifications (Verified Locally)
-
-**8.1 Rider New Delivery Notification**
-**Channel:** `rider:{rider_id}`
-**Event:** `new_delivery`
-**Status:** ✅ Verified
-
-- **Payload:** `{ order_id: 26, pickup_location: "...", ... }`
-- **Trigger:** Successful automatic assignment.
+**Status:** 200 OK
 
 ---
 
-### 9. Fixes Pending Deployment
+### 8. Cart Management (Verified)
 
----
-
-### 10. Real-Time Tracking (Verified Locally)
-
-**10.1 Tracking Channel**
-**Channel:** `tracking:{order_id}`
-**Status:** ✅ Verified (Geospatial)
-
-- **Logic:**
-  - Rejects if no riders available.
-  - **Old:** Picked first available.
-  - **New:** Picks **NEAREST** available rider to the Store.
-- **Notification:** Sends WebSocket event `new_delivery` to specific rider channel.` (Broadcast).
-
-* **Persistence:** Updates Rider's `last_lat/lng` in DB.
-
----
-
-### 14. Geospatial Search (Verified Locally)
-
-**14.1 Search Stores by Location**
-**Endpoint:** `GET /api/stores?lat=-1.29&lng=36.82&radius=5`
-**Status:** ✅ Verified (Geospatial)
-
-- **Behavior:** Returns stores within `radius` km, sorted by distance.
-- **Result:** Verified that stores > radius are excluded.
-
----
-
-### 15. Rating System (Verified Locally)
-
-### 16. Server-Side Cart (Verified Locally)
-
-**16.1 Add Item**
-**Endpoint:** `POST /api/cart/items`
-**Status:** ✅ Verified
-
-- **Behavior:** Adds item to cart. Creates cart if missing.
-- **One Store Rule:** ✅ Blocked adding item from Store B when cart has item from Store A.
-- **Logic:** Merges quantity if item exists.
-
-**16.2 Get Cart**
+**8.1 Get Cart**
 **Endpoint:** `GET /api/cart`
-**Status:** ✅ Verified
 
-- **Result:** Returns cart with items and total price.
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
 
-**16.3 Clear Cart**
-**Endpoint:** `DELETE /api/cart`
-**Status:** ✅ Verified
+**Status:** 200 OK
 
-**15.1 Create Review**
-**Endpoint:** `POST /api/reviews`
-**Status:** ✅ Verified
+**8.2 Add Item**
+**Endpoint:** `POST /api/cart/items`
 
-- **Validation:** Can only rate if `delivery_status` is `delivered`.
-- **Integrity:** One review per order (Unique Constraint).
-- **Linkage:** Automagically links Customer -> Order -> Rider.
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{"product_id": 1, "quantity": 1}'
+```
+
+**Status:** 200 OK
+
+---
+
+### 9. Notifications (Verified)
+
+**9.1 List Notifications**
+**Endpoint:** `GET /api/notifications`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/notifications" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**9.2 Mark as Read**
+**Endpoint:** `PATCH /api/notifications/:id/read`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/1/read" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
