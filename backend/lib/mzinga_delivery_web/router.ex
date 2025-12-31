@@ -63,6 +63,8 @@ defmodule MzingaDeliveryWeb.Router do
     patch "/orders/:id/reject", OrderController, :reject
     patch "/orders/:id/ready", OrderController, :mark_ready
     patch "/orders/:id/handover", OrderController, :handover
+    post "/orders/:id/confirm", OrderController, :confirm_delivery
+    patch "/orders/:id/confirm", OrderController, :confirm
 
     # Cart
     get "/cart", CartController, :show

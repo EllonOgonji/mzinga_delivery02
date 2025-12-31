@@ -324,6 +324,61 @@ defmodule MzingaDeliveryWeb.OrderController do
     end
   end
 
+  def confirm_delivery(conn, %{"id" => id}) do
+    case Orders.confirm_delivery(id) do
+      {:ok, order} ->
+        conn |> json(%{status: "confirmed", order_id: order.id})
+
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Order not found"})
+
+      {:error, _reason} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "Failed to confirm"})
+    end
+  end
+
+  @doc """
+  Customer confirms delivery for their order.
+  Accepts optional payload fields: `otp`, `photo_url` (strings).
+  """
+  def confirm(conn, %{"id" => id} = params) do
+    user = Guardian.Plug.current_resource(conn)
+
+    case Orders.get_order(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Order not found"})
+
+      order ->
+        if order.customer_id == user.id do
+          case Orders.confirm_delivery(id, params) do
+            {:ok, updated_order} ->
+              render(conn, "show.json", order: updated_order)
+
+            {:error, :order_not_delivered} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> json(%{error: "Order not marked as delivered yet"})
+
+            {:error, :not_found} ->
+              conn
+              |> put_status(:not_found)
+              |> json(%{error: "Order not found"})
+
+            {:error, reason} ->
+              conn
+              |> put_status(:internal_server_error)
+              |> json(%{error: inspect(reason)})
+          end
+        else
+          conn
+          |> put_status(:forbidden)
+          |> json(%{error: "Not authorized to confirm this delivery"})
+        end
+    end
+  end
+
   # Check if user can view the order
   defp can_view_order?(user, order) do
     user.role == "admin" ||
