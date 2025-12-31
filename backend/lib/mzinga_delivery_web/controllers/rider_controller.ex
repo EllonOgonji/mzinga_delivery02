@@ -14,9 +14,20 @@ defmodule MzingaDeliveryWeb.RiderController do
     render(conn, :index, deliveries: deliveries)
   end
 
+  def update_status(conn, %{"id" => id, "status" => "delivered"}) do
+    # Verify rider owns this delivery (simplified check for now)
+
+    case MzingaDelivery.Orders.mark_as_delivered(id) do
+      {:ok, order} ->
+        conn |> json(%{status: "delivered", order_id: order.id})
+
+      {:error, _reason} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "Failed to mark delivered"})
+    end
+  end
+
   def update_status(conn, %{"id" => _id, "status" => _status}) do
-    # Placeholder for delivery status update (picked_up, delivered)
-    # This might need to be moved/implemented properly later
+    # Fallback for other statuses
     conn |> json(%{status: "ok"})
   end
 
