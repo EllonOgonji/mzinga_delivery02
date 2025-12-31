@@ -371,6 +371,26 @@ curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
 
 ### 15. Rating System (Verified Locally)
 
+### 16. Server-Side Cart (Verified Locally)
+
+**16.1 Add Item**
+**Endpoint:** `POST /api/cart/items`
+**Status:** ✅ Verified
+
+- **Behavior:** Adds item to cart. Creates cart if missing.
+- **One Store Rule:** ✅ Blocked adding item from Store B when cart has item from Store A.
+- **Logic:** Merges quantity if item exists.
+
+**16.2 Get Cart**
+**Endpoint:** `GET /api/cart`
+**Status:** ✅ Verified
+
+- **Result:** Returns cart with items and total price.
+
+**16.3 Clear Cart**
+**Endpoint:** `DELETE /api/cart`
+**Status:** ✅ Verified
+
 **15.1 Create Review**
 **Endpoint:** `POST /api/reviews`
 **Status:** ✅ Verified
