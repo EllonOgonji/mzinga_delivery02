@@ -91,6 +91,51 @@ defmodule MzingaDelivery.Accounts do
   end
 
   @doc """
+  Lists available riders sorted by distance to the given location.
+  """
+  def list_nearby_available_riders(lat, lng) do
+    # Earth's radius in km
+    r = 6371
+
+    # Convert inputs to floats
+    {lat, _} = Float.parse(to_string(lat))
+    {lng, _} = Float.parse(to_string(lng))
+
+    User
+    |> where([u], u.role == "rider" and u.is_available == true)
+    |> where([u], not is_nil(u.last_lat) and not is_nil(u.last_lng))
+    |> select([u], %{
+      u
+      | distance:
+          fragment(
+            "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
+            ^r,
+            ^lat,
+            u.last_lat,
+            u.last_lng,
+            ^lng,
+            ^lat,
+            u.last_lat
+          )
+    })
+    |> order_by(
+      [u],
+      asc:
+        fragment(
+          "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
+          ^r,
+          ^lat,
+          u.last_lat,
+          u.last_lng,
+          ^lng,
+          ^lat,
+          u.last_lat
+        )
+    )
+    |> Repo.all()
+  end
+
+  @doc """
   Updates rider status (availability and location).
   """
   def update_rider_status(%User{} = user, attrs) do

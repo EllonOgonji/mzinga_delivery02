@@ -346,11 +346,26 @@ curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
 
 **10.1 Tracking Channel**
 **Channel:** `tracking:{order_id}`
-**Status:** ✅ Verified
+**Status:** ✅ Verified (Geospatial)
 
-- **Authorization:** Checks if user is the Order Owner or Assigned Rider.
-- **Events:** `update_location` (In) -> `location_update` (Broadcast).
-- **Persistence:** Updates Rider's `last_lat/lng` in DB.
+- **Logic:**
+  - Rejects if no riders available.
+  - **Old:** Picked first available.
+  - **New:** Picks **NEAREST** available rider to the Store.
+- **Notification:** Sends WebSocket event `new_delivery` to specific rider channel.` (Broadcast).
+
+* **Persistence:** Updates Rider's `last_lat/lng` in DB.
+
+---
+
+### 14. Geospatial Search (Verified Locally)
+
+**14.1 Search Stores by Location**
+**Endpoint:** `GET /api/stores?lat=-1.29&lng=36.82&radius=5`
+**Status:** ✅ Verified (Geospatial)
+
+- **Behavior:** Returns stores within `radius` km, sorted by distance.
+- **Result:** Verified that stores > radius are excluded.
 
 ---
 
@@ -363,7 +378,3 @@ curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
 - **Validation:** Can only rate if `delivery_status` is `delivered`.
 - **Integrity:** One review per order (Unique Constraint).
 - **Linkage:** Automagically links Customer -> Order -> Rider.
-
-```
-
-```
