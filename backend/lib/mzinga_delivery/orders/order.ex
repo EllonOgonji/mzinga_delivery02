@@ -34,6 +34,7 @@ defmodule MzingaDelivery.Orders.Order do
     |> validate_inclusion(:delivery_status, [
       "pending",
       "assigned",
+      "ready_for_pickup",
       "picked_up",
       "delivered",
       "cancelled"
@@ -43,11 +44,17 @@ defmodule MzingaDelivery.Orders.Order do
     |> foreign_key_constraint(:rider_id)
   end
 
-  def update_status_changeset(order, attrs) do
+  def status_changeset(order, attrs) do
     order
-    |> cast(attrs, [:payment_status])
+    |> cast(attrs, [:payment_status, :delivery_status])
     |> validate_inclusion(:payment_status, ["pending", "paid", "failed", "refunded"])
-
-    # |> validate_inclusion(:order_status, ["pending", "accepted", "rejected", "awaiting_pickup", "in_transit", "delivered", "cancelled"])
+    |> validate_inclusion(:delivery_status, [
+      "pending",
+      "assigned",
+      "ready_for_pickup",
+      "picked_up",
+      "delivered",
+      "cancelled"
+    ])
   end
 end

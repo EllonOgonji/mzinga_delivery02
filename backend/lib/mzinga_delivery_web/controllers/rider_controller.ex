@@ -14,7 +14,7 @@ defmodule MzingaDeliveryWeb.RiderController do
     render(conn, :index, deliveries: deliveries)
   end
 
-  def update_status(conn, %{"id" => id, "status" => status}) do
+  def update_status(conn, %{"id" => _id, "status" => _status}) do
     # Placeholder for delivery status update (picked_up, delivered)
     # This might need to be moved/implemented properly later
     conn |> json(%{status: "ok"})
