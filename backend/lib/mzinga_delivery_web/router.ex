@@ -82,6 +82,10 @@ defmodule MzingaDeliveryWeb.Router do
       get "/deliveries", RiderController, :index
       patch "/deliveries/:id/status", RiderController, :update_status
       patch "/status", RiderController, :update_availability
+
+      # Request Flow
+      post "/requests/:id/accept", RiderController, :accept_request
+      post "/requests/:id/reject", RiderController, :reject_request
     end
   end
 

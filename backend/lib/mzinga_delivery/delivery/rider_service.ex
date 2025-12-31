@@ -3,55 +3,131 @@ defmodule MzingaDelivery.Delivery.RiderService do
   Service for matching orders to riders and managing assignments.
   """
 
+  import Ecto.Query, warn: false
+  alias MzingaDelivery.Repo
   alias MzingaDelivery.Accounts
   alias MzingaDelivery.Orders
   alias MzingaDelivery.Stores
+  alias MzingaDelivery.Delivery.DeliveryRequest
 
   require Logger
 
+  def get_request(id), do: Repo.get(DeliveryRequest, id)
+
   @doc """
-  Finds an available rider and assigns them to the order.
+  Dispatches an order to the nearest available rider who hasn't rejected it yet.
   """
-  def assign_rider_to_order(%Orders.Order{} = order) do
-    # Get store location
+  def dispatch_order(%Orders.Order{} = order) do
     store = Stores.get_store(order.store_id)
 
-    # Find best rider (sort by distance to store)
-    # Using Accounts.list_nearby_available_riders if implemented, or fetching all and sorting in memory.
-    # For performance at scale, use SQL. For MVP, memory sort is fine (assuming <1000 active riders).
-    # Since we don't have list_nearby_available_riders in Accounts yet, let's add it or do in-memory here.
-    # Let's add list_nearby_riders to Accounts for consistency.
+    # Get IDs of riders who already rejected this order
+    rejected_rider_ids =
+      from(dr in DeliveryRequest,
+        where: dr.order_id == ^order.id and dr.status == "rejected",
+        select: dr.rider_id
+      )
+      |> Repo.all()
 
-    # Actually, to keep it clean, let's call Accounts.list_nearby_available_riders(store.latitude, store.longitude)
-    # We need to implement that in Accounts first.
-    case Accounts.list_nearby_available_riders(store.latitude, store.longitude) do
+    # Find nearest riders, excluding rejected ones
+    available_riders =
+      Accounts.list_nearby_available_riders(store.latitude, store.longitude)
+      |> Enum.reject(fn rider -> rider.id in rejected_rider_ids end)
+
+    case available_riders do
       [] ->
-        Logger.info("No available riders found near store #{store.id}")
+        Logger.info("No available riders found for order #{order.id} (All rejected or busy)")
         {:error, :no_riders_available}
 
       [rider | _others] ->
-        Logger.info("Assigning nearest rider #{rider.id} to order #{order.id}")
+        Logger.info("Dispatching order #{order.id} to rider #{rider.id}")
 
-        # 1. Assign rider to order
-        {:ok, updated_order} = Orders.assign_rider(order, rider.id)
+        # Create Delivery Request
+        %DeliveryRequest{}
+        |> DeliveryRequest.changeset(%{
+          order_id: order.id,
+          rider_id: rider.id,
+          status: "pending"
+        })
+        |> Repo.insert()
+        |> case do
+          {:ok, request} ->
+            # Notify Rider
+            MzingaDeliveryWeb.Endpoint.broadcast(
+              "rider:#{rider.id}",
+              "new_delivery_request",
+              %{
+                request_id: request.id,
+                order_id: order.id,
+                store_name: store.name,
+                store_address: store.address,
+                # In real app, name
+                customer_name: order.customer_id
+              }
+            )
 
-        # 2. Mark rider as busy (unavailable)
-        {:ok, _updated_rider} = Accounts.update_rider_status(rider, %{is_available: false})
+            {:ok, request}
 
-        # 3. Notify Rider via WebSocket (Topic: "rider:{id}")
-        MzingaDeliveryWeb.Endpoint.broadcast(
-          "rider:#{rider.id}",
-          "new_delivery",
-          %{
-            order_id: order.id,
-            store_name: store.name,
-            store_address: store.address,
-            # In real app, name
-            customer_name: order.customer_id
-          }
-        )
-
-        {:ok, updated_order}
+          {:error, cs} ->
+            {:error, cs}
+        end
     end
+  end
+
+  def accept_request(request_id) do
+    request = Repo.get(DeliveryRequest, request_id)
+
+    if request && request.status == "pending" do
+      Repo.transaction(fn ->
+        # 1. Update Request
+        request
+        |> DeliveryRequest.changeset(%{status: "accepted"})
+        |> Repo.update!()
+
+        # 2. Assign Rider to Order
+        order = Orders.get_order!(request.order_id)
+        {:ok, updated_order} = Orders.assign_rider(order, request.rider_id)
+
+        # 3. Mark Rider Busy
+        rider = Accounts.get_user(request.rider_id)
+        Accounts.update_rider_status(rider, %{is_available: false})
+
+        updated_order
+      end)
+    else
+      {:error, :invalid_request}
+    end
+  end
+
+  def reject_request(request_id) do
+    request = Repo.get(DeliveryRequest, request_id)
+
+    if request && request.status == "pending" do
+      result =
+        Repo.transaction(fn ->
+          # 1. Mark Rejected
+          request
+          |> DeliveryRequest.changeset(%{status: "rejected"})
+          |> Repo.update!()
+
+          # 2. Dispatch to NEXT rider
+          order = Orders.get_order!(request.order_id)
+          dispatch_order(order)
+        end)
+
+      case result do
+        {:ok, _} -> {:ok, :rejected_and_dispatched}
+        {:error, reason} -> {:error, reason}
+      end
+    else
+      {:error, :invalid_request}
+    end
+  end
+
+  @doc """
+  Finds an available rider and assigns them to the order.
+  NOW: Uses dispatch_order to create a pending request.
+  """
+  def assign_rider_to_order(order) do
+    dispatch_order(order)
   end
 end
