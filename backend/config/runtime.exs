@@ -21,11 +21,13 @@ if File.exists?(".env") do
     end
   end)
 end
+
 #
 # Configure CORS origins at runtime. Set `CORS_ALLOWED_ORIGINS` as a comma
 # separated list (example: "http://localhost:8080,https://mzinga-delivery.vercel.app").
 # If the env var is set, it will override the default origins in config/config.exs.
 cors_allowed = System.get_env("CORS_ALLOWED_ORIGINS")
+
 if cors_allowed && cors_allowed != "" do
   origins = cors_allowed |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
   config :cors_plug, origin: origins, credentials: true
@@ -63,6 +65,7 @@ if config_env() == :prod do
     # ssl: true,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    prepare: :unnamed,
     socket_options: maybe_ipv6
 
   # The secret key base is used to sign/encrypt cookies and other secrets.

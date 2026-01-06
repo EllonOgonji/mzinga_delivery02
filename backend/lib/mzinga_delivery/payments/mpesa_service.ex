@@ -36,7 +36,7 @@ defmodule MzingaDelivery.Payments.MpesaService do
           "Password" => password,
           "Timestamp" => timestamp,
           "TransactionType" => "CustomerPayBillOnline",
-          "Amount" => round(amount),
+          "Amount" => to_int(amount),
           "PartyA" => formatted_phone,
           "PartyB" => shortcode(),
           "PhoneNumber" => formatted_phone,
@@ -199,6 +199,16 @@ defmodule MzingaDelivery.Payments.MpesaService do
     |> case do
       nil -> nil
       item -> item["Value"]
+    end
+  end
+
+  defp to_int(amount) do
+    cond do
+      is_struct(amount, Decimal) -> Decimal.round(amount) |> Decimal.to_integer()
+      is_float(amount) -> round(amount)
+      is_integer(amount) -> amount
+      is_binary(amount) -> round(String.to_float(amount))
+      true -> 0
     end
   end
 end
