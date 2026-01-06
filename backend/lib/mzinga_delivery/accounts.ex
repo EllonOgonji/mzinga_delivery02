@@ -12,7 +12,7 @@ defmodule MzingaDelivery.Accounts do
   """
   def list_users do
     Repo.all(User)
-    end
+  end
 
   @doc """
   gets single user
@@ -28,14 +28,14 @@ defmodule MzingaDelivery.Accounts do
     Repo.get_by(User, email: email)
   end
 
-      @doc """
-      Creates a user.
-      """
-      def create_user(attrs \\ %{}) do
-        %User{}
-        |> User.changeset(attrs)
-        |> Repo.insert()
-      end
+  @doc """
+  Creates a user.
+  """
+  def create_user(attrs \\ %{}) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
+  end
 
   @doc """
   Updates a user.
@@ -46,14 +46,12 @@ defmodule MzingaDelivery.Accounts do
     |> Repo.update()
   end
 
-
   @doc """
   delete user
   """
   def delete_user(%User{} = user) do
     Repo.delete(user)
   end
-
 
   @doc """
   authenticate user by email and password
@@ -74,7 +72,6 @@ defmodule MzingaDelivery.Accounts do
     end
   end
 
-
   @doc """
   return list of users by role
   """
@@ -82,5 +79,77 @@ defmodule MzingaDelivery.Accounts do
     User
     |> where([u], u.role == ^role)
     |> Repo.all()
+  end
+
+  @doc """
+  Lists available riders.
+  """
+  def list_available_riders do
+    User
+    |> where([u], u.role == "rider" and u.is_available == true)
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists available riders sorted by distance to the given location.
+  """
+  def list_nearby_available_riders(lat, lng) do
+    # Earth's radius in km
+    r = 6371
+
+    # Convert inputs to floats
+    {lat, _} = Float.parse(to_string(lat))
+    {lng, _} = Float.parse(to_string(lng))
+
+    User
+    |> where([u], u.role == "rider" and u.is_available == true)
+    |> where([u], not is_nil(u.last_lat) and not is_nil(u.last_lng))
+    |> select([u], %{
+      u
+      | distance:
+          fragment(
+            "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
+            ^r,
+            ^lat,
+            u.last_lat,
+            u.last_lng,
+            ^lng,
+            ^lat,
+            u.last_lat
+          )
+    })
+    |> order_by(
+      [u],
+      asc:
+        fragment(
+          "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
+          ^r,
+          ^lat,
+          u.last_lat,
+          u.last_lng,
+          ^lng,
+          ^lat,
+          u.last_lat
+        )
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Updates rider status (availability and location).
+  """
+  def update_rider_status(%User{} = user, attrs) do
+    user
+    |> User.update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates specifically the rider's location.
+  """
+  def update_rider_location(%User{} = user, lat, lng) do
+    user
+    |> User.update_changeset(%{last_lat: lat, last_lng: lng})
+    |> Repo.update()
   end
 end
