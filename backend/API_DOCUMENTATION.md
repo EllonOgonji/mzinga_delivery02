@@ -7,6 +7,7 @@
 ---
 
 ## Table of Contents
+
 1. [Authentication](#authentication)
 2. [Stores](#stores)
 3. [Products](#products)
@@ -20,11 +21,13 @@
 ## Authentication
 
 ### Register User
+
 **Endpoint**: `POST /api/auth/register`  
 **Authentication**: None (Public)  
 **Status Code**: `201 Created`
 
 **Request Body**:
+
 ```json
 {
   "user": {
@@ -49,6 +52,7 @@
 | `phone_number` | string | Yes | string | Kenyan format: 254... |
 
 **Success Response (201)**:
+
 ```json
 {
   "data": {
@@ -65,6 +69,7 @@
 ```
 
 **Error Response (422)**:
+
 ```json
 {
   "errors": {
@@ -75,6 +80,7 @@
 ```
 
 **cURL**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
@@ -93,11 +99,13 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
 ---
 
 ### Login User
+
 **Endpoint**: `POST /api/auth/login`  
 **Authentication**: None (Public)  
 **Status Code**: `200 OK`
 
 **Request Body**:
+
 ```json
 {
   "email": "user@example.com",
@@ -106,6 +114,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
 ```
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -122,6 +131,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
 ```
 
 **Error Response (401)**:
+
 ```json
 {
   "errors": {
@@ -131,6 +141,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
 ```
 
 **cURL**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
@@ -143,11 +154,13 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/login \
 ---
 
 ### Get Current User
+
 **Endpoint**: `GET /api/auth/me`  
 **Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -161,6 +174,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/login \
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/auth/me \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -169,11 +183,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/auth/me \
 ---
 
 ### Logout
+
 **Endpoint**: `POST /api/auth/logout`  
 **Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "message": "Logged out successfully"
@@ -181,6 +197,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/auth/me \
 ```
 
 **cURL**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/logout \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -191,11 +208,13 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/logout \
 ## Stores
 
 ### List All Stores (Public)
+
 **Endpoint**: `GET /api/stores`  
 **Authentication**: None  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": [
@@ -213,6 +232,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/logout \
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores
 ```
@@ -220,11 +240,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores
 ---
 
 ### Get Store Details (Public)
+
 **Endpoint**: `GET /api/stores/:id`  
 **Authentication**: None  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -240,6 +262,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/1
 ```
@@ -247,11 +270,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/1
 ---
 
 ### Create Store (Vendor/Admin)
+
 **Endpoint**: `POST /api/stores`  
 **Authentication**: Required  
 **Status Code**: `201 Created`
 
 **Request Body**:
+
 ```json
 {
   "store": {
@@ -264,6 +289,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/1
 ```
 
 **Success Response (201)**:
+
 ```json
 {
   "data": {
@@ -279,6 +305,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/1
 ```
 
 **cURL**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/stores \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -296,11 +323,13 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/stores \
 ---
 
 ### Update Store (Vendor/Admin)
+
 **Endpoint**: `PATCH /api/stores/:id`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Request Body**:
+
 ```json
 {
   "store": {
@@ -312,6 +341,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/stores \
 ```
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -327,6 +357,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/stores \
 ```
 
 **cURL**:
+
 ```bash
 curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/stores/5 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -342,13 +373,15 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/stores/5 \
 ---
 
 ### Delete Store (Admin Only)
+
 **Endpoint**: `DELETE /api/stores/:id`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `204 No Content`
 
 **Success Response (204)**: Empty body
 
 **cURL**:
+
 ```bash
 curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/stores/5 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -359,11 +392,13 @@ curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/stores/5 \
 ## Products
 
 ### List Products by Store (Public)
+
 **Endpoint**: `GET /api/stores/:store_id/products`  
 **Authentication**: None  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": [
@@ -371,7 +406,7 @@ curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/stores/5 \
       "id": 1,
       "name": "Fresh Tomatoes",
       "description": "Ripe tomatoes from farm",
-      "price": 150.00,
+      "price": 150.0,
       "quantity_available": 50,
       "store_id": 5,
       "image_url": "https://..."
@@ -381,6 +416,7 @@ curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/stores/5 \
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/5/products
 ```
@@ -388,18 +424,20 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/5/products
 ---
 
 ### Get Product Details (Public)
+
 **Endpoint**: `GET /api/products/:id`  
 **Authentication**: None  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
     "id": 1,
     "name": "Fresh Tomatoes",
     "description": "Ripe tomatoes from farm",
-    "price": 150.00,
+    "price": 150.0,
     "quantity_available": 50,
     "store_id": 5,
     "image_url": "https://..."
@@ -408,6 +446,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores/5/products
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/1
 ```
@@ -415,17 +454,19 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/1
 ---
 
 ### Create Product (Vendor)
+
 **Endpoint**: `POST /api/products`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `201 Created`
 
 **Request Body**:
+
 ```json
 {
   "product": {
     "name": "Fresh Tomatoes",
     "description": "Ripe tomatoes from farm",
-    "price": 150.00,
+    "price": 150.0,
     "quantity_available": 50,
     "store_id": 5,
     "image_url": "https://example.com/tomatoes.jpg"
@@ -434,13 +475,14 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/1
 ```
 
 **Success Response (201)**:
+
 ```json
 {
   "data": {
     "id": 10,
     "name": "Fresh Tomatoes",
     "description": "Ripe tomatoes from farm",
-    "price": 150.00,
+    "price": 150.0,
     "quantity_available": 50,
     "store_id": 5,
     "image_url": "https://example.com/tomatoes.jpg"
@@ -449,6 +491,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/1
 ```
 
 **cURL**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/products \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -467,15 +510,17 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/products \
 ---
 
 ### Update Product (Vendor)
+
 **Endpoint**: `PATCH /api/products/:id`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Request Body**:
+
 ```json
 {
   "product": {
-    "price": 200.00,
+    "price": 200.0,
     "quantity_available": 75,
     "description": "Premium ripe tomatoes"
   }
@@ -483,13 +528,14 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/products \
 ```
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
     "id": 10,
     "name": "Fresh Tomatoes",
     "description": "Premium ripe tomatoes",
-    "price": 200.00,
+    "price": 200.0,
     "quantity_available": 75,
     "store_id": 5
   }
@@ -497,6 +543,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/products \
 ```
 
 **cURL**:
+
 ```bash
 curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/products/10 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -512,11 +559,13 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/products/10 \
 ---
 
 ### Delete Product (Vendor)
+
 **Endpoint**: `DELETE /api/products/:id`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `204 No Content`
 
 **cURL**:
+
 ```bash
 curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/products/10 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -527,11 +576,13 @@ curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/products/10 \
 ## Orders
 
 ### List Orders (Role-Based)
+
 **Endpoint**: `GET /api/orders`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": [
@@ -540,12 +591,12 @@ curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/products/10 \
       "customer_id": 3,
       "store_id": 5,
       "status": "pending",
-      "total_price": 1500.00,
+      "total_price": 1500.0,
       "items": [
         {
           "product_id": 1,
           "quantity": 2,
-          "subtotal": 500.00
+          "subtotal": 500.0
         }
       ]
     }
@@ -554,6 +605,7 @@ curl -X DELETE https://mzinga-delivery02-t6rg.onrender.com/api/products/10 \
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -562,11 +614,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders \
 ---
 
 ### Get Order Details
+
 **Endpoint**: `GET /api/orders/:id`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -574,14 +628,14 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders \
     "customer_id": 3,
     "store_id": 5,
     "status": "pending",
-    "total_price": 1500.00,
+    "total_price": 1500.0,
     "items": [
       {
         "product_id": 1,
         "product_name": "Fresh Tomatoes",
         "quantity": 2,
-        "price": 150.00,
-        "subtotal": 300.00
+        "price": 150.0,
+        "subtotal": 300.0
       }
     ]
   }
@@ -589,6 +643,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders \
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders/1 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -597,11 +652,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders/1 \
 ---
 
 ### Create Order
+
 **Endpoint**: `POST /api/orders`  
 **Authentication**: Required  
 **Status Code**: `201 Created`
 
 **Request Body**:
+
 ```json
 {
   "order": {
@@ -610,12 +667,12 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders/1 \
       {
         "product_id": 1,
         "quantity": 2,
-        "subtotal": 300.00
+        "subtotal": 300.0
       },
       {
         "product_id": 2,
         "quantity": 1,
-        "subtotal": 200.00
+        "subtotal": 200.0
       }
     ]
   }
@@ -623,6 +680,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders/1 \
 ```
 
 **Success Response (201)**:
+
 ```json
 {
   "data": {
@@ -630,17 +688,17 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders/1 \
     "customer_id": 3,
     "store_id": 5,
     "status": "pending_payment",
-    "total_price": 500.00,
+    "total_price": 500.0,
     "items": [
       {
         "product_id": 1,
         "quantity": 2,
-        "subtotal": 300.00
+        "subtotal": 300.0
       },
       {
         "product_id": 2,
         "quantity": 1,
-        "subtotal": 200.00
+        "subtotal": 200.0
       }
     ]
   }
@@ -648,6 +706,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/orders/1 \
 ```
 
 **cURL**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/orders \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -674,11 +733,13 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/orders \
 ---
 
 ### Accept Order (Vendor Only)
+
 **Endpoint**: `PATCH /api/orders/:id/accept`  
 **Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -690,6 +751,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/orders \
 ```
 
 **cURL**:
+
 ```bash
 curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/orders/10/accept \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -698,11 +760,13 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/orders/10/accept \
 ---
 
 ### Reject Order (Vendor Only)
+
 **Endpoint**: `PATCH /api/orders/:id/reject`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -714,6 +778,7 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/orders/10/accept \
 ```
 
 **cURL**:
+
 ```bash
 curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/orders/10/reject \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -724,11 +789,13 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/orders/10/reject \
 ## Notifications
 
 ### List Notifications
+
 **Endpoint**: `GET /api/notifications`  
 **Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": [
@@ -744,6 +811,7 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/orders/10/reject \
 ```
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/notifications \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -752,11 +820,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/notifications \
 ---
 
 ### Get Unread Count
+
 **Endpoint**: `GET /api/notifications/unread`  
 **Authentication**: Required  
 **Status Code**: `200 OK`
 
 **Success Response (200)**:
+
 ```json
 {
   "data": {
@@ -768,11 +838,13 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/notifications \
 ---
 
 ### Mark as Read
+
 **Endpoint**: `PATCH /api/notifications/:id/read`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 **cURL**:
+
 ```bash
 curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/notifications/1/read \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -781,8 +853,9 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/notifications/1/re
 ---
 
 ### Mark All as Read
+
 **Endpoint**: `PATCH /api/notifications/read_all`  
-**Authentication**: Required   
+**Authentication**: Required  
 **Status Code**: `200 OK`
 
 ---
@@ -790,11 +863,13 @@ curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/notifications/1/re
 ## Filters & Search
 
 ### Filter Products
+
 **Endpoint**: `GET /api/products/filter`  
 **Authentication**: None  
 **Query Parameters**: `search`, `min_price`, `max_price`, `page`, `limit`
 
 **cURL**:
+
 ```bash
 curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter?search=tomatoes&min_price=100&max_price=200"
 ```
@@ -802,11 +877,13 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter?sea
 ---
 
 ### Filter Stores
+
 **Endpoint**: `GET /api/stores/filter`  
 **Authentication**: None  
 **Query Parameters**: `search`, `min_rating`, `location`, `page`, `limit`
 
 **cURL**:
+
 ```bash
 curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/filter?search=mart&min_rating=4"
 ```
@@ -814,10 +891,12 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/filter?searc
 ---
 
 ### Filter Options
+
 **Endpoint**: `GET /api/products/filter/options`  
 **Authentication**: None
 
 **cURL**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/options
 ```
@@ -827,6 +906,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "errors": {
@@ -836,6 +916,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "errors": {
@@ -845,6 +926,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "error": "Admin access required"
@@ -852,6 +934,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "error": "Resource not found"
@@ -859,6 +942,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ```
 
 ### 422 Unprocessable Entity
+
 ```json
 {
   "errors": {
@@ -868,6 +952,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "errors": {
@@ -881,6 +966,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ## Important Notes
 
 **Request Body Format**: All POST/PATCH requests require wrapped payload format:
+
 - `{"user": {...}}` for auth
 - `{"store": {...}}` for stores
 - `{"product": {...}}` for products
@@ -889,10 +975,12 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 **Authentication**: All protected endpoints require `Authorization: Bearer {token}` header
 
 **CORS**: Allowed origins:
+
 - `http://localhost:8080` (development)
 - `https://mzinga-delivery.vercel.app` (production)
 
- **Roles**: 
+  **Roles**:
+
 - `customer`: Can register, place orders, view stores/products
 - `vendor`: Can manage stores and products
 - `admin`: Full access to all endpoints
@@ -902,6 +990,7 @@ curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opti
 ## Quick Test Commands
 
 **Register**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
@@ -909,6 +998,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/register \
 ```
 
 **Login**:
+
 ```bash
 curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
@@ -916,7 +1006,7 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/auth/login \
 ```
 
 **List Stores**:
+
 ```bash
 curl -X GET https://mzinga-delivery02-t6rg.onrender.com/api/stores
 ```
-

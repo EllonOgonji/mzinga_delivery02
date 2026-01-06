@@ -7,6 +7,7 @@ defmodule MzingaDelivery.Stores.Store do
     field :address, :string
     field :latitude, :decimal
     field :longitude, :decimal
+    field :distance, :float, virtual: true
     field :status, :string, default: "Open"
     field :logo, :string
     field :banner, :string
