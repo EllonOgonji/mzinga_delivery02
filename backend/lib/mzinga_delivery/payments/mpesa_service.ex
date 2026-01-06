@@ -36,7 +36,7 @@ defmodule MzingaDelivery.Payments.MpesaService do
           "Password" => password,
           "Timestamp" => timestamp,
           "TransactionType" => "CustomerPayBillOnline",
-          "Amount" => round(amount),
+          "Amount" => to_int(amount),
           "PartyA" => formatted_phone,
           "PartyB" => shortcode(),
           "PhoneNumber" => formatted_phone,
@@ -51,7 +51,7 @@ defmodule MzingaDelivery.Payments.MpesaService do
 
         headers = [
           {"Content-Type", "application/json"},
-          {"Authorization", "Bearer #{get_access_token()}"}
+          {"Authorization", "Bearer #{get_access_token() || ""}"}
         ]
 
         case HTTPoison.post(
@@ -62,13 +62,23 @@ defmodule MzingaDelivery.Payments.MpesaService do
                recv_timeout: 30_000
              ) do
           {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-            response = Jason.decode!(body)
-            Logger.info("STK Push Response: #{inspect(response)}")
-            {:ok, response}
+            case Jason.decode(body) do
+              {:ok, response} ->
+                Logger.info("STK Push Response: #{inspect(response)}")
+                {:ok, response}
+
+              {:error, _} ->
+                Logger.error("STK Push Response Decoding Failed. Body: #{body}")
+                {:error, %{error: "Invalid JSON response from M-Pesa"}}
+            end
 
           {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
             Logger.error("STK Push Failed - Status: #{status_code}, Body: #{body}")
-            {:error, Jason.decode!(body)}
+
+            case Jason.decode(body) do
+              {:ok, decoded} -> {:error, decoded}
+              {:error, _} -> {:error, %{status: status_code, body: body}}
+            end
 
           {:error, %HTTPoison.Error{reason: reason}} ->
             Logger.error("STK Push HTTP Error: #{inspect(reason)}")
@@ -127,7 +137,6 @@ defmodule MzingaDelivery.Payments.MpesaService do
     end
   end
 
-
   defp get_access_token do
     auth = Base.encode64("#{consumer_key()}:#{consumer_secret()}")
     headers = [{"Authorization", "Basic #{auth}"}]
@@ -139,7 +148,14 @@ defmodule MzingaDelivery.Payments.MpesaService do
            recv_timeout: 30_000
          ) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        body |> Jason.decode!() |> Map.get("access_token")
+        case Jason.decode(body) do
+          {:ok, decoded} ->
+            Map.get(decoded, "access_token")
+
+          {:error, _} ->
+            Logger.error("Access Token Decoding Failed. Body: #{body}")
+            nil
+        end
 
       {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
         Logger.error("Failed to get access token - Status: #{status_code}, Body: #{body}")
@@ -183,6 +199,16 @@ defmodule MzingaDelivery.Payments.MpesaService do
     |> case do
       nil -> nil
       item -> item["Value"]
+    end
+  end
+
+  defp to_int(amount) do
+    cond do
+      is_struct(amount, Decimal) -> Decimal.round(amount) |> Decimal.to_integer()
+      is_float(amount) -> round(amount)
+      is_integer(amount) -> amount
+      is_binary(amount) -> round(String.to_float(amount))
+      true -> 0
     end
   end
 end

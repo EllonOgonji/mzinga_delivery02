@@ -3,8 +3,9 @@ defmodule MzingaDeliveryWeb.UserSocket do
 
   require Logger
 
-  # Channel routes
   channel "notifications:*", MzingaDeliveryWeb.NotificationChannel
+  channel "rider:*", MzingaDeliveryWeb.RiderChannel
+  channel "tracking:*", MzingaDeliveryWeb.TrackingChannel
 
   @doc """
   Connect to socket with JWT authentication.

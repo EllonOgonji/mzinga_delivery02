@@ -7,6 +7,7 @@ defmodule MzingaDelivery.Orders do
   alias MzingaDelivery.Repo
   alias MzingaDelivery.Orders.{Order, OrderItem}
   alias MzingaDelivery.Stores
+  alias MzingaDelivery.Accounts
 
   @doc """
   Returns the list of orders.
@@ -131,7 +132,7 @@ defmodule MzingaDelivery.Orders do
   """
   def update_order_status(%Order{} = order, status) do
     order
-    |> Order.update_status_changeset(%{order_status: status})
+    |> Order.status_changeset(%{order_status: status})
     |> Repo.update()
   end
 
@@ -140,7 +141,7 @@ defmodule MzingaDelivery.Orders do
   """
   def update_payment_status(%Order{} = order, status) do
     order
-    |> Order.update_status_changeset(%{payment_status: status})
+    |> Order.status_changeset(%{payment_status: status})
     |> Repo.update()
   end
 
@@ -199,5 +200,129 @@ defmodule MzingaDelivery.Orders do
   """
   def delete_order(%Order{} = order) do
     Repo.delete(order)
+  end
+
+  @doc """
+  Assigns a rider to an order.
+  """
+  def assign_rider(%Order{} = order, rider_id) do
+    order
+    |> Order.changeset(%{rider_id: rider_id, delivery_status: "assigned"})
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates delivery status.
+  """
+  def update_delivery_status(%Order{} = order, status) do
+    order
+    |> Order.changeset(%{delivery_status: status})
+    |> Repo.update()
+  end
+
+  @doc """
+  List deliveries for a rider.
+  """
+  def list_rider_deliveries(rider_id) do
+    Order
+    |> where([o], o.rider_id == ^rider_id)
+    |> preload([:customer, :store, :order_items])
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+  end
+
+  def mark_as_ready(order_id) do
+    order = get_order!(order_id)
+
+    Repo.transaction(fn ->
+      updated_order =
+        order
+        |> Order.status_changeset(%{delivery_status: "ready_for_pickup"})
+        |> Repo.update!()
+
+      # Notify Tracking Channel
+      MzingaDeliveryWeb.Endpoint.broadcast(
+        "tracking:#{order.id}",
+        "order_update",
+        %{status: "ready_for_pickup", message: "Order is ready for pickup!"}
+      )
+
+      updated_order
+    end)
+  end
+
+  def mark_as_picked_up(order_id) do
+    order = get_order!(order_id)
+
+    Repo.transaction(fn ->
+      updated_order =
+        order
+        |> Order.status_changeset(%{delivery_status: "picked_up"})
+        |> Repo.update!()
+
+      # Notify Tracking Channel
+      MzingaDeliveryWeb.Endpoint.broadcast(
+        "tracking:#{order.id}",
+        "order_update",
+        %{status: "picked_up", message: "Rider has picked up your order!"}
+      )
+
+      updated_order
+    end)
+  end
+
+  @doc """
+  Rider marks order as delivered.
+  """
+  def mark_as_delivered(order_id) do
+    order = get_order!(order_id)
+
+    Repo.transaction(fn ->
+      updated_order =
+        order
+        |> Order.status_changeset(%{
+          delivery_status: "delivered",
+          delivered_at: DateTime.utc_now()
+        })
+        |> Repo.update!()
+
+      # Mark rider as available
+      if updated_order.rider_id do
+        rider = Accounts.get_user(updated_order.rider_id)
+        Accounts.update_rider_status(rider, %{is_available: true})
+      end
+
+      # Notify Customer
+      MzingaDeliveryWeb.Endpoint.broadcast(
+        "tracking:#{order.id}",
+        "order_update",
+        %{status: "delivered", message: "Order Delivered! Enjoy your meal."}
+      )
+
+      updated_order
+    end)
+  end
+
+  @doc """
+  Customer confirms delivery.
+  This is a secondary confirmation layer.
+  """
+  def confirm_delivery(order_id, _attrs \\ %{}) do
+    order = get_order(order_id)
+
+    cond do
+      order == nil ->
+        {:error, :not_found}
+
+      true ->
+        # We don't change status (it's already delivered), just notify
+        MzingaDeliveryWeb.Endpoint.broadcast(
+          "notifications:store_#{order.store_id}",
+          "delivery_confirmed",
+          %{order_id: order.id, message: "Customer confirmed delivery"}
+        )
+
+        {:ok, order}
+    end
   end
 end
