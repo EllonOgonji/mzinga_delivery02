@@ -60,7 +60,7 @@ export interface Shop {
   banner: string;
   latitude: number;
   longitude: number;
-  status: 'open' | 'suspended' | 'closed';
+  status: 'open' | 'suspended' | 'closed' | 'approved';
   createdAt: string;
   updatedAt?: string;
   // 
@@ -69,27 +69,30 @@ export interface Shop {
 
 export interface Product {
   id: number;
-  shopId: number;
+  store_id: number;
   name: string;
   category: string;
   description: string;
   price: number;
   compareAtPrice?: number;
   images: string[];
+  image_url: string;
   stock: number;
-  rating: number[];
+  ratings: number[];
   specifications: Record<string, string>;
   status: 'active' | 'inactive';
   createdAt: string;
   updatedAt?: string;
+  average_rating: number;
   // New
   searchTags?: string[];
   featured?: boolean;
 }
 
-export interface CartItem {
-  productId: number;
-  shopId: number;
+export interface CartItem extends Partial<Product> {
+  id: number;
+  store_id: number;
+  shopId?: number; // Added shop_id to CartItem
   quantity: number;
   price: number;
 }

@@ -9,23 +9,65 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { mockShops, mockProducts } from '@/data/mockData';
+import { getAllShops } from '@/data/shopData';
+import { useQuery } from "@tanstack/react-query";
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
+import { useMemo } from 'react';
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, clearCart, cartTotal, cartCount } = useCart();
 
   // Group cart items by shop
   const cartByShop = cart.reduce((acc, item) => {
-    if (!acc[item.shopId]) {
-      acc[item.shopId] = [];
+    if (!acc[item.store_id]) {
+      acc[item.store_id] = [];
     }
-    acc[item.shopId].push(item);
+    acc[item.store_id].push(item);
     return acc;
   }, {} as Record<number, typeof cart>);
 
+  console.log('cartByShop', cartByShop);
+
   const shopIds = Object.keys(cartByShop).map(Number);
-  const deliveryFeePerShop = 3; // Simplified
-  const totalDeliveryFees = shopIds.length * deliveryFeePerShop;
+
+  const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
+    queryKey: ['shops', 'cart', shopIds],
+    queryFn: async () => await getAllShops({ idMultiple: shopIds }),
+    enabled: shopIds.length > 0
+  });
+
+  const shopsData = useMemo(() => {
+    return shopIds.map(shopId => {
+      const shop = allShops.find(s => s.id === shopId);
+      const shopItems = cartByShop[shopId];
+      const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      
+      const deliveryFee = shop 
+        ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude })
+        : 0;
+      
+      const distance = shop
+        ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
+        : 0;
+      
+      const shopTotal = shopSubtotal + deliveryFee;
+
+      return {
+        shopId,
+        shop,
+        items: shopItems,
+        subtotal: shopSubtotal,
+        deliveryFee,
+        distance,
+        total: shopTotal
+      };
+    });
+  }, [allShops, cartByShop, shopIds]);
+  const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
   const orderTotal = cartTotal + totalDeliveryFees;
+
+  // List of shop ids in the cart
+  // for each id: fetch the shop details, calculate delivery fee, calculate the cumulative totals
 
   if (cartCount === 0) {
     return (
@@ -70,15 +112,16 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content - Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {shopIds.map(shopId => {
-                const shop = mockShops.find(s => s.id === shopId);
-                const shopItems = cartByShop[shopId];
-                const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                const shopTotal = shopSubtotal + deliveryFeePerShop;
+              {shopsData.map(({ shopId, shop, items, subtotal, deliveryFee, distance, total }) => {
+                if (!shop) return null;
 
+                const shopItems = items;
+                const shopSubtotal = subtotal;
+                const deliveryFeePerShop = deliveryFee;
+                const shopTotal = total;
                 return (
                   <Card key={shopId} className="p-6">
-                    {/* Shop Header */}
+                    
                     <div className="flex items-center justify-between mb-4 pb-4 border-b">
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
@@ -104,24 +147,24 @@ export default function Cart() {
                       </Button>
                     </div>
 
-                    {/* Products */}
+                    
                     <div className="space-y-4">
                       {shopItems.map(item => {
-                        const product = mockProducts.find(p => p.id === item.productId);
+                        const product = item
                         if (!product) return null;
 
                         return (
-                          <div key={item.productId} className="flex gap-4">
-                            {/* Product Image */}
+                          <div key={item.id} className="flex gap-4">
+                            
                             <Link to={`/product/${product.id}`} className="flex-shrink-0">
                               <img
-                                src={product.images[0]}
+                                src={product.image_url}
                                 alt={product.name}
                                 className="h-20 w-20 object-cover rounded-md"
                               />
                             </Link>
 
-                            {/* Product Details */}
+                            
                             <div className="flex-1 min-w-0">
                               <Link
                                 to={`/product/${product.id}`}
@@ -130,14 +173,14 @@ export default function Cart() {
                                 {product.name}
                               </Link>
                               <p className="text-sm text-muted-foreground">{shop?.name}</p>
-                              <p className="text-sm font-medium mt-1">${product.price.toFixed(2)}</p>
+                              <p className="text-sm font-medium mt-1">KES. {Number(product.price).toFixed(2)}</p>
                               {product.preparationTime && (
                                 <p className="text-xs text-muted-foreground">
                                   Prep: ~{product.preparationTime} mins
                                 </p>
                               )}
 
-                              {/* Quantity Selector */}
+                              
                               <div className="flex items-center gap-2 mt-2">
                                 <Button
                                   variant="outline"
@@ -163,10 +206,10 @@ export default function Cart() {
                               </div>
                             </div>
 
-                            {/* Subtotal & Actions */}
+                            
                             <div className="flex flex-col items-end gap-2">
                               <p className="font-bold text-lg">
-                                ${(product.price * item.quantity).toFixed(2)}
+                                KES. {(product.price * item.quantity).toFixed(2)}
                               </p>
                               <div className="flex gap-1">
                                 <Button
@@ -174,7 +217,7 @@ export default function Cart() {
                                   size="icon"
                                   className="h-8 w-8"
                                   onClick={() => {
-                                    // TODO: Move to wishlist
+                                    
                                     removeFromCart(item.productId);
                                   }}
                                 >
@@ -195,20 +238,20 @@ export default function Cart() {
                       })}
                     </div>
 
-                    {/* Shop Footer */}
+                    
                     <Separator className="my-4" />
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Shop subtotal:</span>
-                        <span className="font-medium">${shopSubtotal.toFixed(2)}</span>
+                        <span className="font-medium">KES. {shopSubtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-muted-foreground">
-                        <span>Delivery fee (2.5 km away):</span>
-                        <span>${deliveryFeePerShop.toFixed(2)}</span>
+                        <span>Delivery fee ({distance.toFixed(1)} km away):</span>
+                        <span>KES. {deliveryFeePerShop.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between font-bold text-base pt-2">
                         <span>Shop total:</span>
-                        <span>${shopTotal.toFixed(2)}</span>
+                        <span>KES. {shopTotal.toFixed(2)}</span>
                       </div>
                     </div>
                   </Card>
@@ -238,18 +281,18 @@ export default function Cart() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span>Items subtotal:</span>
-                    <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                    <span className="font-medium">KES. {cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Total Delivery Fees:</span>
-                    <span>${totalDeliveryFees.toFixed(2)}</span>
+                    <span>KES. {totalDeliveryFees.toFixed(2)}</span>
                   </div>
                   
                   <Separator />
                   
                   <div className="flex justify-between text-lg font-bold text-accent">
                     <span>Order Total:</span>
-                    <span>${orderTotal.toFixed(2)}</span>
+                    <span>KES. {orderTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -260,12 +303,6 @@ export default function Cart() {
                 <div className="mt-6 pt-6 border-t space-y-2 text-xs text-muted-foreground">
                   <p className="flex items-center gap-2">
                     ✓ Secure checkout
-                  </p>
-                  <p className="flex items-center gap-2">
-                    ✓ Money-back guarantee
-                  </p>
-                  <p className="flex items-center gap-2">
-                    ✓ Multiple payment methods
                   </p>
                 </div>
               </Card>
