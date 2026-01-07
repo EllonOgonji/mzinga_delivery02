@@ -404,3 +404,292 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/1/r
 ```
 
 **Status:** 200 OK
+
+---
+
+## Additional Documentation
+
+### 10. Order Structure Explained
+
+**Conceptual Overview:**
+
+```
+Order (belongs to ONE Store)
+├── store_id: 5
+├── customer_id: 3
+├── total_price: 750.00
+└── OrderItems (multiple products)
+    ├── OrderItem: product_id: 1, quantity: 2, subtotal: 500.00
+    └── OrderItem: product_id: 2, quantity: 1, subtotal: 250.00
+```
+
+- **Store** is the anchor: Each order belongs to exactly ONE store.
+- **Products** become **OrderItems**: Each cart item becomes an order_item with quantity and subtotal.
+- **One Store Rule**: Cart enforces that all items must be from the same store.
+
+---
+
+### 11. Cart Management (Complete)
+
+**11.1 Remove Item**
+**Endpoint:** `DELETE /api/cart/items/:product_id`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items/1" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Response:**
+
+```json
+{ "status": "ok", "message": "Item removed" }
+```
+
+**11.2 Clear Cart**
+**Endpoint:** `DELETE /api/cart`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Response:**
+
+```json
+{ "status": "ok", "message": "Cart cleared" }
+```
+
+---
+
+### 12. Search & Filter (with Pagination)
+
+**12.1 Filter Products**
+**Endpoint:** `GET /api/products/filter`
+**Query Params:** `search`, `min_price`, `max_price`, `category`, `page`, `limit`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter?search=tusker&min_price=100&max_price=500&page=1&limit=10"
+```
+
+**Response:**
+
+```json
+{
+  "data": [...products...],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 25
+  }
+}
+```
+
+**12.2 Filter Stores**
+**Endpoint:** `GET /api/stores/filter`
+**Query Params:** `search`, `min_rating`, `category`, `page`, `limit`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/filter?search=liquor&min_rating=4&page=1&limit=10"
+```
+
+**12.3 Geospatial Search (Nearby Stores)**
+**Endpoint:** `GET /api/stores?lat=<latitude>&lng=<longitude>&radius=<km>`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores?lat=-1.2921&lng=36.8219&radius=5"
+```
+
+**Response:** Stores sorted by distance (nearest first), includes `distance` field in km.
+
+**12.4 Filter Options**
+**Endpoint:** `GET /api/products/filter/options`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/options"
+```
+
+**Response:**
+
+```json
+{
+  "categories": ["Beer", "Wine", "Whiskey"],
+  "price_range": { "min": 100, "max": 5000 }
+}
+```
+
+---
+
+### 13. Order Management (Complete)
+
+**13.1 List Orders (Role-Based)**
+**Endpoint:** `GET /api/orders`
+
+- **Customer**: Returns only their orders
+- **Vendor**: Returns orders for their stores
+- **Admin**: Returns all orders
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**13.2 Get Single Order**
+**Endpoint:** `GET /api/orders/:id`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**13.3 Reject Order (Vendor)**
+**Endpoint:** `PATCH /api/orders/:id/reject`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/reject" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>"
+```
+
+**Status:** 200 OK
+
+---
+
+### 14. Rider Management (Complete)
+
+**14.1 Reject Request**
+**Endpoint:** `POST /api/rider/requests/:id/reject`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/requests/1/reject" \
+  -H "Authorization: Bearer <RIDER_TOKEN>"
+```
+
+**Status:** 200 OK (Dispatches to next nearest rider)
+
+**14.2 Update Availability**
+**Endpoint:** `PATCH /api/rider/status`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/status" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -d '{"is_available": true}'
+```
+
+**Status:** 200 OK
+
+---
+
+### 15. Notifications (Complete)
+
+**15.1 Get Unread Count**
+**Endpoint:** `GET /api/notifications/unread`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/unread" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Response:**
+
+```json
+{ "unread_count": 5 }
+```
+
+**15.2 Mark All as Read**
+**Endpoint:** `PATCH /api/notifications/read_all`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/read_all" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+---
+
+### 16. Reviews
+
+**16.1 Create Review (After Delivery)**
+**Endpoint:** `POST /api/reviews`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/reviews" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "review": {
+      "order_id": 1,
+      "rating": 5,
+      "comment": "Great service!"
+    }
+  }'
+```
+
+**Status:** 201 Created (Only allowed after order is `delivered`)
+
+**16.2 Get Review**
+**Endpoint:** `GET /api/reviews/:id`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/reviews/1"
+```
+
+**Status:** 200 OK
+
+---
+
+### 17. Admin Store Management (Complete)
+
+**17.1 Create Store (Admin)**
+**Endpoint:** `POST /api/admin/stores`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -d '{
+    "store": {
+      "name": "Admin Created Store",
+      "address": "Admin Address",
+      "latitude": -1.2921,
+      "longitude": 36.8219,
+      "vendor_id": 5
+    }
+  }'
+```
+
+**Status:** 201 Created
+
+**17.2 Update Store (Admin)**
+**Endpoint:** `PATCH /api/admin/stores/:id`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -d '{"store": {"name": "Updated Name"}}'
+```
+
+**Status:** 200 OK
+
+**17.3 Delete Store (Admin)**
+**Endpoint:** `DELETE /api/admin/stores/:id`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Status:** 204 No Content
+
+**17.4 Reject Store (Admin)**
+**Endpoint:** `PATCH /api/admin/stores/:id/reject`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1/reject" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -d '{"reason": "Incomplete documentation"}'
+```
+
+**Status:** 200 OK
