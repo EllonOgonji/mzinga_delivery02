@@ -36,7 +36,7 @@ const ShopDirectory = () => {
 
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ['shops', 'directory'],
-    queryFn: () => getAllShops({})
+    queryFn: async () => await getAllShops({})
   });
 
   // Expandable sections - recal which sections are open and which are not
@@ -466,11 +466,15 @@ const ShopDirectory = () => {
                         <div className="mb-3">
                           <h3 className="font-semibold text-lg mb-1">{shop.name}</h3>
                           <div className="flex flex-wrap gap-1 mb-2">
-                            {shop.category.slice(0, 2).map((cat) => (
+                            {/* {shop.category.slice(0, 2).map((cat) => (
                               <Badge key={cat} variant="secondary" className="text-xs">
                                 {cat}
                               </Badge>
-                            ))}
+                            ))} */}
+
+                            <Badge variant="secondary" className="text-xs">
+                              {shop.category}
+                            </Badge>
                           </div>
                         </div>
 
@@ -490,7 +494,7 @@ const ShopDirectory = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span className={shop.status === "open" ? "text-success" : "text-destructive"}>
+                            <span className={shop.status === "approved" ? "text-success" : "text-destructive"}>
                               {shop.status.toUpperCase()}
                             </span>
                           </div>
