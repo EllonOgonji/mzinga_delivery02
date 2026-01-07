@@ -32,7 +32,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={product.images[0]}
+            src={product.image_url}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -90,20 +90,20 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           {/* Rating */}
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-warning text-warning" />
-            <span className="text-sm font-medium">{product.rating}</span>
+            <span className="text-sm font-medium">{product.average_rating}</span>
             <span className="text-xs text-muted-foreground">
-              ({product.rating.length})
+              ({product.ratings.length})
             </span>
           </div>
 
           {/* Price */}
           <div className="flex items-baseline gap-2">
             <span className="text-md font-semibold">
-              KES {product.price.toFixed(2)}
+              KES {Number(product.price).toFixed(2)}
             </span>
             {product.compareAtPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                KES {product.compareAtPrice.toFixed(2)}
+                KES {Number(product.compareAtPrice).toFixed(2)}
               </span>
             )}
           </div>

@@ -10,6 +10,9 @@ import { Separator } from '@/components/ui/separator';
 export default function OrderConfirmation() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
 
+  // To do :
+  // Fetch order details using orderNumber
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -92,10 +95,6 @@ export default function OrderConfirmation() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Order Date:</span>
                 <span>{new Date().toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Estimated Delivery:</span>
-                <span>2-3 business days</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Method:</span>

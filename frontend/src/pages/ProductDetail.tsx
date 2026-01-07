@@ -13,9 +13,10 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useCart } from '@/contexts/CartContext';
 import { Heart, Share2, ShoppingCart, Star, MapPin, Clock, Truck, Package, Shield, CheckCircle, Phone, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllProducts } from '@/data/productData';
-import { getAllShops } from '@/data/shopData';
-import { calculateDeliveryFee } from '@/lib/utils';
+import { getAllProducts, getSingleProduct } from '@/data/productData';
+import { getAllShops, getSingleShop } from '@/data/shopData';
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
+import { Product, Shop } from '@/types';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -26,28 +27,30 @@ export default function ProductDetail() {
 
   const productId = id ? parseInt(id) : undefined;
 
-  const { data: products = [], isLoading: isLoadingProduct } = useQuery({
+  const { data: product, isLoading: isLoadingProduct } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => getAllProducts({ id: productId }),
+    queryFn: () => getSingleProduct(productId),
     enabled: !!productId
   });
-  const product = products[0];
 
-  const { data: shops = [], isLoading: isLoadingShop } = useQuery({
-    queryKey: ['shop', product?.shopId],
-    queryFn: () => getAllShops({ id: product?.shopId }),
-    enabled: !!product?.shopId
+  console.log(product)
+
+  const { data: shop, isLoading: isLoadingShop } = useQuery({
+    queryKey: ['shop', product?.store_id],
+    queryFn: () => getSingleShop(product?.store_id),
+    enabled: !!product?.store_id
   });
-  const shop = shops[0];
 
+  console.log(shop)
+  
   const { data: rawRelatedProducts = [] } = useQuery({
-    queryKey: ['relatedProducts', product?.category, product?.shopId],
-    queryFn: () => getAllProducts({ category: product?.category, shopId: product?.shopId }),
+    queryKey: ['relatedProducts', product?.category, product?.store_id],
+    queryFn: () => getAllProducts({ category: product?.category, shopId: product?.store_id }),
     enabled: !!product
   });
 
   const relatedProducts = rawRelatedProducts.filter(p => p.id !== product?.id).slice(0, 8);
-  const productAverageRating = product?.rating?.length > 0 ? (product.rating.reduce((sum, r) => sum + r, 0) / product.rating.length).toFixed(1) : 0;
+  const productAverageRating = product?.ratings?.length > 0 ? (product.ratings.reduce((sum, r) => sum + r, 0) / product.ratings.length).toFixed(1) : 0;
   const deliveryFee = shop ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude }) : 0;
 
   if (isLoadingProduct || isLoadingShop) {
@@ -77,11 +80,7 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
-      addToCart({
-        productId: product.id,
-        shopId: product.shopId,
-        price: product.price
-      });
+      addToCart(product);
     }
   };
 
@@ -137,7 +136,7 @@ export default function ProductDetail() {
             {/* Main Image */}
             <div className="relative aspect-square bg-muted rounded-lg overflow-hidden group">
               <img
-                src={product.images[mainImage]}
+                src={product.image_url}
                 alt={product.name}
                 className="w-full h-full object-cover cursor-zoom-in hover:scale-110 transition-transform duration-500"
               />
@@ -159,7 +158,7 @@ export default function ProductDetail() {
 
             {/* Thumbnail Gallery */}
             <div className="flex gap-2 overflow-x-auto">
-              {product.images.map((image, index) => (
+              {/* {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setMainImage(index)}
@@ -168,7 +167,15 @@ export default function ProductDetail() {
                 >
                   <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
                 </button>
-              ))}
+              ))} */}
+              <button
+                  key={0}
+                  onClick={() => setMainImage(0)}
+                  className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors ${mainImage === 0 ? 'border-primary' : 'border-transparent'
+                    }`}
+                >
+                  <img src={product.image_url} alt={`${product.name} 1`} className="w-full h-full object-cover" />
+                </button>
             </div>
           </div>
 
@@ -194,10 +201,10 @@ export default function ProductDetail() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-warning text-warning" />
-                  <span className="text-lg font-semibold">{product.rating}</span>
+                  <span className="text-lg font-semibold">{product.average_rating}</span>
                 </div>
                 <button className="text-sm text-muted-foreground hover:text-foreground">
-                  ({product.rating.length} reviews)
+                  ({product.ratings.length} reviews)
                 </button>
               </div>
             </div>
@@ -208,12 +215,12 @@ export default function ProductDetail() {
             <div>
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-accent">
-                  KES {product.price.toFixed(2)}
+                  KES {Number(product.price).toFixed(2)}
                 </span>
                 {product.compareAtPrice && (
                   <>
                     <span className="text-2xl text-muted-foreground line-through">
-                      KES {product.compareAtPrice.toFixed(2)}
+                      KES {Number(product.compareAtPrice).toFixed(2)}
                     </span>
                     {/* <Badge variant="destructive" className="text-sm">
                       Save KES {(product.compareAtPrice - product.price).toFixed(2)}
@@ -343,15 +350,15 @@ export default function ProductDetail() {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className={shop.status === 'open' ? 'text-success' : 'text-destructive'}>
+                    <span className={shop.status === 'approved' ? 'text-success' : 'text-destructive'}>
                       {shop.status.toUpperCase()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>2.5 km away</span>
+                    <span>{findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude }).toFixed(1)} km away</span>
                   </div>
-                  <p className="text-muted-foreground">200+ products from this shop</p>
+                  {/* <p className="text-muted-foreground">200+ products from this shop</p> */}
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm" asChild className="flex-1">
@@ -380,7 +387,7 @@ export default function ProductDetail() {
               Specifications
             </TabsTrigger>
             <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              Reviews ({product.rating.length})
+              Reviews ({product.ratings.length})
             </TabsTrigger>
             <TabsTrigger value="related" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
               Related Products
@@ -414,7 +421,7 @@ export default function ProductDetail() {
                         <Star key={i} className={`h-5 w-5 ${i < Math.floor(Number(productAverageRating)) ? 'fill-warning text-warning' : 'text-muted'}`} />
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground">{product.rating.length} reviews</p>
+                    <p className="text-sm text-muted-foreground">{product.ratings.length} reviews</p>
                   </div>
 
                   <div className="flex-1 space-y-2">
@@ -464,9 +471,9 @@ export default function ProductDetail() {
       {/* Sticky Buy Bar (Mobile) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex items-center gap-3 z-50">
         <div className="flex-1">
-          <div className="text-2xl font-bold text-accent">${product[0].price.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-accent">${Number(product.price).toFixed(2)}</div>
         </div>
-        <Button size="lg" onClick={handleAddToCart} disabled={product[0].stock === 0}>
+        <Button size="lg" onClick={handleAddToCart} disabled={product.stock === 0}>
           <ShoppingCart className="mr-2 h-5 w-5" />
           Add to Cart
         </Button>
