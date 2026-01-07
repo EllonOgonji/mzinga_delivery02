@@ -112,10 +112,15 @@ defmodule MzingaDeliveryWeb.OrderController do
               status: "pending"
             })
 
+          # Use payment_phone if provided, otherwise use customer's registered phone
+          payment_phone = Map.get(order_params, "payment_phone") || user.phone_number
+
+          Logger.info("Using phone #{payment_phone} for M-Pesa STK Push")
+
           # Initiate M-Pesa STK Push
           mpesa_result =
             try do
-              MpesaService.initiate_stk_push(user.phone_number, order.total_price, order.id)
+              MpesaService.initiate_stk_push(payment_phone, order.total_price, order.id)
             rescue
               e -> {:error, "Exception: #{Exception.message(e)}"}
             end
