@@ -45,7 +45,7 @@ defmodule MzingaDelivery.Orders do
   """
   def get_order(id) do
     Order
-    |> preload([:customer, :store, order_items: :product])
+    |> preload([:customer, [store: :vendor], order_items: :product])
     |> Repo.get(id)
   end
 
