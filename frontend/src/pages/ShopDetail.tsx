@@ -27,6 +27,7 @@ import {
 import { getAllShops } from "@/data/shopData";
 import { getAllProducts } from "@/data/productData";
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
+import { Shop } from "@/types";
 
 const ShopDetail = () => {
   const { id } = useParams();
@@ -35,16 +36,15 @@ const ShopDetail = () => {
 
   const shopId = id ? parseInt(id) : undefined;
 
-  const { data: shops = [], isLoading: isLoadingShop } = useQuery({
+  const { data: shop = {}, isLoading: isLoadingShop } = useQuery({
     queryKey: ['shop', shopId],
-    queryFn: () => getAllShops({ id: shopId }),
+    queryFn: async () => await getAllShops({ id: shopId }),
     enabled: !!shopId
   });
-  const shop = shops[0];
 
   const { data: shopProducts = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ['shopProducts', shopId],
-    queryFn: () => getAllProducts({ shopId: shopId }),
+    queryFn: async () => await getAllProducts({ shopId: shopId }),
     enabled: !!shopId
   });
 
@@ -110,11 +110,9 @@ const ShopDetail = () => {
                       <div>
                         <h1 className="text-3xl font-bold mb-2">{shop.name}</h1>
                         <div className="flex flex-wrap gap-2 mb-2">
-                          {shop.category.map((cat) => (
-                            <Badge key={cat} variant="secondary">
-                              {cat}
+                            <Badge variant="secondary">
+                              {shop.category}
                             </Badge>
-                          ))}
                         </div>
                         {/* <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
@@ -157,8 +155,8 @@ const ShopDetail = () => {
                         <span>KES. {deliveryFees} delivery</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <Clock className={`w-4 h-4 ${shop.status === "open" ? "text-success" : "text-destructive"}`} />
-                        <span className={shop.status === "open" ? "text-success" : "text-destructive"}>
+                        <Clock className={`w-4 h-4 ${shop.status === "approved" ? "text-success" : "text-destructive"}`} />
+                        <span className={shop.status === "approved" ? "text-success" : "text-destructive"}>
                           {shop.status.toUpperCase()}
                         </span>
                       </div>

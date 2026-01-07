@@ -14,6 +14,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useCart } from '@/contexts/CartContext';
 import { mockShops, mockProducts } from '@/data/mockData';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
+import { useQuery } from "@tanstack/react-query";
+import { getAllShops } from '@/data/shopData';
+import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
+import { createOrder } from '@/data/orderData';
 
 const steps = [
   { id: 1, name: 'Delivery', completed: false, active: true },
@@ -25,8 +30,8 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { cart, cartTotal, cartCount, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
-  const [deliveryAddress, setDeliveryAddress] = useState('123 Main St, Nairobi');
-  const [phone, setPhone] = useState('+254712345678');
+  const [deliveryAddress, setDeliveryAddress] = useState('Lurambi');
+  const [phone, setPhone] = useState('254712345678');
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -47,9 +52,51 @@ export default function Checkout() {
     );
   }
 
-  const shopIds = [...new Set(cart.map(item => item.shopId))];
-  const deliveryFeePerShop = 3;
-  const totalDeliveryFees = shopIds.length * deliveryFeePerShop;
+  const cartByShop = cart.reduce((acc, item) => {
+    if (!acc[item.store_id]) {
+      acc[item.store_id] = [];
+    }
+    acc[item.store_id].push(item);
+    return acc;
+  }, {} as Record<number, typeof cart>);
+
+  const shopIds = Object.keys(cartByShop).map(Number);
+
+  const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
+    queryKey: ['shops', 'cart', shopIds],
+    queryFn: async () => await getAllShops({ idMultiple: shopIds }),
+    enabled: shopIds.length > 0
+  });
+
+  const shopsData = useMemo(() => {
+    return shopIds.map(shopId => {
+      const shop = allShops.find(s => s.id === shopId);
+      const shopItems = cartByShop[shopId];
+      const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      
+      const deliveryFee = shop 
+        ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude })
+        : 0;
+      
+      const distance = shop
+        ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
+        : 0;
+      
+      const shopTotal = shopSubtotal + deliveryFee;
+
+      return {
+        shopId,
+        shop,
+        items: shopItems,
+        subtotal: shopSubtotal,
+        deliveryFee,
+        distance,
+        total: shopTotal
+      };
+    });
+  }, [allShops, cartByShop, shopIds]);
+
+  const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
   const orderTotal = cartTotal + totalDeliveryFees;
 
   const handlePlaceOrder = () => {
@@ -58,13 +105,32 @@ export default function Checkout() {
       return;
     }
 
-    // TODO: Integrate with backend
-    const orderNumber = 'CST' + Date.now();
-    console.log('Order placed:', { orderNumber, paymentMethod, total: orderTotal });
+    console.log(cartByShop)
+    console.log('Shops Data:', shopsData);
+
+    shopsData.forEach(async (shopData) => {
+      const orderPayload = {
+        "order": {
+          store_id: shopData.shopId,
+          items: shopData.items.map(item => ({
+            product_id: item.shopId,
+            quantity: item.quantity,
+            subtotal: item.quantity * Number(item.price)
+          })),
+        }
+      };
+      console.log('Order Payload for Shop', shopData.shopId, orderPayload);
+      const res = await createOrder(orderPayload);
+      console.log('Create Order Response for Shop', shopData.shopId, res);
+    })
+    // const orderNumber = 'CST' + Date.now();
+
+    // console.log('Order placed:', { orderNumber, paymentMethod, total: orderTotal });
     
-    toast.success('Order placed successfully!');
-    clearCart();
-    navigate(`/order-confirmation/${orderNumber}`);
+    // toast.success('Order placed successfully!');
+    // clearCart();
+    // navigate(`/order-confirmation/${orderNumber}`);
+
   };
 
   return (
@@ -146,16 +212,7 @@ export default function Checkout() {
                           <Label htmlFor="standard" className="flex-1 cursor-pointer">
                             <p className="font-medium">Standard Delivery</p>
                             <p className="text-sm text-muted-foreground">
-                              ${deliveryFeePerShop} - 1.5 hrs
-                            </p>
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 border rounded-lg p-4">
-                          <RadioGroupItem value="express" id="express" />
-                          <Label htmlFor="express" className="flex-1 cursor-pointer">
-                            <p className="font-medium">Express Delivery</p>
-                            <p className="text-sm text-muted-foreground">
-                              ${deliveryFeePerShop * 2} - 30 mins
+                              KES. {totalDeliveryFees}  ~1.5 hrs
                             </p>
                           </Label>
                         </div>
@@ -211,7 +268,7 @@ export default function Checkout() {
                             id="mpesa-phone"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            placeholder="+254712345678"
+                            placeholder="254712345678"
                             className="mt-2"
                           />
                           <p className="text-xs text-muted-foreground mt-2">
@@ -285,11 +342,11 @@ export default function Checkout() {
                     {/* Order Items */}
                     <div className="space-y-3">
                       {cart.map(item => {
-                        const product = mockProducts.find(p => p.id === item.productId);
+                        const product = mockProducts.find(p => p.id === item.id);
                         if (!product) return null;
 
                         return (
-                          <div key={item.productId} className="flex gap-3 text-sm">
+                          <div key={item.id} className="flex gap-3 text-sm">
                             <img
                               src={product.images[0]}
                               alt={product.name}
@@ -300,7 +357,7 @@ export default function Checkout() {
                               <p className="text-muted-foreground">Qty: {item.quantity}</p>
                             </div>
                             <p className="font-medium">
-                              ${(product.price * item.quantity).toFixed(2)}
+                              KES. {(product.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
                         );
@@ -336,7 +393,7 @@ export default function Checkout() {
                       onClick={handlePlaceOrder}
                       disabled={!agreedToTerms}
                     >
-                      Place Order - ${orderTotal.toFixed(2)}
+                      Place Order - KES. {orderTotal.toFixed(2)}
                     </Button>
                   </div>
                 </div>
@@ -350,16 +407,16 @@ export default function Checkout() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span>Items ({cartCount}):</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>KES. {cartTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Delivery Fees:</span>
-                    <span>${totalDeliveryFees.toFixed(2)}</span>
+                    <span>KES. {totalDeliveryFees.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold text-accent">
                     <span>Total:</span>
-                    <span>${orderTotal.toFixed(2)}</span>
+                    <span>KES. {orderTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </Card>

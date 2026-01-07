@@ -26,11 +26,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCart(prev => {
-      const existing = prev.find(i => i.productId === item.productId);
+      const existing = prev.find(i => i.id === item.id);
       if (existing) {
         toast.success('Cart updated!');
         return prev.map(i =>
-          i.productId === item.productId
+          i.id === item.id
             ? { ...i, quantity: i.quantity + 1 }
             : i
         );
@@ -41,7 +41,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const removeFromCart = (productId: number) => {
-    setCart(prev => prev.filter(i => i.productId !== productId));
+    setCart(prev => prev.filter(i => i.id !== productId));
     toast.success('Removed from cart');
   };
 
@@ -52,7 +52,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setCart(prev =>
       prev.map(i =>
-        i.productId === productId ? { ...i, quantity } : i
+        i.id === productId ? { ...i, quantity } : i
       )
     );
   };
