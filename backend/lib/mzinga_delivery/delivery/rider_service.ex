@@ -84,7 +84,7 @@ defmodule MzingaDelivery.Delivery.RiderService do
         |> Repo.update!()
 
         # 2. Assign Rider to Order
-        order = Orders.get_order!(request.order_id)
+        {:ok, order} = Orders.get_order!(request.order_id)
         {:ok, updated_order} = Orders.assign_rider(order, request.rider_id)
 
         # 3. Mark Rider Busy
@@ -110,7 +110,7 @@ defmodule MzingaDelivery.Delivery.RiderService do
           |> Repo.update!()
 
           # 2. Dispatch to NEXT rider
-          order = Orders.get_order!(request.order_id)
+          {:ok, order} = Orders.get_order!(request.order_id)
           dispatch_order(order)
         end)
 

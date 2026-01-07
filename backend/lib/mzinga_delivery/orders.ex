@@ -232,75 +232,87 @@ defmodule MzingaDelivery.Orders do
   end
 
   def mark_as_ready(order_id) do
-    order = get_order!(order_id)
+    case get_order!(order_id) do
+      {:ok, order} ->
+        Repo.transaction(fn ->
+          updated_order =
+            order
+            |> Order.status_changeset(%{delivery_status: "ready_for_pickup"})
+            |> Repo.update!()
 
-    Repo.transaction(fn ->
-      updated_order =
-        order
-        |> Order.status_changeset(%{delivery_status: "ready_for_pickup"})
-        |> Repo.update!()
+          # Notify Tracking Channel
+          MzingaDeliveryWeb.Endpoint.broadcast(
+            "tracking:#{order.id}",
+            "order_update",
+            %{status: "ready_for_pickup", message: "Order is ready for pickup!"}
+          )
 
-      # Notify Tracking Channel
-      MzingaDeliveryWeb.Endpoint.broadcast(
-        "tracking:#{order.id}",
-        "order_update",
-        %{status: "ready_for_pickup", message: "Order is ready for pickup!"}
-      )
+          updated_order
+        end)
 
-      updated_order
-    end)
+      {:error, _} = error ->
+        error
+    end
   end
 
   def mark_as_picked_up(order_id) do
-    order = get_order!(order_id)
+    case get_order!(order_id) do
+      {:ok, order} ->
+        Repo.transaction(fn ->
+          updated_order =
+            order
+            |> Order.status_changeset(%{delivery_status: "picked_up"})
+            |> Repo.update!()
 
-    Repo.transaction(fn ->
-      updated_order =
-        order
-        |> Order.status_changeset(%{delivery_status: "picked_up"})
-        |> Repo.update!()
+          # Notify Tracking Channel
+          MzingaDeliveryWeb.Endpoint.broadcast(
+            "tracking:#{order.id}",
+            "order_update",
+            %{status: "picked_up", message: "Rider has picked up your order!"}
+          )
 
-      # Notify Tracking Channel
-      MzingaDeliveryWeb.Endpoint.broadcast(
-        "tracking:#{order.id}",
-        "order_update",
-        %{status: "picked_up", message: "Rider has picked up your order!"}
-      )
+          updated_order
+        end)
 
-      updated_order
-    end)
+      {:error, _} = error ->
+        error
+    end
   end
 
   @doc """
   Rider marks order as delivered.
   """
   def mark_as_delivered(order_id) do
-    order = get_order!(order_id)
+    case get_order!(order_id) do
+      {:ok, order} ->
+        Repo.transaction(fn ->
+          updated_order =
+            order
+            |> Order.status_changeset(%{
+              delivery_status: "delivered",
+              delivered_at: DateTime.utc_now()
+            })
+            |> Repo.update!()
 
-    Repo.transaction(fn ->
-      updated_order =
-        order
-        |> Order.status_changeset(%{
-          delivery_status: "delivered",
-          delivered_at: DateTime.utc_now()
-        })
-        |> Repo.update!()
+          # Mark rider as available
+          if updated_order.rider_id do
+            rider = Accounts.get_user(updated_order.rider_id)
+            Accounts.update_rider_status(rider, %{is_available: true})
+          end
 
-      # Mark rider as available
-      if updated_order.rider_id do
-        rider = Accounts.get_user(updated_order.rider_id)
-        Accounts.update_rider_status(rider, %{is_available: true})
-      end
+          # Notify Customer
+          MzingaDeliveryWeb.Endpoint.broadcast(
+            "tracking:#{order.id}",
+            "order_update",
+            %{status: "delivered", message: "Order Delivered! Enjoy your meal."}
+          )
 
-      # Notify Customer
-      MzingaDeliveryWeb.Endpoint.broadcast(
-        "tracking:#{order.id}",
-        "order_update",
-        %{status: "delivered", message: "Order Delivered! Enjoy your meal."}
-      )
+          updated_order
+        end)
 
-      updated_order
-    end)
+      {:error, _} = error ->
+        error
+    end
   end
 
   @doc """
