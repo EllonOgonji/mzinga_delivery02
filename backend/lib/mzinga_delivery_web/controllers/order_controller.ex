@@ -404,4 +404,88 @@ defmodule MzingaDeliveryWeb.OrderController do
       store -> store.vendor_id == vendor_id
     end
   end
+
+  @doc """
+  Retry payment for a failed order
+  POST /api/orders/:id/retry-payment
+
+  Optional: Accept payment_phone to charge a different number
+  """
+  def retry_payment(conn, %{"id" => id} = params) do
+    user = Guardian.Plug.current_resource(conn)
+    order = Orders.get_order(id)
+
+    cond do
+      order == nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Order not found"})
+
+      order.customer_id != user.id ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "You can only retry payment for your own orders"})
+
+      order.payment_status == "paid" ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "This order has already been paid"})
+
+      true ->
+        # Use payment_phone if provided, otherwise use customer's phone
+        payment_phone = params["payment_phone"] || user.phone_number
+
+        Logger.info("Retrying payment for order #{id} using phone #{payment_phone}")
+
+        # Find existing payment or create new one
+        payment = Payments.get_payment_by_order(order.id)
+
+        if payment do
+          # Reset payment status to pending
+          Payments.update_payment(payment, %{status: "pending"})
+        else
+          # Create new payment record
+          Payments.create_payment(%{
+            order_id: order.id,
+            amount: order.total_price,
+            status: "pending"
+          })
+        end
+
+        # Initiate new M-Pesa STK Push
+        case MpesaService.initiate_stk_push(payment_phone, order.total_price, order.id) do
+          {:ok, mpesa_response} ->
+            Logger.info("Retry M-Pesa STK Push initiated for order #{order.id}")
+
+            # Update payment with new checkout_request_id
+            checkout_request_id = mpesa_response["CheckoutRequestID"]
+
+            if payment,
+              do: Payments.update_payment(payment, %{transaction_id: checkout_request_id})
+
+            # Update order status back to pending
+            Orders.update_payment_status(order, "pending")
+
+            conn
+            |> put_status(:ok)
+            |> json(%{
+              status: "payment_initiated",
+              order_id: order.id,
+              message: "M-Pesa payment prompt sent to #{payment_phone}",
+              mpesa_response: mpesa_response
+            })
+
+          {:error, reason} ->
+            Logger.error("Retry payment failed for order #{order.id}: #{inspect(reason)}")
+
+            conn
+            |> put_status(:unprocessable_entity)
+            |> json(%{
+              error: "Payment initiation failed",
+              reason: inspect(reason),
+              message: "Please try again or contact support"
+            })
+        end
+    end
+  end
 end
