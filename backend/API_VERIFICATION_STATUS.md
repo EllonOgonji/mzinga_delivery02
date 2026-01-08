@@ -1,6 +1,6 @@
 # API Verification Status & Examples
 
-**Deployed Base URL:** `https://mzinga-delivery02-t6rg.onrender.com`
+**Deployed Base URL:** `https://mzinga-delivery-2rkz.onrender.com`
 **Local Base URL:** `http://localhost:4000`
 
 ---
@@ -15,7 +15,7 @@ The following endpoints have been verified using the specific test cases below.
 **Endpoint:** `POST /api/auth/register`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
     "user": {
@@ -35,7 +35,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
 **Endpoint:** `POST /api/auth/register`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
     "user": {
@@ -55,7 +55,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
 **Endpoint:** `POST /api/auth/register`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
     "user": {
@@ -75,7 +75,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/register" \
 **Endpoint:** `POST /api/auth/login`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/login" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "venom@example.com",
@@ -89,7 +89,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/login" \
 **Endpoint:** `GET /api/auth/me`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/auth/me" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -103,7 +103,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
 **Endpoint:** `POST /api/vendor/stores`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/vendor/stores" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <VENDOR_TOKEN>" \
   -d '{
@@ -124,7 +124,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
 **Endpoint:** `GET /api/vendor/stores`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/vendor/stores" \
   -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
@@ -138,7 +138,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
 **Endpoint:** `GET /api/admin/stores/pending`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/pending" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/admin/stores/pending" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
@@ -148,7 +148,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/pendin
 **Endpoint:** `PATCH /api/admin/stores/:id/approve`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/approve" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/admin/stores/5/approve" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
@@ -162,7 +162,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/ap
 **Endpoint:** `GET /api/stores`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores"
 ```
 
 **Status:** 200 OK
@@ -171,7 +171,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores"
 **Endpoint:** `GET /api/stores/:id`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores/5"
 ```
 
 **Status:** 200 OK
@@ -184,7 +184,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5"
 **Endpoint:** `POST /api/products`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/products" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <VENDOR_TOKEN>" \
   -d '{
@@ -214,7 +214,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products" \
 **Endpoint:** `GET /api/stores/:store_id/products`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5/products"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores/5/products"
 ```
 
 **Status:** 200 OK
@@ -223,7 +223,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5/products"
 **Endpoint:** `GET /api/products/:id`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/1"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/products/1"
 ```
 
 **Status:** 200 OK
@@ -232,7 +232,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/1"
 **Endpoint:** `PATCH /api/products/:id`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/products/1" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <VENDOR_TOKEN>" \
   -d '{
@@ -250,7 +250,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 **Endpoint:** `DELETE /api/products/:id`
 
 ```bash
-curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
+curl -X DELETE "https://mzinga-delivery-2rkz.onrender.com/api/products/1" \
   -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
@@ -264,7 +264,7 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 **Endpoint:** `POST /api/orders`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
   -d '{
@@ -283,7 +283,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
 **Endpoint:** `PATCH /api/orders/:id/accept`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/accept" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/orders/1/accept" \
   -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
@@ -293,7 +293,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/accept" 
 **Endpoint:** `PATCH /api/orders/:id/ready`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/ready" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/orders/1/ready" \
   -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
@@ -303,7 +303,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/ready" \
 **Endpoint:** `PATCH /api/orders/:id/handover`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/handover" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/orders/1/handover" \
   -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
@@ -313,7 +313,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/handover
 **Endpoint:** `POST /api/orders/:id/confirm`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/confirm" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders/1/confirm" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>"
 ```
 
@@ -327,7 +327,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/confirm" 
 **Endpoint:** `GET /api/rider/deliveries`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/rider/deliveries" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/rider/deliveries" \
   -H "Authorization: Bearer <RIDER_TOKEN>"
 ```
 
@@ -337,7 +337,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/rider/deliveries" \
 **Endpoint:** `POST /api/rider/requests/:id/accept`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/requests/1/accept" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/rider/requests/1/accept" \
   -H "Authorization: Bearer <RIDER_TOKEN>"
 ```
 
@@ -347,7 +347,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/requests/1/a
 **Endpoint:** `PATCH /api/rider/deliveries/:id/status`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/deliveries/1/status" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/deliveries/1/status" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <RIDER_TOKEN>" \
   -d '{"status": "delivered"}'
@@ -363,7 +363,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/deliveries/
 **Endpoint:** `GET /api/cart`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/cart" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>"
 ```
 
@@ -373,7 +373,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
 **Endpoint:** `POST /api/cart/items`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/cart/items" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
   -d '{"product_id": 1, "quantity": 1}'
@@ -389,7 +389,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items" \
 **Endpoint:** `GET /api/notifications`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/notifications" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/notifications" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -399,7 +399,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/notifications" \
 **Endpoint:** `PATCH /api/notifications/:id/read`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/1/read" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/notifications/1/read" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -435,7 +435,7 @@ Order (belongs to ONE Store)
 **Endpoint:** `DELETE /api/cart/items/:product_id`
 
 ```bash
-curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items/1" \
+curl -X DELETE "https://mzinga-delivery-2rkz.onrender.com/api/cart/items/1" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>"
 ```
 
@@ -449,7 +449,7 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items/1" \
 **Endpoint:** `DELETE /api/cart`
 
 ```bash
-curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+curl -X DELETE "https://mzinga-delivery-2rkz.onrender.com/api/cart" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>"
 ```
 
@@ -468,7 +468,7 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
 **Query Params:** `search`, `min_price`, `max_price`, `category`, `page`, `limit`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter?search=tusker&min_price=100&max_price=500&page=1&limit=10"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/products/filter?search=tusker&min_price=100&max_price=500&page=1&limit=10"
 ```
 
 **Response:**
@@ -489,14 +489,14 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter?sea
 **Query Params:** `search`, `min_rating`, `category`, `page`, `limit`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/filter?search=liquor&min_rating=4&page=1&limit=10"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores/filter?search=liquor&min_rating=4&page=1&limit=10"
 ```
 
 **12.3 Geospatial Search (Nearby Stores)**
 **Endpoint:** `GET /api/stores?lat=<latitude>&lng=<longitude>&radius=<km>`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores?lat=-1.2921&lng=36.8219&radius=5"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores?lat=-1.2921&lng=36.8219&radius=5"
 ```
 
 **Response:** Stores sorted by distance (nearest first), includes `distance` field in km.
@@ -505,7 +505,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores?lat=-1.2921&
 **Endpoint:** `GET /api/products/filter/options`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/options"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/products/filter/options"
 ```
 
 **Response:**
@@ -529,7 +529,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter/opt
 - **Admin**: Returns all orders
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -537,7 +537,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
 **Endpoint:** `GET /api/orders/:id`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/orders/1" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -545,7 +545,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1" \
 **Endpoint:** `PATCH /api/orders/:id/reject`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/reject" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/orders/1/reject" \
   -H "Authorization: Bearer <VENDOR_TOKEN>"
 ```
 
@@ -559,7 +559,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/1/reject" 
 **Endpoint:** `POST /api/rider/requests/:id/reject`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/requests/1/reject" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/rider/requests/1/reject" \
   -H "Authorization: Bearer <RIDER_TOKEN>"
 ```
 
@@ -569,7 +569,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/requests/1/r
 **Endpoint:** `PATCH /api/rider/status`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/status" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/rider/status" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <RIDER_TOKEN>" \
   -d '{"is_available": true}'
@@ -585,7 +585,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/status" \
 **Endpoint:** `GET /api/notifications/unread`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/unread" \
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/notifications/unread" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -599,7 +599,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/unrea
 **Endpoint:** `PATCH /api/notifications/read_all`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/read_all" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/notifications/read_all" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -613,7 +613,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/notifications/rea
 **Endpoint:** `POST /api/reviews`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/reviews" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/reviews" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
   -d '{
@@ -631,7 +631,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/reviews" \
 **Endpoint:** `GET /api/reviews/:id`
 
 ```bash
-curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/reviews/1"
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/reviews/1"
 ```
 
 **Status:** 200 OK
@@ -644,7 +644,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/reviews/1"
 **Endpoint:** `POST /api/admin/stores`
 
 ```bash
-curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores" \
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/admin/stores" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
   -d '{
@@ -664,7 +664,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores" \
 **Endpoint:** `PATCH /api/admin/stores/:id`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/admin/stores/1" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
   -d '{"store": {"name": "Updated Name"}}'
@@ -676,7 +676,7 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1" \
 **Endpoint:** `DELETE /api/admin/stores/:id`
 
 ```bash
-curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1" \
+curl -X DELETE "https://mzinga-delivery-2rkz.onrender.com/api/admin/stores/1" \
   -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
@@ -686,10 +686,115 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1" 
 **Endpoint:** `PATCH /api/admin/stores/:id/reject`
 
 ```bash
-curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/1/reject" \
+curl -X PATCH "https://mzinga-delivery-2rkz.onrender.com/api/admin/stores/1/reject" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <ADMIN_TOKEN>" \
   -d '{"reason": "Incomplete documentation"}'
 ```
 
 **Status:** 200 OK
+
+---
+
+### 18. Payment Features (Verified)
+
+**18.1 Create Order with Different Payment Phone**
+**Endpoint:** `POST /api/orders`
+
+Use optional `payment_phone` field to charge a different M-Pesa number:
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "order": {
+      "store_id": 79,
+      "payment_phone": "254712345678",
+      "items": [
+        {"product_id": 20, "quantity": 1, "subtotal": 1000}
+      ]
+    }
+  }'
+```
+
+**Behavior:**
+
+- If `payment_phone` provided → STK Push sent to that number
+- If not provided → Uses customer's registered phone
+
+**Status:** 201 Created
+
+---
+
+**18.2 Retry Failed Payment**
+**Endpoint:** `POST /api/orders/:id/retry-payment`
+
+Retry payment for orders with `payment_status: "failed"`:
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders/57/retry-payment" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**With Different Phone:**
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders/57/retry-payment" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{"payment_phone": "254712345678"}'
+```
+
+**Response:**
+
+```json
+{
+  "status": "payment_initiated",
+  "order_id": 57,
+  "message": "M-Pesa payment prompt sent to 254712345678",
+  "mpesa_response": {
+    "CheckoutRequestID": "ws_CO_...",
+    "ResponseCode": "0",
+    "ResponseDescription": "Success"
+  }
+}
+```
+
+**Error Responses:**
+
+- `404` - Order not found
+- `403` - Not your order
+- `400` - Order already paid
+
+**Status:** 200 OK
+
+---
+
+### 19. Payment Failure Handling
+
+When M-Pesa payment fails (cancelled/timeout):
+
+1. **WebSocket Notification** sent to customer:
+
+   ```json
+   {
+     "event": "payment_failed",
+     "order_id": 57,
+     "message": "Payment failed: Request cancelled by user"
+   }
+   ```
+
+2. **Database Notification** saved (visible in notification history):
+
+   - Message: `"Payment failed for order #57: Request cancelled by user. You can retry payment."`
+   - Type: `payment_failed`
+
+3. **Order Status** updated to `payment_status: "failed"`
+
+**Common M-Pesa Result Codes:**
+| Code | Description |
+|------|-------------|
+| 1032 | Request cancelled by user |
+| 1037 | STK request timeout |
+| 1 | Insufficient balance |
