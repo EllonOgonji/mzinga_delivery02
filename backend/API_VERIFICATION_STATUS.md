@@ -176,6 +176,21 @@ curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores/5"
 
 **Status:** 200 OK
 
+**Response Structure (Store):**
+
+```json
+{
+  "data": {
+    "id": 5,
+    "name": "Store A",
+    "is_open": true,
+    "closing_time": "22:00:00",
+    "status": "approved",
+    ...
+  }
+}
+```
+
 ---
 
 ### 5. Product Management (Verified)
@@ -210,11 +225,17 @@ curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/products" \
 
 **Status:** 201 Created
 
-**5.2 View Products by Store**
+**5.2 View Products by Store (with Filters & Pagination)**
 **Endpoint:** `GET /api/stores/:store_id/products`
 
+Supports all filter parameters: `search`, `category`, `min_price`, `max_price`, `sort_by`, `page`, `limit`.
+
 ```bash
+# Basic List
 curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores/5/products"
+
+# Filtered List (e.g. search "milk" under 200 KES, page 1)
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/stores/5/products?search=milk&max_price=200&page=1&limit=20"
 ```
 
 **Status:** 200 OK
@@ -270,6 +291,8 @@ curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
   -d '{
     "order": {
       "store_id": 5,
+      "delivery_lat": -1.286389,
+      "delivery_lng": 36.817223,
       "items": [
         {"product_id": 1, "quantity": 2, "subtotal": 500.00}
       ]
@@ -467,7 +490,16 @@ curl -X DELETE "https://mzinga-delivery-2rkz.onrender.com/api/cart" \
 **Endpoint:** `GET /api/products/filter`
 **Query Params:** `search`, `min_price`, `max_price`, `category`, `page`, `limit`
 
+**Multiple Categories:** Separate by comma (e.g., `category=Beer,Wine`)
+
 ```bash
+# Single Category
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/products/filter?category=Beer"
+
+# Multiple Categories
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/products/filter?category=Beer,Wine,Whiskey&min_price=1000"
+
+# Complex Filter
 curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/products/filter?search=tusker&min_price=100&max_price=500&page=1&limit=10"
 ```
 

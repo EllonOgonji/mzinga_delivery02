@@ -21,6 +21,8 @@ defmodule MzingaDeliveryWeb.OrderJSON do
       id: order.id,
       total_price: order.total_price,
       payment_status: order.payment_status,
+      delivery_lat: order.delivery_lat,
+      delivery_lng: order.delivery_lng,
       customer: %{
         id: order.customer.id,
         full_name: order.customer.full_name,
