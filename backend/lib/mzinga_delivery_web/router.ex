@@ -58,6 +58,8 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Orders
     resources "/orders", OrderController, only: [:index, :show, :create]
+    post "/orders/:id/retry-payment", OrderController, :retry_payment
+    post "/checkout", CheckoutController, :create
     resources "/reviews", ReviewController, only: [:create, :show]
     patch "/orders/:id/accept", OrderController, :accept
     patch "/orders/:id/reject", OrderController, :reject
@@ -65,7 +67,6 @@ defmodule MzingaDeliveryWeb.Router do
     patch "/orders/:id/handover", OrderController, :handover
     post "/orders/:id/confirm", OrderController, :confirm_delivery
     patch "/orders/:id/confirm", OrderController, :confirm
-    post "/orders/:id/retry-payment", OrderController, :retry_payment
 
     # Cart
     get "/cart", CartController, :show
