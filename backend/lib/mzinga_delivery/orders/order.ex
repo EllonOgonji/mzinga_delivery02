@@ -7,6 +7,8 @@ defmodule MzingaDelivery.Orders.Order do
     field :payment_status, :string, default: "pending"
     # pending, assigned, picked_up, delivered, cancelled
     field :delivery_status, :string, default: "pending"
+    field :delivery_lat, :float
+    field :delivery_lng, :float
 
     belongs_to :customer, MzingaDelivery.Accounts.User
     belongs_to :store, MzingaDelivery.Stores.Store
@@ -26,7 +28,9 @@ defmodule MzingaDelivery.Orders.Order do
       :total_price,
       :payment_status,
       :rider_id,
-      :delivery_status
+      :delivery_status,
+      :delivery_lat,
+      :delivery_lng
     ])
     |> validate_required([:customer_id, :store_id, :total_price])
     |> validate_number(:total_price, greater_than: 0)
