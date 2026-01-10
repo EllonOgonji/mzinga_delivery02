@@ -50,7 +50,10 @@ defmodule MzingaDeliveryWeb.PaymentController do
   end
 
   # handle successful payment
-  defp handle_successful_payment(%{transaction_id: transaction_id, checkout_request_id: checkout_request_id} = payment_data) do
+  defp handle_successful_payment(
+         %{transaction_id: transaction_id, checkout_request_id: checkout_request_id} =
+           payment_data
+       ) do
     Logger.info("Processing successful payment: TxID=#{transaction_id}")
 
     # find payment record by checkout_request_id
@@ -77,9 +80,9 @@ defmodule MzingaDeliveryWeb.PaymentController do
   # update payment and order status
   defp update_payment_and_order(payment, transaction_id, payment_data) do
     case Payments.update_payment(payment, %{
-      status: "completed",
-      transaction_id: transaction_id
-    }) do
+           status: "completed",
+           transaction_id: transaction_id
+         }) do
       {:ok, updated_payment} ->
         Logger.info("Payment #{updated_payment.id} marked as completed")
 
@@ -95,7 +98,9 @@ defmodule MzingaDeliveryWeb.PaymentController do
                 broadcast_payment_success(order, transaction_id, payment_data)
 
               {:error, changeset} ->
-                Logger.error("Failed to update order payment status: #{inspect(changeset.errors)}")
+                Logger.error(
+                  "Failed to update order payment status: #{inspect(changeset.errors)}"
+                )
             end
         end
 
@@ -121,7 +126,8 @@ defmodule MzingaDeliveryWeb.PaymentController do
     # save notification to database
     MzingaDelivery.Notifications.create_notification(%{
       user_id: order.customer.id,
-      message: "Payment of KES #{payment_data.amount} received for order ##{order.id}. Receipt: #{transaction_id}",
+      message:
+        "Payment of KES #{payment_data.amount} received for order ##{order.id}. Receipt: #{transaction_id}",
       type: "payment_completed"
     })
 
@@ -151,7 +157,7 @@ defmodule MzingaDeliveryWeb.PaymentController do
               order ->
                 Orders.update_payment_status(order, "failed")
 
-                # Notify customer about failed payment
+                # Notify customer about failed payment via WebSocket
                 MzingaDeliveryWeb.Endpoint.broadcast(
                   "notifications:customer_#{order.customer_id}",
                   "payment_failed",
@@ -161,6 +167,14 @@ defmodule MzingaDeliveryWeb.PaymentController do
                     timestamp: DateTime.utc_now()
                   }
                 )
+
+                # Save notification to database for history
+                MzingaDelivery.Notifications.create_notification(%{
+                  user_id: order.customer_id,
+                  message:
+                    "Payment failed for order ##{order.id}: #{result_desc}. You can retry payment.",
+                  type: "payment_failed"
+                })
 
                 Logger.info("Payment failure notification sent to customer #{order.customer_id}")
             end
