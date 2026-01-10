@@ -23,9 +23,10 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  Search,
 } from "lucide-react";
-import { getAllShops } from "@/data/shopData";
-import { getAllProducts } from "@/data/productData";
+import { getAllShops, getSingleShop } from "@/data/shopData";
+import { getAllProducts, getSingleStoreProducts } from "@/data/productData";
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 import { Shop } from "@/types";
 
@@ -33,18 +34,25 @@ const ShopDetail = () => {
   const { id } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
+    const [paginationSettings, setPaginationSettings] = useState({
+    page: 1,
+    limit: 6,
+    total: 0,
+    totalPages: 0,
+    searchQuery: ''
+  });
 
   const shopId = id ? parseInt(id) : undefined;
 
-  const { data: shop = {}, isLoading: isLoadingShop } = useQuery({
+  const { data: shop = {} as Shop, isLoading: isLoadingShop } = useQuery({
     queryKey: ['shop', shopId],
-    queryFn: async () => await getAllShops({ id: shopId }),
+    queryFn: async () => await getSingleShop(shopId),
     enabled: !!shopId
   });
 
   const { data: shopProducts = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ['shopProducts', shopId],
-    queryFn: async () => await getAllProducts({ shopId: shopId }),
+    queryFn: async () => await getSingleStoreProducts(shopId),
     enabled: !!shopId
   });
 
@@ -58,7 +66,7 @@ const ShopDetail = () => {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">Shop Not Found</h1>
+            <h1 className="text-xl md:text-2xl font-bold mb-2">Shop Not Found</h1>
             <Button asChild>
               <Link to="/shops">Browse All Shops</Link>
             </Button>
@@ -108,7 +116,7 @@ const ShopDetail = () => {
                   <div className="flex-1">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                       <div>
-                        <h1 className="text-3xl font-bold mb-2">{shop.name}</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold mb-2">{shop.name}</h1>
                         <div className="flex flex-wrap gap-2 mb-2">
                             <Badge variant="secondary">
                               {shop.category}
@@ -146,15 +154,15 @@ const ShopDetail = () => {
 
                     {/* Quick Info */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
                         <MapPin className="w-4 h-4 text-muted-foreground" />
                         <span>{distanceToUser.toFixed(1)} km away</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
                         <Truck className="w-4 h-4 text-muted-foreground" />
                         <span>KES. {deliveryFees} delivery</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
                         <Clock className={`w-4 h-4 ${shop.status === "approved" ? "text-success" : "text-destructive"}`} />
                         <span className={shop.status === "approved" ? "text-success" : "text-destructive"}>
                           {shop.status.toUpperCase()}
@@ -198,14 +206,21 @@ const ShopDetail = () => {
           <TabsContent value="products" className="mt-6">
             {/* Search and Filter */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1">
+              <div className="flex-1 flex gap-2">
                 <Input
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                 <Button
+                    variant="outline"
+                    onClick={() => {setPaginationSettings(prev => ({ ...prev, page: 1, searchQuery: searchQuery }));}}>
+                    <Search className="w-4 h-4" />
+                  </Button>
               </div>
-              <Select value={sortBy} onValueChange={setSortBy}>
+
+              {/* Dropdown quick filter */}
+              {/* <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-full md:w-48 rounded-none">
                   <SelectValue />
                 </SelectTrigger>
@@ -215,7 +230,7 @@ const ShopDetail = () => {
                   <SelectItem value="price-desc">Price: High to Low</SelectItem>
                   <SelectItem value="rating">Top Rated</SelectItem>
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
 
             {/* Products Grid */}
@@ -227,7 +242,7 @@ const ShopDetail = () => {
 
             {filteredProducts.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No products found</p>
+                <p className="text-muted-foreground text-sm md:text-base">No products found</p>
               </div>
             )}
           </TabsContent>
@@ -262,13 +277,13 @@ const ShopDetail = () => {
 
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Location</h3>
+                  <h3 className="font-semibold text-base md:text-lg mb-4">Location</h3>
                   <div className="space-y-4">
                     {/* <div className="flex items-start gap-2">
                       <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
                     </div> */}
                     <div className="h-48 bg-muted flex items-center justify-center">
-                      <p className="text-sm text-muted-foreground">Map View</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">Map View</p>
                     </div>
                     {/* <Button variant="outline" className="w-full">
                       Get Directions
@@ -279,11 +294,11 @@ const ShopDetail = () => {
 
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Contact Information</h3>
+                  <h3 className="font-semibold text-base md:text-lg mb-4">Contact Information</h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
                       <Phone className="w-5 h-5 text-muted-foreground" />
-                      <a href="tel:+254712345678" className="text-sm hover:text-primary">
+                      <a href="tel:+254712345678" className="text-xs md:text-sm hover:text-primary">
                         +254 712 345 678
                       </a>
                     </div>

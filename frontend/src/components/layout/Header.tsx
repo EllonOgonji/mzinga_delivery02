@@ -13,11 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
 
 export const Header = () => {
   const { isDark, toggleTheme } = useTheme();
   const {logout} = useAuth();
   const { cartCount } = useCart();
+  const [searchTerm, setSearchTerm] = useState('');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -26,18 +28,23 @@ export const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
             <ShoppingBag className="h-6 w-6 text-accent" />
-            <span className="hidden sm:inline">Cstop Shop</span>
+            <span className="hidden sm:inline">Mzinga Delivery</span>
           </Link>
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative w-full flex gap-2">
               <Input
                 type="search"
                 placeholder="Search products"
-                className="w-full pl-10"
+                className="w-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
+              <Button variant="outline" onClick={() => { window.location.href=`/products?search=${encodeURIComponent(searchTerm)}`; setSearchTerm(''); }}>
+                {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
+                <Search/>
+              </Button>
             </div>
           </div>
 
@@ -55,13 +62,6 @@ export const Header = () => {
               ) : (
                 <Moon className="h-5 w-5" />
               )}
-            </Button>
-
-            {/* Wishlist */}
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/wishlist">
-                <Heart className="h-5 w-5" />
-              </Link>
             </Button>
 
             {/* Cart */}
@@ -90,31 +90,32 @@ export const Header = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/profile">My Orders</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">Wishlist</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Mobile Menu */}
-            <Button variant="ghost" size="icon" className="md:hidden">
+            {/* <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
-            </Button>
+            </Button> */}
           </div>
         </div>
 
         {/* Search Bar - Mobile */}
         <div className="pb-3 md:hidden">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative w-full flex gap-2">
             <Input
               type="search"
               placeholder="Search products"
-              className="w-full pl-10"
+              className="w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <Button variant="outline" onClick={() => { window.location.href=`/products?search=${encodeURIComponent(searchTerm)}`; setSearchTerm(''); }}>
+              {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
+              <Search/>
+            </Button>
           </div>
         </div>
       </div>

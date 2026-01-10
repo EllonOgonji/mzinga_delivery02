@@ -37,24 +37,10 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
 
   const { data: shops = [] } = useQuery({
     queryKey: ['shops', 'filterModal'],
-    queryFn: () => getAllShops({})
-  });
-
-  const filteredShops = shops.filter(shop => {
-    const matchesSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-    let matchesFilters = true;
-    if (activeFilters.includes('open')) {
-      matchesFilters = matchesFilters && shop.status === 'open';
+    queryFn: async () => {
+      const res = await getAllShops({limit:10, page:1})
+      return res.data
     }
-    // if (activeFilters.includes('rated')) {
-    //   matchesFilters = matchesFilters && shop.rating >= 4.5;
-    // }
-    // if (activeFilters.includes('fast')) {
-    //   matchesFilters = matchesFilters && shop.deliveryFees['0-2km'] <= 3;
-    // }
-
-    return matchesSearch && matchesFilters;
   });
 
   const toggleFilter = (filterId: string) => {
@@ -116,7 +102,7 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
 
           {/* Shop List */}
           <div className="space-y-2">
-            {filteredShops.map((shop) => {
+            {shops.map((shop) => {
               const deliveryFees = calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude });
               const distanceToUser = findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude }).toFixed(1);
               return (
@@ -137,11 +123,9 @@ export const ShopFilterModal = ({ open, onOpenChange }: ShopFilterModalProps) =>
                       <div>
                         <h3 className="font-semibold">{shop.name}</h3>
                         <div className="flex gap-2 mt-1">
-                          {shop.category.slice(0, 2).map(cat => (
-                            <Badge key={cat} variant="secondary" className="text-xs">
-                              {cat}
-                            </Badge>
-                          ))}
+                          <Badge variant="secondary" className="text-xs">
+                            {shop.category}
+                          </Badge>
                         </div>
                       </div>
                       <button

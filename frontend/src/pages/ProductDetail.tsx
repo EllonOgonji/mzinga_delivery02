@@ -13,7 +13,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { useCart } from '@/contexts/CartContext';
 import { Heart, Share2, ShoppingCart, Star, MapPin, Clock, Truck, Package, Shield, CheckCircle, Phone, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllProducts, getSingleProduct } from '@/data/productData';
+import { getAllProducts, getSingleProduct, getSingleStoreProducts } from '@/data/productData';
 import { getAllShops, getSingleShop } from '@/data/shopData';
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 import { Product, Shop } from '@/types';
@@ -33,23 +33,22 @@ export default function ProductDetail() {
     enabled: !!productId
   });
 
-  console.log(product)
-
   const { data: shop, isLoading: isLoadingShop } = useQuery({
     queryKey: ['shop', product?.store_id],
     queryFn: () => getSingleShop(product?.store_id),
     enabled: !!product?.store_id
   });
-
-  console.log(shop)
   
   const { data: rawRelatedProducts = [] } = useQuery({
     queryKey: ['relatedProducts', product?.category, product?.store_id],
-    queryFn: () => getAllProducts({ category: product?.category, shopId: product?.store_id }),
+    queryFn: async () => {
+      const productsFromSameShop = await getSingleStoreProducts(product?.store_id)
+      return productsFromSameShop.filter(p => p.category === product?.category && p.id !== product?.id).slice(0, 8);
+    },
     enabled: !!product
   });
 
-  const relatedProducts = rawRelatedProducts.filter(p => p.id !== product?.id).slice(0, 8);
+  const relatedProducts = rawRelatedProducts
   const productAverageRating = product?.ratings?.length > 0 ? (product.ratings.reduce((sum, r) => sum + r, 0) / product.ratings.length).toFixed(1) : 0;
   const deliveryFee = shop ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude }) : 0;
 
@@ -64,8 +63,8 @@ export default function ProductDetail() {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-2">Product not found</h1>
-            <Link to="/products">
-              <Button>Browse Products</Button>
+            <Link to="/">
+              <Button>Browse Shops</Button>
             </Link>
           </div>
         </main>
@@ -108,12 +107,6 @@ export default function ProductDetail() {
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link to="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/products">{product.category}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -183,7 +176,7 @@ export default function ProductDetail() {
           <div className="space-y-6">
             {/* Product Header */}
             <div>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
 
               {/* Shop Info */}
               {/* <Link to={`/shop/${shop.id}`} className="flex items-center gap-2 mb-3 hover:text-accent">
@@ -201,9 +194,9 @@ export default function ProductDetail() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-warning text-warning" />
-                  <span className="text-lg font-semibold">{product.average_rating}</span>
+                  <span className="text-base md:text-lg font-semibold">{product.average_rating}</span>
                 </div>
-                <button className="text-sm text-muted-foreground hover:text-foreground">
+                <button className="text-xs md:text-sm text-muted-foreground hover:text-foreground">
                   ({product.ratings.length} reviews)
                 </button>
               </div>
@@ -214,12 +207,12 @@ export default function ProductDetail() {
             {/* Pricing */}
             <div>
               <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-4xl font-bold text-accent">
+                <span className="text-2xl md:text-4xl font-bold text-accent">
                   KES {Number(product.price).toFixed(2)}
                 </span>
                 {product.compareAtPrice && (
                   <>
-                    <span className="text-2xl text-muted-foreground line-through">
+                    <span className="text-xl md:text-2xl text-muted-foreground line-through">
                       KES {Number(product.compareAtPrice).toFixed(2)}
                     </span>
                     {/* <Badge variant="destructive" className="text-sm">
@@ -233,7 +226,7 @@ export default function ProductDetail() {
               {product.stock > 0 ? (
                 <div className="flex items-center gap-2 text-success">
                   <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">
+                  <span className="font-medium text-sm md:text-base">
                     {product.stock > 10 ? 'In Stock' : `Only ${product.stock} left`}
                   </span>
                 </div>
@@ -248,8 +241,8 @@ export default function ProductDetail() {
 
             {/* Product Description */}
             <div>
-              <h3 className="font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+              <h3 className="font-semibold mb-2 text-sm md:text-base">Description</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm md:text-base">{product.description}</p>
             </div>
 
             <Separator />
@@ -257,7 +250,7 @@ export default function ProductDetail() {
             {/* Add to Cart Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="flex items-center border">
+                <div className="flex flex-1 items-center justify-between border">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -266,7 +259,7 @@ export default function ProductDetail() {
                   >
                     -
                   </Button>
-                  <span className="px-6 py-2 font-semibold">{quantity}</span>
+                    <span className="px-6 py-2 font-semibold text-sm md:text-base">{quantity}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -281,14 +274,14 @@ export default function ProductDetail() {
               <div className="flex gap-3">
                 <Button
                   size="lg"
-                  className="flex-1"
+                  className="flex-1 text-sm md:text-base"
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart
                 </Button>
-                <Button
+                {/* <Button
                   size="lg"
                   variant="outline"
                   onClick={() => {
@@ -297,41 +290,11 @@ export default function ProductDetail() {
                   }}
                 >
                   <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
+                </Button> */}
               </div>
-
-              <Button size="lg" variant="secondary" className="w-full" onClick={handleAddToCart}>
-                Buy Now
-              </Button>
             </div>
 
             <Separator />
-
-            {/* Delivery Information */}
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Truck className="h-5 w-5" />
-                  Delivery Information
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Delivery fee: KES. {deliveryFee}</p>
-                      <p className="text-muted-foreground text-xs">Depends on your location</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Shop Information */}
             <Card>
@@ -339,7 +302,7 @@ export default function ProductDetail() {
                 <div className="flex items-center gap-3 mb-3">
                   <img src={shop.logo} alt={shop.name} className="w-12 h-12 rounded-full" />
                   <div className="flex-1">
-                    <h3 className="font-semibold">{shop.name}</h3>
+                    <h3 className="font-semibold text-sm md:text-base">{shop.name}</h3>
                     {/* <div className="flex items-center gap-1 text-sm">
                       <Star className="h-4 w-4 fill-warning text-warning" />
                       <span>{shop.rating}</span>
@@ -349,14 +312,9 @@ export default function ProductDetail() {
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className={shop.status === 'approved' ? 'text-success' : 'text-destructive'}>
+                    <span className={shop.status === 'approved' ? 'text-success text-sm md:text-base' : 'text-destructive text-sm md:text-base'}>
                       {shop.status.toUpperCase()}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude }).toFixed(1)} km away</span>
                   </div>
                   {/* <p className="text-muted-foreground">200+ products from this shop</p> */}
                 </div>
@@ -397,12 +355,12 @@ export default function ProductDetail() {
           <TabsContent value="specifications" className="mt-6">
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Product Specifications</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-4">Product Specifications</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   {Object.entries(product.specifications).map(([key, value]) => (
                     <div key={key} className="flex border-b pb-2">
-                      <span className="font-medium w-40 capitalize">{key}:</span>
-                      <span className="text-muted-foreground">{value}</span>
+                      <span className="font-medium text-sm md:text-base w-40 capitalize">{key}:</span>
+                      <span className="text-muted-foreground text-sm md:text-base">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -445,9 +403,9 @@ export default function ProductDetail() {
                 <Separator className="my-6" />
 
                 <div className="space-y-6">
-                  <h4 className="font-semibold">Customer Reviews</h4>
+                  <h4 className="font-semibold text-sm md:text-base">Customer Reviews</h4>
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>No reviews yet. Be the first to review this product!</p>
+                    <p className='text-sm md:text-base'>No reviews yet. Be the first to review this product!</p>
                     <Button className="mt-4">Write a Review</Button>
                   </div>
                 </div>
@@ -456,7 +414,7 @@ export default function ProductDetail() {
           </TabsContent>
 
           <TabsContent value="related" className="mt-6">
-            <h3 className="text-xl font-semibold mb-6">Related Products</h3>
+            <h3 className="text-lg md:text-xl font-semibold mb-6">Related Products</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map(relatedProduct => (
                 <ProductCard key={relatedProduct.id} product={relatedProduct} />
@@ -469,7 +427,7 @@ export default function ProductDetail() {
       <Footer />
 
       {/* Sticky Buy Bar (Mobile) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex items-center gap-3 z-50">
+      {/* <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex items-center gap-3 z-50">
         <div className="flex-1">
           <div className="text-2xl font-bold text-accent">${Number(product.price).toFixed(2)}</div>
         </div>
@@ -480,7 +438,7 @@ export default function ProductDetail() {
         <Button size="lg" variant="outline" onClick={() => setIsWishlisted(!isWishlisted)}>
           <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 }
