@@ -12,9 +12,9 @@ export const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <ShoppingBag className="h-6 w-6 text-accent" />
-              <span className="font-bold text-lg">Cstop Shop</span>
+              <span className="font-bold text-base md:text-lg">Mzinga Delivery</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-xs md:text-sm text-muted-foreground mb-4">
               Shop Everything, Everywhere - Your Way. The modern multi-vendor marketplace.
             </p>
             <div className="flex gap-3">
@@ -36,7 +36,7 @@ export const Footer = () => {
           {/* Customer Service */}
           <div>
             <h3 className="font-semibold mb-4">Customer Service</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li>
                 <Link to="/contact" className="hover:text-accent transition-colors">
                   Contact Us
@@ -47,23 +47,13 @@ export const Footer = () => {
                   FAQ
                 </Link>
               </li>
-              <li>
-                <Link to="/returns" className="hover:text-accent transition-colors">
-                  Returns & Refunds
-                </Link>
-              </li>
-              <li>
-                <Link to="/shipping" className="hover:text-accent transition-colors">
-                  Shipping Information
-                </Link>
-              </li>
             </ul>
           </div>
 
           {/* Quick Links */}
           <div>
             <h3 className="font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li>
                 <Link to="/products" className="hover:text-accent transition-colors">
                   All Products
@@ -75,11 +65,6 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/deals" className="hover:text-accent transition-colors">
-                  Today's Deals
-                </Link>
-              </li>
-              <li>
                 <Link to="/vendor/register" className="hover:text-accent transition-colors">
                   Become a Vendor
                 </Link>
@@ -88,9 +73,9 @@ export const Footer = () => {
           </div>
 
           {/* Newsletter */}
-          <div>
+          {/* <div>
             <h3 className="font-semibold mb-4">Stay Connected</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-xs md:text-sm text-muted-foreground mb-4">
               Subscribe to get special offers and updates.
             </p>
             <div className="flex gap-2">
@@ -103,15 +88,16 @@ export const Footer = () => {
                 Subscribe
               </Button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Bottom Bar */}
         <div className="border-t mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © 2024 Cstop Shop. All rights reserved.
+          <p className="text-xs md:text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Mzinga Delivery. All rights reserved.
           </p>
-          <div className="flex gap-6 text-sm text-muted-foreground">
+          {/* Policies */}
+          {/* <div className="flex gap-6 text-xs md:text-sm text-muted-foreground">
             <Link to="/terms" className="hover:text-accent transition-colors">
               Terms of Service
             </Link>
@@ -121,7 +107,7 @@ export const Footer = () => {
             <Link to="/cookies" className="hover:text-accent transition-colors">
               Cookie Policy
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

@@ -4,14 +4,16 @@ export interface ShopFilters {
   category?: string[];
   rating?: number;
   isOpenNow?: boolean;
+  limit: number;
+  page: number;
   // featured?: boolean;
   searchQuery?: string;
 }
 
 export interface ProductFilters {
-  idMultiple?: number[];
-  id?: number;
-  shopId?: number;
+  // idMultiple?: number[];
+  // id?: number;
+  // shopId?: number;
   shopIdMultiple?: number[];
   shopOpen?: boolean;
   category?: string;
@@ -21,6 +23,8 @@ export interface ProductFilters {
   inStock?: boolean;
   featured?: boolean;
   searchQuery?: string;
+  limit: number;
+  page: number;
 }
 
 export interface User {
