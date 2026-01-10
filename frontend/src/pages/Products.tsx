@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/product/ProductCard';
@@ -15,11 +15,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { mockProducts, mockShops } from '@/data/mockData';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
 import { Filter, Grid, List, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Product, ProductFilters } from '@/types';
 import { getAllProducts } from '@/data/productData';
+import { Pagination, PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious, } from "@/components/ui/pagination";
 
 const categories = [
   'Alcohol & Beverages',
@@ -34,23 +39,28 @@ const categories = [
 ];
 
 export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const { selectedShops, isShopSelected } = useShopFilter();
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get('search');
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isShopFilterOpen, setIsShopFilterOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('relevance');
+  const [sortBy, setSortBy] = useState('price-low');
 
   // Filter states
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [priceRange, setPriceRange] = useState([0, 0]);
   const [minPrice, setMinPrice] = useState('0');
   const [maxPrice, setMaxPrice] = useState('0');
-  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
-  const [deliveryOptions, setDeliveryOptions] = useState<string[]>([]);
+  const [selectedRating, setSelectedRating] = useState<number>(0);
   const [shopFeatures, setShopFeatures] = useState<string[]>([]);
-  const [distance, setDistance] = useState('any');
-  const [shopFromAll, setShopFromAll] = useState(selectedShops.length === 0);
+  const [searchQuery, setSearchQuery] = useState<string>(search ? search : '');
+  const [paginationSettings, setPaginationSettings] = useState({
+    page: 1,
+    limit: 6,
+    total: 0,
+    totalPages: 0,
+    searchQuery: search || ''
+  });
 
   // Expandable sections
   const [expandedSections, setExpandedSections] = useState({
@@ -70,92 +80,80 @@ export default function Products() {
   // Filter and sort products
   // Construct filter object
   const filter = useMemo(() => {
-    let f: ProductFilters = {};
+    let f: ProductFilters = {limit: paginationSettings.limit, page: paginationSettings.page};
 
-    if (!shopFromAll && selectedShops.length > 0) {
-      f.shopIdMultiple = selectedShops;
+    if (selectedCategory && selectedCategory !== '') {
+      f.category = selectedCategory;
     }
 
-    // Filter by categories
-    if (selectedCategories.length > 0) {
-      // Use categoryMultiple for multiple categories
-      f.categoryMultiple = selectedCategories;
-    }
-
-    // Filter by price range
     if (priceRange[0] != 0 || priceRange[1] != 0) {
       f.priceRange = { min: priceRange[0], max: priceRange[1] };
     }
 
-    // Filter by rating
-    if (selectedRatings.length > 0) {
-      f.rating = Math.min(...selectedRatings);
-    }
-
-    // Filter by shop features
-    if (shopFeatures.includes('open-now')) {
-      f.shopOpen = true;
-    }
-    if (shopFeatures.includes('top-rated')) {
-      f.rating = 4;
+    if (searchQuery && searchQuery.trim() !== '') {
+      f.searchQuery = searchQuery;
     }
 
     return f;
-  }, [selectedShops, shopFromAll, selectedCategories, priceRange, selectedRatings, shopFeatures]);
+  }, [selectedCategory, priceRange, selectedRating, searchQuery, paginationSettings]);
 
-  const { data: fetchedProducts = [], isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ['products', filter],
-    queryFn: () => getAllProducts(filter)
+    queryFn: async () => {
+      const res = await getAllProducts(filter)
+      setPaginationSettings(prev => ({
+        ...prev,
+        total: res.meta.total,
+        totalPages: Math.ceil(res.meta.total / prev.limit)
+      }))
+      return res.data
+    },
   });
 
   // Sort products
   const filteredProducts = useMemo(() => {
-    let products = [...fetchedProducts];
+    let productsCopy = [...products];
 
     switch (sortBy) {
       case 'price-low':
-        products.sort((a, b) => a.price - b.price);
+        productsCopy.sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        products.sort((a, b) => b.price - a.price)
+        productsCopy.sort((a, b) => b.price - a.price)
         break;
       case 'newest':
-        products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        productsCopy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         break;
     }
 
-    return products;
-  }, [fetchedProducts, sortBy]);
-
-  const uniqueShops = new Set(filteredProducts.map(p => p.shopId)).size;
+    return productsCopy;
+  }, [products, sortBy]);
 
   const clearAllFilters = () => {
-    setSelectedCategories([]);
+    setSelectedCategory('');
     setPriceRange([0, 0]);
     setMinPrice('0');
     setMaxPrice('0');
-    setSelectedRatings([]);
-    setDeliveryOptions([]);
+    setSelectedRating(0);
     setShopFeatures([]);
-    setDistance('any');
   };
 
   const activeFilters = [
-    ...selectedCategories.map(c => ({ label: c, type: 'category' as const })),
-    ...(selectedRatings.length > 0 ? [{ label: `${Math.min(...selectedRatings)}+ stars`, type: 'rating' as const }] : []),
-    ...(priceRange[0] > 0 || priceRange[1] < 500 ? [{ label: `$${priceRange[0]}-$${priceRange[1]}`, type: 'price' as const }] : []),
+    ...(selectedCategory ? [{ label: selectedCategory, type: 'category' as const }] : []),
+    ...(selectedRating > 0 ? [{ label: `${selectedRating}+ stars`, type: 'rating' as const }] : []),
+    ...(priceRange[0] > 0 || priceRange[1] > 0 ? [{ label: `$${priceRange[0]}-$${priceRange[1]}`, type: 'price' as const }] : []),
     ...shopFeatures.map(f => ({ label: f.replace('-', ' '), type: 'feature' as const })),
   ];
 
   const removeFilter = (filter: typeof activeFilters[0]) => {
     if (filter.type === 'category') {
-      setSelectedCategories(prev => prev.filter(c => c !== filter.label));
+      setSelectedCategory('');
     } else if (filter.type === 'rating') {
-      setSelectedRatings([]);
+      setSelectedRating(0);
     } else if (filter.type === 'price') {
-      setPriceRange([0, 500]);
+      setPriceRange([0, 0]);
       setMinPrice('0');
-      setMaxPrice('500');
+      setMaxPrice('0');
     } else if (filter.type === 'feature') {
       setShopFeatures(prev => prev.filter(f => f.replace('-', ' ') !== filter.label));
     }
@@ -316,12 +314,12 @@ export default function Products() {
               <div key={rating} className="flex items-center space-x-2">
                 <Checkbox
                   id={`rating-${rating}`}
-                  checked={selectedRatings.includes(rating)}
+                  checked={selectedRating === rating}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSelectedRatings([rating]);
+                      setSelectedRating(rating);
                     } else {
-                      setSelectedRatings([]);
+                      setSelectedRating(0);
                     }
                   }}
                 />
@@ -403,7 +401,7 @@ export default function Products() {
       </div>
 
       {/* Distance Filter */}
-      <div className="pb-4">
+      {/* <div className="pb-4">
         <button
           onClick={() => toggleSection('distance')}
           className="flex items-center justify-between w-full text-left mb-3"
@@ -423,7 +421,7 @@ export default function Products() {
             ))}
           </RadioGroup>
         )}
-      </div>
+      </div> */}
 
       {/* Action Buttons */}
       <div className="space-y-2">
@@ -446,24 +444,31 @@ export default function Products() {
         </button>
         {expandedSections.categories && (
           <div className="space-y-2">
-            {categories.map(category => (
-              <div key={category} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`category-${category}`}
-                  checked={selectedCategories.includes(category)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedCategories(prev => [...prev, category]);
-                    } else {
-                      setSelectedCategories(prev => prev.filter(c => c !== category));
-                    }
-                  }}
-                />
-                <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
-                  {category}
-                </Label>
-              </div>
-            ))}
+            <RadioGroup value={selectedCategory} onValueChange={val => setSelectedCategory(val)}>
+              {categories.map(category => (
+                <div key={category} className="flex items-center space-x-2">
+                  <RadioGroupItem value={category} id={`category-${category}`} />
+
+                  <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                    {category}
+                  </Label>
+                  {/* <Checkbox
+                    id={`category-${category}`}
+                    checked={selectedCategory === category}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedCategory(category);
+                      } else {
+                        setSelectedCategory('');
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                    {category}
+                  </Label> */}
+                </div>
+              ))}
+          </RadioGroup>
           </div>
         )}
       </div>
@@ -510,13 +515,13 @@ export default function Products() {
           <div className="flex-1">
             {/* Results Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between gap-4">
                 <h1 className="text-xl font-bold">
-                  {filteredProducts.length} products from {uniqueShops} {uniqueShops === 1 ? 'shop' : 'shops'}
+                  {paginationSettings.total} products found
                 </h1>
 
                 {/* Mobile Filter Button */}
-                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                {/* <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="lg:hidden">
                       <Filter className="h-4 w-4" />
@@ -531,13 +536,13 @@ export default function Products() {
                       <FilterSidebar />
                     </div>
                   </SheetContent>
-                </Sheet>
+                </Sheet> */}
 
                 {/* Mobile Categories Button */}
                 <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="lg:hidden">
-                      Categories
+                      <Filter className="h-4 w-4" />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 overflow-y-auto">
@@ -576,7 +581,6 @@ export default function Products() {
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="relevance">Relevance</SelectItem>
                     <SelectItem value="price-low">Price: Low to High</SelectItem>
                     <SelectItem value="price-high">Price: High to Low</SelectItem>
                     <SelectItem value="newest">Newest First</SelectItem>
@@ -597,7 +601,7 @@ export default function Products() {
                   </Badge>
                 ))}
                 <Button variant="link" size="sm" onClick={clearAllFilters}>
-                  Clear all
+                  Clear filters
                 </Button>
               </div>
             )}
@@ -621,33 +625,93 @@ export default function Products() {
                 </Button>
               </div>
             ) : (
-              <div className={viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                : 'space-y-4'
-              }>
+              <div className={'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}>
                 {filteredProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             )}
 
-            {/* Pagination */}
-            {filteredProducts.length > 0 && (
-              <div className="mt-8 text-center">
-                <Button variant="outline" size="lg">
-                  Load More
-                </Button>
-              </div>
-            )}
+            <div>
+              {/* Pagination */}
+              {(paginationSettings.total / paginationSettings.limit) > 1 && (
+                <Pagination className="mt-8">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (paginationSettings.page > 1) {
+                            setPaginationSettings(prev => ({ ...prev, page: prev.page - 1 }));
+                          }
+                        }}
+                        className={paginationSettings.page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {[...Array(paginationSettings.totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      // Show first, last, current, and adjacent pages
+                      if (
+                        pageNum === 1 ||
+                        pageNum === paginationSettings.totalPages ||
+                        (pageNum >= paginationSettings.page - 1 && pageNum <= paginationSettings.page + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPaginationSettings(prev => ({ ...prev, page: pageNum }));
+                              }}
+                              isActive={paginationSettings.page === pageNum}
+                              className="cursor-pointer"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (
+                        pageNum === paginationSettings.page - 2 ||
+                        pageNum === paginationSettings.page + 2
+                      ) {
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (paginationSettings.page < paginationSettings.totalPages) {
+                            setPaginationSettings(prev => ({ ...prev, page: prev.page + 1 }));
+                          }
+                        }}
+                        className={paginationSettings.page === paginationSettings.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
           </div>
         </div>
       </main>
 
       <Footer />
-      <ShopFilterModal
+
+      {/* <ShopFilterModal
         open={isShopFilterOpen}
         onOpenChange={setIsShopFilterOpen}
-      />
+      /> */}
     </div>
   );
 }

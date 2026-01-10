@@ -1,22 +1,40 @@
 import { Shop, ShopFilters } from "@/types";
 
-export const getAllShops = async function (filters: ShopFilters = {}): Promise<Shop[]> {
-    let url = `${import.meta.env.VITE_BASE_URL}/api/stores`;
+type ShopResponse = {
+    data: Shop[];
+    meta: {
+        page: number;
+        limit: number;
+        total: number;
+    }
+};
+
+export const getAllShops = async function (filters: ShopFilters = {limit: 6, page: 1}): Promise<ShopResponse>{
+    let filterUrl = `${import.meta.env.VITE_BASE_URL}/api/stores/filter?`;
+
     if (filters && filters.idMultiple) {
         const shops = await Promise.all(
-            filters.idMultiple.map(id => getAllShops({ id }))
+            filters.idMultiple.map(id => getSingleShop(id))
         );
-        return shops.flat();
+        return { data: shops.flat(), meta: { page: 1, limit: shops.length, total: shops.length } };
     }
 
-    return fetch(url,{
+    if (filters.page && filters.limit) {
+        filterUrl += `page=${filters.page}&limit=${filters.limit}`;
+    }
+
+    if (filters.searchQuery && filters.searchQuery.trim() !== "") {
+        filterUrl += `&search=${encodeURIComponent(filters.searchQuery)}`;
+    }
+
+    return fetch(filterUrl,{
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
     }).then(response => response.json()).then(data => {
-        return data.data as Shop[]
+        return data
     }).catch(error => {
         console.error('Error:', error);
         return [];

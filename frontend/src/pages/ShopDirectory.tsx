@@ -12,12 +12,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockShops, mockCategories } from "@/data/mockData";
 import { Grid3x3, MapPin, Heart, Star, Clock, Truck } from "lucide-react";
-import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sheet, SheetHeader, SheetTitle, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Shop } from "@/types";
 import { getAllShops } from "@/data/shopData";
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
+import { Pagination, PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious, } from "@/components/ui/pagination";
 
 const ShopDirectory = () => {
   type expandableSections = 'categories' | 'rating' | 'delivery' | 'features' | 'distance';
@@ -28,15 +34,28 @@ const ShopDirectory = () => {
   const categories = mockCategories;
   const [shopFeatures, setShopFeatures] = useState<{ id: string; label: string }[]>([
     { id: 'open-now', label: 'Open now' },
-    // { id: 'top-rated', label: 'Top rated (4+ stars)' },
-    // { id: 'fast-delivery', label: 'Fast delivery (< 2 hours)' },
-    // { id: 'budget-friendly', label: 'Budget-friendly' }
+    { id: 'top-rated', label: 'Top rated (4+ stars)' },    
   ]);
   const [selectedShopFeatures, setSelectedShopFeatures] = useState<string[]>([]);
+  const [paginationSettings, setPaginationSettings] = useState({
+    page: 1,
+    limit: 6,
+    total: 0,
+    totalPages: 0,
+    searchQuery: ''
+  });
 
   const { data: shops = [], isLoading } = useQuery({
-    queryKey: ['shops', 'directory'],
-    queryFn: async () => await getAllShops({})
+    queryKey: ['shops', 'directory', paginationSettings.page, paginationSettings.limit, paginationSettings.searchQuery],
+    queryFn: async () => {
+      const res = await getAllShops({limit: paginationSettings.limit, page: paginationSettings.page, searchQuery: paginationSettings.searchQuery});
+      setPaginationSettings(prev => ({
+        ...prev,
+        total: res.meta.total,
+        totalPages: Math.ceil(res.meta.total / prev.limit)
+      }))
+      return res.data;
+    }
   });
 
   // Expandable sections - recal which sections are open and which are not
@@ -230,10 +249,10 @@ const ShopDirectory = () => {
     let filtered = shops;
 
     if (searchQuery.trim() !== "") {
-      filtered = filtered.filter((shop) =>
-        shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        shop.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      // filtered = filtered.filter((shop) =>
+      //   shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      //   shop.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
+      // );
     }
 
     // Filter by categories
@@ -284,7 +303,7 @@ const ShopDirectory = () => {
       <section className="bg-gradient-hero py-16">
         <div className="container text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Explore All Shops</h1>
-          <p className="text-lg text-muted-foreground mb-6">
+          <p className="text-base md:text-lg text-muted-foreground mb-6">
             Browse through our amazing collection of shops
           </p>
           <Button size="lg" className="bg-primary hover:bg-primary/90">
@@ -368,28 +387,33 @@ const ShopDirectory = () => {
           <div className="flex-1">
             {/* Search and Controls */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1">
+              <div className="flex flex-1 gap-2">
                 <Input
                   placeholder="Search shops..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  
                 />
+                <Button
+                  variant="outline"
+                  onClick={() => {setPaginationSettings(prev => ({ ...prev, page: 1, searchQuery: searchQuery }));}}>
+                  <Search className="w-4 h-4" />
+                </Button>
               </div>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
+              {/* Dropdown quick filter */}
+              {/* <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-full md:w-48 rounded-none">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="rating">Top Rated</SelectItem>
-                  <SelectItem value="nearest">Nearest</SelectItem>
-                  <SelectItem value="name">A-Z</SelectItem>
+                  <SelectItem value="rating">Top Rated</SelectItem>                                    
                 </SelectContent>
-              </Select>
+              </Select> */}
 
               {/* Mobile Filter Button */}
-              <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              {/* <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm" className="lg:hidden">
                     <Filter className="h-4 w-4 mr-2" />
@@ -404,7 +428,7 @@ const ShopDirectory = () => {
                     <FilterSidebar />
                   </div>
                 </SheetContent>
-              </Sheet>
+              </Sheet> */}
 
               {/* <div className="flex gap-2">
                 <Button
@@ -426,7 +450,7 @@ const ShopDirectory = () => {
 
             {/* Results Count */}
             <p className="text-sm text-muted-foreground mb-4">
-              {filteredShops.length} shops found
+              {paginationSettings.total} shops found
             </p>
 
             {/* Shop Grid/List */}
@@ -509,6 +533,79 @@ const ShopDirectory = () => {
                 );
               })}
             </div>
+
+            <div>
+              {/* Pagination */}
+              {(paginationSettings.total / paginationSettings.limit) > 1 && (
+                <Pagination className="mt-8">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (paginationSettings.page > 1) {
+                            setPaginationSettings(prev => ({ ...prev, page: prev.page - 1 }));
+                          }
+                        }}
+                        className={paginationSettings.page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+
+                    {[...Array(paginationSettings.totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      // Show first, last, current, and adjacent pages
+                      if (
+                        pageNum === 1 ||
+                        pageNum === paginationSettings.totalPages ||
+                        (pageNum >= paginationSettings.page - 1 && pageNum <= paginationSettings.page + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPaginationSettings(prev => ({ ...prev, page: pageNum }));
+                              }}
+                              isActive={paginationSettings.page === pageNum}
+                              className="cursor-pointer"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (
+                        pageNum === paginationSettings.page - 2 ||
+                        pageNum === paginationSettings.page + 2
+                      ) {
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (paginationSettings.page < paginationSettings.totalPages) {
+                            setPaginationSettings(prev => ({ ...prev, page: prev.page + 1 }));
+                          }
+                        }}
+                        className={paginationSettings.page === paginationSettings.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+
+            
           </div>
         </div>
       </div>
