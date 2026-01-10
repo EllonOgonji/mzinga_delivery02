@@ -864,4 +864,34 @@ curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/checkout" \
 }
 ```
 
----
+### 8. Configuration & Security (Verified)
+
+**8.1 CORS Verification**
+
+Cross-Origin Resource Sharing (CORS) is configured to allow specific origins.
+
+**Test 1: Vercel Frontend**
+
+```bash
+curl -v -X OPTIONS "https://mzinga-delivery-2rkz.onrender.com/api/products" \
+  -H "Origin: https://mzinga-delivery.vercel.app" \
+  -H "Access-Control-Request-Method: GET"
+```
+
+**Expected Response:**
+
+- Status: `204 No Content`
+- Header: `access-control-allow-origin: https://mzinga-delivery.vercel.app`
+
+**Test 2: Localhost 8080**
+
+```bash
+curl -v -X OPTIONS "https://mzinga-delivery-2rkz.onrender.com/api/products" \
+  -H "Origin: http://localhost:8080" \
+  -H "Access-Control-Request-Method: GET"
+```
+
+**Expected Response:**
+
+- Status: `204 No Content`
+- Header: `access-control-allow-origin: http://localhost:8080`
