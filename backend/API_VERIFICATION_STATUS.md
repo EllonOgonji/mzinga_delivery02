@@ -291,6 +291,8 @@ curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/orders" \
   -d '{
     "order": {
       "store_id": 5,
+      "delivery_lat": -1.286389,
+      "delivery_lng": 36.817223,
       "items": [
         {"product_id": 1, "quantity": 2, "subtotal": 500.00}
       ]
