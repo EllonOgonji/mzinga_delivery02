@@ -9,6 +9,7 @@ defmodule MzingaDelivery.Orders.Order do
     field :delivery_status, :string, default: "pending"
     field :delivery_lat, :float
     field :delivery_lng, :float
+    field :checkout_group_id, Ecto.UUID
 
     belongs_to :customer, MzingaDelivery.Accounts.User
     belongs_to :store, MzingaDelivery.Stores.Store
@@ -30,7 +31,8 @@ defmodule MzingaDelivery.Orders.Order do
       :rider_id,
       :delivery_status,
       :delivery_lat,
-      :delivery_lng
+      :delivery_lng,
+      :checkout_group_id
     ])
     |> validate_required([:customer_id, :store_id, :total_price])
     |> validate_number(:total_price, greater_than: 0)

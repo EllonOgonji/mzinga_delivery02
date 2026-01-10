@@ -8,6 +8,10 @@ defmodule MzingaDelivery.Orders do
   alias MzingaDelivery.Orders.{Order, OrderItem}
   alias MzingaDelivery.Stores
   alias MzingaDelivery.Accounts
+  alias MzingaDelivery.Payments
+
+  alias MzingaDelivery.Carts
+  alias MzingaDelivery.Payments.MpesaService
 
   @doc """
   Returns the list of orders.
@@ -336,5 +340,116 @@ defmodule MzingaDelivery.Orders do
 
         {:ok, order}
     end
+  end
+
+  @doc """
+  Creates unified checkout orders for cart items.
+  Splits items by store, creates one order per store, and one payment for the total.
+  """
+  def create_unified_checkout(user, attrs \\ %{}) do
+    payment_phone = Map.get(attrs, "payment_phone") || user.phone_number
+
+    # Get Cart
+    cart = Carts.get_cart(user.id)
+
+    if is_nil(cart) or Enum.empty?(cart.items) do
+      {:error, :empty_cart}
+    else
+      Repo.transaction(fn ->
+        items = cart.items
+        checkout_group_id = Ecto.UUID.generate()
+
+        # Group items by store
+        grouped_items = Enum.group_by(items, & &1.product.store_id)
+
+        # Create Orders (one per store)
+        created_orders =
+          Enum.map(grouped_items, fn {store_id, store_items} ->
+            total_price =
+              Enum.reduce(store_items, Decimal.new(0), &Decimal.add(&1.subtotal, &2))
+
+            # Prepare Order Items attrs
+            order_items_attrs =
+              Enum.map(store_items, fn item ->
+                %{
+                  "product_id" => item.product_id,
+                  "quantity" => item.quantity,
+                  "subtotal" => item.subtotal
+                }
+              end)
+
+            order_params = %{
+              "customer_id" => user.id,
+              "store_id" => store_id,
+              "total_price" => total_price,
+              "checkout_group_id" => checkout_group_id,
+              "payment_status" => "pending",
+              "items" => order_items_attrs
+            }
+
+            case create_order_with_items(order_params) do
+              {:ok, order} -> order
+              {:error, reason} -> Repo.rollback(reason)
+            end
+          end)
+
+        # Calculate Grand Total
+        grand_total =
+          Enum.reduce(created_orders, Decimal.new(0), &Decimal.add(&1.total_price, &2))
+
+        # Create Payment
+        {:ok, payment} =
+          Payments.create_payment(%{
+            checkout_group_id: checkout_group_id,
+            amount: grand_total,
+            status: "pending",
+            provider: "M-Pesa"
+          })
+
+        # Initiate M-Pesa STK Push
+        # Use short ref for AccountReference
+        ref_id = "GRP-#{String.slice(checkout_group_id, 0, 8)}"
+
+        case MpesaService.initiate_stk_push(payment_phone, grand_total, ref_id) do
+          {:ok, mpesa_response} ->
+            # Update payment with transaction ID
+            Payments.update_payment(payment, %{
+              transaction_id: mpesa_response["CheckoutRequestID"]
+            })
+
+            # Clear Cart
+            Carts.clear_cart(user.id)
+
+            %{
+              status: "payment_initiated",
+              checkout_group_id: checkout_group_id,
+              payment: payment,
+              orders: created_orders,
+              mpesa_response: mpesa_response,
+              message: "Payment initiated for #{length(created_orders)} orders"
+            }
+
+          {:error, reason} ->
+            Repo.rollback(reason)
+        end
+      end)
+    end
+  end
+
+  @doc """
+  Updates payment status for all orders in a checkout group.
+  """
+  def update_group_orders_payment_status(group_id, status) do
+    from(o in Order, where: o.checkout_group_id == ^group_id)
+    |> Repo.update_all(set: [payment_status: status])
+  end
+
+  @doc """
+  Get all orders in a checkout group.
+  """
+  def get_orders_by_group(group_id) do
+    from(o in Order, where: o.checkout_group_id == ^group_id)
+    |> Repo.all()
+    |> Repo.preload(:customer)
   end
 end

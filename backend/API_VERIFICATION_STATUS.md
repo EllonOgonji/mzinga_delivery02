@@ -830,3 +830,38 @@ When M-Pesa payment fails (cancelled/timeout):
 | 1032 | Request cancelled by user |
 | 1037 | STK request timeout |
 | 1 | Insufficient balance |
+
+---
+
+### 7. Unified Checkout (Verified)
+
+**7.1 Create Unified Checkout (Multiple Stores)**
+**Endpoint:** `POST /api/checkout`
+
+Allows purchasing items from multiple stores in a single transaction. Requires items in cart.
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/checkout" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "payment_phone": "254712345678"
+  }'
+```
+
+**Status:** 201 Created
+
+**Response Structure:**
+
+```json
+{
+  "message": "Payment initiated for 2 orders",
+  "data": {
+    "checkout_group_id": "550e8400-e29b-41d4-a716-446655440000",
+    "total_orders": 2,
+    "payment_status": "initiated"
+  }
+}
+```
+
+---
