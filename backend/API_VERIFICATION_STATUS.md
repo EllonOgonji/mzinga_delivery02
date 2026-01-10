@@ -830,3 +830,68 @@ When M-Pesa payment fails (cancelled/timeout):
 | 1032 | Request cancelled by user |
 | 1037 | STK request timeout |
 | 1 | Insufficient balance |
+
+---
+
+### 7. Unified Checkout (Verified)
+
+**7.1 Create Unified Checkout (Multiple Stores)**
+**Endpoint:** `POST /api/checkout`
+
+Allows purchasing items from multiple stores in a single transaction. Requires items in cart.
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/checkout" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "payment_phone": "254712345678"
+  }'
+```
+
+**Status:** 201 Created
+
+**Response Structure:**
+
+```json
+{
+  "message": "Payment initiated for 2 orders",
+  "data": {
+    "checkout_group_id": "550e8400-e29b-41d4-a716-446655440000",
+    "total_orders": 2,
+    "payment_status": "initiated"
+  }
+}
+```
+
+### 8. Configuration & Security (Verified)
+
+**8.1 CORS Verification**
+
+Cross-Origin Resource Sharing (CORS) is configured to allow specific origins.
+
+**Test 1: Vercel Frontend**
+
+```bash
+curl -v -X OPTIONS "https://mzinga-delivery-2rkz.onrender.com/api/products" \
+  -H "Origin: https://mzinga-delivery.vercel.app" \
+  -H "Access-Control-Request-Method: GET"
+```
+
+**Expected Response:**
+
+- Status: `204 No Content`
+- Header: `access-control-allow-origin: https://mzinga-delivery.vercel.app`
+
+**Test 2: Localhost 8080**
+
+```bash
+curl -v -X OPTIONS "https://mzinga-delivery-2rkz.onrender.com/api/products" \
+  -H "Origin: http://localhost:8080" \
+  -H "Access-Control-Request-Method: GET"
+```
+
+**Expected Response:**
+
+- Status: `204 No Content`
+- Header: `access-control-allow-origin: http://localhost:8080`

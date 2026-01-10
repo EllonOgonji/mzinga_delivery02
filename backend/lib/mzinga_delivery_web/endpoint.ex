@@ -50,7 +50,7 @@ defmodule MzingaDeliveryWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug CORSPlug
+  plug CORSPlug, origin: &MzingaDeliveryWeb.CORS.allow?/1
   plug Plug.Session, @session_options
   plug MzingaDeliveryWeb.Router
 end
