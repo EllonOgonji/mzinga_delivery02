@@ -12,6 +12,8 @@ defmodule MzingaDelivery.Stores.Store do
     field :logo, :string
     field :banner, :string
     field :category, :string
+    field :is_open, :boolean, default: true
+    field :closing_time, :time
     field :is_verified, :boolean, default: false
     field :rejection_reason, :string
     field :approved_at, :utc_datetime
@@ -35,7 +37,18 @@ defmodule MzingaDelivery.Stores.Store do
   """
   def vendor_create_changeset(store, attrs) do
     store
-    |> cast(attrs, [:vendor_id, :name, :address, :latitude, :longitude, :logo, :banner, :category])
+    |> cast(attrs, [
+      :vendor_id,
+      :name,
+      :address,
+      :latitude,
+      :longitude,
+      :logo,
+      :banner,
+      :category,
+      :is_open,
+      :closing_time
+    ])
     |> validate_required([:vendor_id, :name, :address])
     |> validate_inclusion(:category, @valid_categories, allow_nil: true)
     |> put_change(:status, "pending")
@@ -60,7 +73,9 @@ defmodule MzingaDelivery.Stores.Store do
       :logo,
       :banner,
       :category,
-      :is_verified
+      :is_verified,
+      :is_open,
+      :closing_time
     ])
     |> validate_required([:vendor_id, :name, :address])
     |> validate_inclusion(:status, @valid_statuses)

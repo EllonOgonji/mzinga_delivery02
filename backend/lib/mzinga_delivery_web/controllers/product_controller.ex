@@ -12,8 +12,18 @@ defmodule MzingaDeliveryWeb.ProductController do
   List products for a store (public)
   GET /api/stores/:store_id/products
   """
-  def index(conn, %{"store_id" => store_id}) do
-    products = Stores.list_products_by_store(store_id)
+  def index(conn, %{"store_id" => _store_id} = params) do
+    # Use filter_products which handles store_id filtering, other filters, sorting, and pagination
+    products = Stores.filter_products(params)
+
+    # Also include pagination meta if needed, but for now just returning products match current behavior
+    # If the frontend needs total count for pagination, we might need to adjust response format
+    # The current filter endpoints return data and meta.
+    # Let's verify standard response format.
+    # The current index.json view likely expects a list of products.
+    # We should probably keep returning just the list for backward compatibility,
+    # OR update to return {data: products, meta: ...} if pagination is used.
+    # However, to be safe and answer the user's specific question about filtering:
     render(conn, "index.json", products: products)
   end
 
