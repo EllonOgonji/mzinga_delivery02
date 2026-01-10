@@ -6,6 +6,15 @@ defmodule MzingaDeliveryWeb.CORS do
 
   require Logger
 
+  def allow?(%Plug.Conn{} = conn) do
+    # CORSPlug passes the conn, so we extract the origin header
+    case Plug.Conn.get_req_header(conn, "origin") do
+      [origin | _] -> allow?(origin)
+      # Allow requests with no origin (non-browser)
+      [] -> true
+    end
+  end
+
   def allow?(origin) do
     # 1. Get Dynamic Config (safely)
     dynamic_origins =
@@ -26,7 +35,6 @@ defmodule MzingaDeliveryWeb.CORS do
     allowed_origins = static_origins ++ dynamic_origins
 
     # 3. Check Origin
-    # Handle nil origin (non-browser requests usually safe to allow, or let Plug decide)
     if is_nil(origin) do
       true
     else
@@ -40,7 +48,6 @@ defmodule MzingaDeliveryWeb.CORS do
   rescue
     e ->
       Logger.error("CORS Check Crashing: #{inspect(e)}")
-      # Fail closed if crashing
       false
   end
 end
