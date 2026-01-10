@@ -64,8 +64,19 @@ defmodule MzingaDelivery.Stores.Filters do
 
   defp filter_by_category(query, %{"category" => category})
        when is_binary(category) and category != "" do
-    from p in query,
-      where: p.category == ^category
+    if String.contains?(category, ",") do
+      categories =
+        category
+        |> String.split(",")
+        |> Enum.map(&String.trim/1)
+        |> Enum.reject(&(&1 == ""))
+
+      from p in query,
+        where: p.category in ^categories
+    else
+      from p in query,
+        where: p.category == ^category
+    end
   end
 
   defp filter_by_category(query, _), do: query
