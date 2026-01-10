@@ -13,11 +13,11 @@ import { getAllShops } from '@/data/shopData';
 import { useQuery } from "@tanstack/react-query";
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 import { useMemo } from 'react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, clearCart, cartTotal, cartCount } = useCart();
-
-  // Group cart items by shop
+  
   const cartByShop = cart.reduce((acc, item) => {
     if (!acc[item.store_id]) {
       acc[item.store_id] = [];
@@ -26,13 +26,16 @@ export default function Cart() {
     return acc;
   }, {} as Record<number, typeof cart>);
 
-  console.log('cartByShop', cartByShop);
-
   const shopIds = Object.keys(cartByShop).map(Number);
+
+  console.log(cartByShop)
 
   const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops', 'cart', shopIds],
-    queryFn: async () => await getAllShops({ idMultiple: shopIds }),
+    queryFn: async () => {
+      const res = await getAllShops({ limit:0, page:0, idMultiple: shopIds })
+      return res.data;
+    },
     enabled: shopIds.length > 0
   });
 
@@ -57,14 +60,12 @@ export default function Cart() {
         shop,
         items: shopItems,
         subtotal: shopSubtotal,
-        deliveryFee,
-        distance,
         total: shopTotal
       };
     });
   }, [allShops, cartByShop, shopIds]);
-  const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
-  const orderTotal = cartTotal + totalDeliveryFees;
+
+  const orderTotal = cartTotal
 
   // List of shop ids in the cart
   // for each id: fetch the shop details, calculate delivery fee, calculate the cumulative totals
@@ -98,45 +99,52 @@ export default function Cart() {
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
           {/* Breadcrumb */}
-          <nav className="text-sm text-muted-foreground mb-6">
-            <Link to="/" className="hover:text-accent">Home</Link>
-            <span className="mx-2">/</span>
-            <span>Cart</span>
-          </nav>
+          <Breadcrumb className="mb-6">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Cart</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
           {/* Page Header */}
-          <h1 className="text-3xl font-bold mb-8">
-            Shopping Cart ({cartCount} items from {shopIds.length} {shopIds.length === 1 ? 'shop' : 'shops'})
+          <h1 className="text-2xl md:text-3xl font-bold mb-8">
+            {cartCount} items from {shopIds.length} {shopIds.length === 1 ? 'shop' : 'shops'}
           </h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content - Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {shopsData.map(({ shopId, shop, items, subtotal, deliveryFee, distance, total }) => {
+              {shopsData.map(({ shopId, shop, items, subtotal, total }) => {
                 if (!shop) return null;
 
                 const shopItems = items;
                 const shopSubtotal = subtotal;
-                const deliveryFeePerShop = deliveryFee;
                 const shopTotal = total;
                 return (
                   <Card key={shopId} className="p-6">
                     
                     <div className="flex items-center justify-between mb-4 pb-4 border-b">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                        <div className="hidden h-12 w-12 rounded-full bg-muted md:flex items-center justify-center">
                           <Store className="h-6 w-6" />
                         </div>
-                        <div>
+                        <div className='flex flex-col'>
                           <Link to={`/shop/${shopId}`} className="font-semibold hover:text-accent">
                             {shop?.name}
                           </Link>
-                          {shop?.status === 'active' ? (
-                            <Badge variant="outline" className="ml-2 text-xs border-success text-success">
-                              Open - Closes at 9 PM
+                          {shop?.status === 'approved' ? (
+                            <Badge variant="outline" className="w-max ml-0 mt-2 md:mt-0 md:ml-2 text-xs border-success text-success">
+                              {shop.status}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="ml-2 text-xs border-destructive text-destructive">
+                            <Badge variant="outline" className="ml-0 md:ml-2 text-xs border-destructive text-destructive">
                               Closed
                             </Badge>
                           )}
@@ -172,34 +180,38 @@ export default function Cart() {
                               >
                                 {product.name}
                               </Link>
-                              <p className="text-sm text-muted-foreground">{shop?.name}</p>
-                              <p className="text-sm font-medium mt-1">KES. {Number(product.price).toFixed(2)}</p>
-                              {product.preparationTime && (
-                                <p className="text-xs text-muted-foreground">
-                                  Prep: ~{product.preparationTime} mins
-                                </p>
-                              )}
-
+                              <p className="text-sm text-muted-foreground">KES. {Number(product.price).toFixed(2)}</p>
                               
                               <div className="flex items-center gap-2 mt-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                  className="text-destructive"
+                                  onClick={() => removeFromCart(item.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 >
                                   -
                                 </Button>
+
                                 <Input
                                   type="number"
                                   min="1"
                                   value={item.quantity}
-                                  onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                                  onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
                                   className="w-16 text-center"
                                 />
+
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                  onClick={() => {updateQuantity(item.id, item.quantity + 1);}}
                                 >
                                   +
                                 </Button>
@@ -207,39 +219,19 @@ export default function Cart() {
                             </div>
 
                             
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="h-max flex flex-col items-end gap-2">
                               <p className="font-bold text-lg">
                                 KES. {(product.price * item.quantity).toFixed(2)}
                               </p>
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => {
-                                    
-                                    removeFromCart(item.productId);
-                                  }}
-                                >
-                                  <Heart className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive"
-                                  onClick={() => removeFromCart(item.productId)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
                             </div>
                           </div>
                         );
                       })}
                     </div>
 
-                    
-                    <Separator className="my-4" />
+                    {/* Shop specific order summary */}
+                    {/* <Separator className="my-4" />
+                    <div className="space-y-<Separator className="my-4" />
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Shop subtotal:</span>
@@ -253,13 +245,26 @@ export default function Cart() {
                         <span>Shop total:</span>
                         <span>KES. {shopTotal.toFixed(2)}</span>
                       </div>
-                    </div>
+                    </div>2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Shop subtotal:</span>
+                        <span className="font-medium">KES. {shopSubtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Delivery fee ({distance.toFixed(1)} km away):</span>
+                        <span>KES. {deliveryFeePerShop.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-base pt-2">
+                        <span>Shop total:</span>
+                        <span>KES. {shopTotal.toFixed(2)}</span>
+                      </div>
+                    </div> */}
                   </Card>
                 );
               })}
 
               {/* Cart Actions */}
-              <div className="flex flex-wrap gap-3">
+              {/* <div className="flex flex-wrap gap-3">
                 <Button variant="outline" asChild>
                   <Link to="/">Continue Shopping</Link>
                 </Button>
@@ -270,7 +275,7 @@ export default function Cart() {
                 >
                   Clear Cart
                 </Button>
-              </div>
+              </div> */}
             </div>
 
             {/* Order Summary Sidebar */}
@@ -283,10 +288,10 @@ export default function Cart() {
                     <span>Items subtotal:</span>
                     <span className="font-medium">KES. {cartTotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
+                  {/* <div className="flex justify-between text-muted-foreground">
                     <span>Total Delivery Fees:</span>
                     <span>KES. {totalDeliveryFees.toFixed(2)}</span>
-                  </div>
+                  </div> */}
                   
                   <Separator />
                   
@@ -298,6 +303,16 @@ export default function Cart() {
 
                 <Button className="w-full mt-6 bg-accent hover:bg-accent/90" size="lg" asChild>
                   <Link to="/checkout">Proceed to Checkout</Link>
+                </Button>
+                <Button variant="outline" asChild className='w-full mt-3'>
+                  <Link to="/">Continue Shopping</Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-destructive w-full mt-3"
+                  onClick={clearCart}
+                >
+                  Clear Cart
                 </Button>
 
                 <div className="mt-6 pt-6 border-t space-y-2 text-xs text-muted-foreground">

@@ -64,7 +64,10 @@ export default function Checkout() {
 
   const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops', 'cart', shopIds],
-    queryFn: async () => await getAllShops({ idMultiple: shopIds }),
+    queryFn: async () => {
+      const res = await getAllShops({ limit:0, page:0, idMultiple: shopIds })
+      return res.data;
+    },
     enabled: shopIds.length > 0
   });
 
@@ -105,7 +108,7 @@ export default function Checkout() {
       return;
     }
 
-    console.log(cartByShop)
+    // console.log(cartByShop)
     console.log('Shops Data:', shopsData);
 
     shopsData.forEach(async (shopData) => {
@@ -113,15 +116,15 @@ export default function Checkout() {
         "order": {
           store_id: shopData.shopId,
           items: shopData.items.map(item => ({
-            product_id: item.shopId,
+            product_id: item.id,
             quantity: item.quantity,
             subtotal: item.quantity * Number(item.price)
           })),
         }
       };
-      console.log('Order Payload for Shop', shopData.shopId, orderPayload);
+      // console.log('Order Payload for Shop', shopData.shopId, orderPayload);
       const res = await createOrder(orderPayload);
-      console.log('Create Order Response for Shop', shopData.shopId, res);
+      // console.log('Create Order Response for Shop', shopData.shopId, res);
     })
     // const orderNumber = 'CST' + Date.now();
 
@@ -140,9 +143,9 @@ export default function Checkout() {
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Progress Indicator */}
           <div className="mb-8">
-            <div className="flex items-center justify-between relative">
+            <div className="flex items-center justify-between relative px-4">
               {steps.map((step, index) => (
-                <div key={step.id} className="flex-1 relative">
+                <div key={step.id} className={`${index+1 == steps.length ? '' : 'flex-1'} relative`}>
                   <div className="flex items-center">
                     <div
                       className={`h-10 w-10 rounded-full flex items-center justify-center font-bold z-10 ${
@@ -175,7 +178,7 @@ export default function Checkout() {
               {/* Step 1: Delivery */}
               {currentStep === 1 && (
                 <Card className="p-6">
-                  <h2 className="text-2xl font-bold mb-6">Delivery Information</h2>
+                  <h2 className="text-xl md:text-2xl font-bold mb-6">Delivery Information</h2>
 
                   <div className="space-y-6">
                     <div>
@@ -298,13 +301,13 @@ export default function Checkout() {
 
                   <div className="flex gap-3 mt-6">
                     <Button variant="outline" onClick={() => setCurrentStep(1)} className="flex-1">
-                      Back to Delivery
+                      Back
                     </Button>
                     <Button
                       className="flex-1 bg-accent hover:bg-accent/90"
                       onClick={() => setCurrentStep(3)}
                     >
-                      Review Order
+                      Next
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
@@ -342,22 +345,19 @@ export default function Checkout() {
                     {/* Order Items */}
                     <div className="space-y-3">
                       {cart.map(item => {
-                        const product = mockProducts.find(p => p.id === item.id);
-                        if (!product) return null;
-
                         return (
                           <div key={item.id} className="flex gap-3 text-sm">
                             <img
-                              src={product.images[0]}
-                              alt={product.name}
+                              src={item.image_url}
+                              alt={item.name}
                               className="h-16 w-16 object-cover rounded"
                             />
                             <div className="flex-1">
-                              <p className="font-medium">{product.name}</p>
+                              <p className="font-medium">{item.name}</p>
                               <p className="text-muted-foreground">Qty: {item.quantity}</p>
                             </div>
                             <p className="font-medium">
-                              KES. {(product.price * item.quantity).toFixed(2)}
+                              KES. {(item.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
                         );
@@ -365,35 +365,9 @@ export default function Checkout() {
                     </div>
                   </Card>
 
-                  {/* Terms */}
-                  <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="terms"
-                      checked={agreedToTerms}
-                      onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                    />
-                    <Label htmlFor="terms" className="text-sm cursor-pointer">
-                      I agree to the{' '}
-                      <Link to="/terms" className="text-accent hover:underline">
-                        Terms of Service
-                      </Link>{' '}
-                      and{' '}
-                      <Link to="/privacy" className="text-accent hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </Label>
-                  </div>
-
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1">
-                      Back to Payment
-                    </Button>
-                    <Button
-                      className="flex-1 bg-accent hover:bg-accent/90"
-                      onClick={handlePlaceOrder}
-                      disabled={!agreedToTerms}
-                    >
-                      Place Order - KES. {orderTotal.toFixed(2)}
+                      Back
                     </Button>
                   </div>
                 </div>
@@ -418,6 +392,30 @@ export default function Checkout() {
                     <span>Total:</span>
                     <span>KES. {orderTotal.toFixed(2)}</span>
                   </div>
+                  <div className="flex items-start space-x-2">
+                    <Checkbox
+                      id="terms"
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                    />
+                    <Label htmlFor="terms" className="text-xs md:text-sm cursor-pointer">
+                      I agree to the{' '}
+                      <Link to="/terms" className="text-accent hover:underline">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link to="/privacy" className="text-accent hover:underline">
+                        Privacy Policy
+                      </Link>
+                    </Label>
+                  </div>
+                  <Button
+                    className="w-full bg-accent hover:bg-accent/90"
+                    onClick={handlePlaceOrder}
+                    disabled={!agreedToTerms}
+                  >
+                    Place Order - KES. {orderTotal.toFixed(2)}
+                  </Button>
                 </div>
               </Card>
             </div>
