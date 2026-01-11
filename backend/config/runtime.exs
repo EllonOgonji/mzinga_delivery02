@@ -44,7 +44,7 @@ context_origins =
 final_origins = (context_origins ++ default_origins) |> Enum.uniq()
 
 if length(final_origins) > 0 do
-  config :cors_plug, origin: final_origins, credentials: true
+  config :mzinga_delivery, :cors_origins, final_origins
 end
 
 # ## Using releases
