@@ -23,7 +23,8 @@ defmodule MzingaDeliveryWeb.CORS do
       "https://mzinga-delivery.vercel.app",
       "http://localhost:3000",
       "http://localhost:5173",
-      "http://localhost:8080"
+      "http://localhost:8080",
+      "http://192.168.0.112:8080"
     ]
 
     # Combine and Deduplicate

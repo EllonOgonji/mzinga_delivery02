@@ -31,7 +31,8 @@ default_origins = [
   "https://mzinga-delivery.vercel.app",
   "http://localhost:3000",
   "http://localhost:5173",
-  "http://localhost:8080"
+  "http://localhost:8080",
+  "http://192.168.0.112:8080"
 ]
 
 cors_env = System.get_env("CORS_ALLOWED_ORIGINS") || ""
