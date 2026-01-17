@@ -15,7 +15,7 @@ defmodule MzingaDelivery.Carts.Cart do
   def changeset(cart, attrs) do
     cart
     |> cast(attrs, [:user_id, :store_id, :total_price])
-    |> validate_required([:user_id, :store_id])
+    |> validate_required([:user_id])
     |> unique_constraint(:user_id)
   end
 end

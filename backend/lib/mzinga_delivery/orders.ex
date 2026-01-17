@@ -378,14 +378,16 @@ defmodule MzingaDelivery.Orders do
                 }
               end)
 
-            order_params = %{
-              "customer_id" => user.id,
-              "store_id" => store_id,
-              "total_price" => total_price,
-              "checkout_group_id" => checkout_group_id,
-              "payment_status" => "pending",
-              "items" => order_items_attrs
-            }
+              order_params = %{
+                "customer_id" => user.id,
+                "store_id" => store_id,
+                "total_price" => total_price,
+                "checkout_group_id" => checkout_group_id,
+                "payment_status" => "pending",
+                "delivery_lat" => Map.get(attrs, "delivery_lat"),
+                "delivery_lng" => Map.get(attrs, "delivery_lng"),
+                "items" => order_items_attrs
+              }
 
             case create_order_with_items(order_params) do
               {:ok, order} -> order
