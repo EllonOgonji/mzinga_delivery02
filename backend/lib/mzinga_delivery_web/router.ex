@@ -8,6 +8,7 @@ defmodule MzingaDeliveryWeb.Router do
 
   pipeline :auth do
     plug MzingaDeliveryWeb.Auth.Pipeline
+    plug MzingaDeliveryWeb.Auth.SetCurrentUser
   end
 
   # Health check
