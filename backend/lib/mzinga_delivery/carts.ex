@@ -44,9 +44,6 @@ defmodule MzingaDelivery.Carts do
                 {:ok, new_cart} = get_or_create_cart(user_id, product.store_id)
                 new_cart
 
-              %Cart{store_id: id} when id != product.store_id ->
-                Repo.rollback({:error, :different_store})
-
               %Cart{} = existing_cart ->
                 existing_cart
             end
