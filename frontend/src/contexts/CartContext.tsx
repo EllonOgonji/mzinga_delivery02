@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem } from '@/types';
 import { toast } from 'sonner';
+import { addItemToCart } from '@/data/orderData';
+import { add } from 'date-fns';
 
 interface CartContextType {
   cart: CartItem[];
@@ -24,7 +26,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+  const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
+    // const res = await addItemToCart(item)
+    // toast.success('Added to cart!')
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {

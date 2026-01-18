@@ -12,13 +12,12 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCart } from '@/contexts/CartContext';
-import { mockShops, mockProducts } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { getAllShops } from '@/data/shopData';
 import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
-import { createOrder } from '@/data/orderData';
+import { checkout, addItemToCart } from '@/data/orderData';
 
 const steps = [
   { id: 1, name: 'Delivery', completed: false, active: true },
@@ -102,36 +101,66 @@ export default function Checkout() {
   const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
   const orderTotal = cartTotal + totalDeliveryFees;
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!agreedToTerms) {
       toast.error('Please agree to the Terms of Service');
       return;
     }
 
-    // console.log(cartByShop)
-    console.log('Shops Data:', shopsData);
+    // Add each item to cart
+    // shopsData.forEach(async (shopData) => {
+    //   const orderPayload = {
+    //     "order": {
+    //       store_id: shopData.shopId,
+    //       payment_phone: phone,
+    //       items: shopData.items.map(item => ({
+    //         product_id: item.id,
+    //         quantity: item.quantity,
+    //         subtotal: item.quantity * Number(item.price)
+    //       })),
+    //     }
+    //   };
 
-    shopsData.forEach(async (shopData) => {
-      const orderPayload = {
-        "order": {
-          store_id: shopData.shopId,
-          items: shopData.items.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            subtotal: item.quantity * Number(item.price)
-          })),
-        }
-      };
-      // console.log('Order Payload for Shop', shopData.shopId, orderPayload);
-      const res = await createOrder(orderPayload);
-      // console.log('Create Order Response for Shop', shopData.shopId, res);
-    })
+    //   orderPayload.order.items.forEach(async (item) => {
+    //     const res = await addItemToCart({id: item.product_id, quantity: item.quantity});
+    //     console.log('Item added to cart response:', res);
+    //   })
+
+    //   // console.log('Order Payload for Shop', shopData.shopId, orderPayload);
+    //   // console.log('Create Order Response for Shop', shopData.shopId, res);
+    // })
+
+  for (const shopData of shopsData) {
+    const orderPayload = {
+      order: {
+        store_id: shopData.shopId,
+        payment_phone: phone,
+        items: shopData.items.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          subtotal: item.quantity * Number(item.price),
+        })),
+      },
+    };
+
+    for (const item of orderPayload.order.items) {
+      const res = await addItemToCart({
+        id: item.product_id,
+        quantity: item.quantity,
+      });
+      console.log('Item added to cart response:', res);
+    }
+  }
+
+    const res = await checkout(String(phone));
+    console.log('Create Order Response for Shop');
+
     // const orderNumber = 'CST' + Date.now();
 
     // console.log('Order placed:', { orderNumber, paymentMethod, total: orderTotal });
     
-    // toast.success('Order placed successfully!');
-    // clearCart();
+    toast.success('Order placed successfully!');
+    clearCart();
     // navigate(`/order-confirmation/${orderNumber}`);
 
   };

@@ -1,4 +1,4 @@
-import { Shop, ShopFilters } from "@/types";
+import { CartItem, Shop, ShopFilters } from "@/types";
 
 type Order = {
     "order": {
@@ -11,8 +11,16 @@ type Order = {
     }
 }
 
-export const createOrder = async function (order: Order) {
-    let url = `${import.meta.env.VITE_BASE_URL}/api/orders`;
+type cartItem = {
+    
+}
+
+type checkout = {
+
+}
+
+export const addItemToCart = async function (item) {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart/items`;
 
     return fetch(url,{
         method: 'POST',
@@ -20,7 +28,26 @@ export const createOrder = async function (order: Order) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(order),
+        body: JSON.stringify({product_id: item.id, quantity: item.quantity}),
+    }).then(response => response.json()).then(data => {
+        console.log('item added to cart:');
+        return data.status;
+    }).catch(error => {
+        console.error('Error:', error);
+        return [];
+    });
+};
+
+export const checkout = async function (paymentPhoneNumber: string) {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/checkout`;
+
+    return fetch(url,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ payment_phone: paymentPhoneNumber }),
     }).then(response => response.json()).then(data => {
         console.log('Order created:', data);
         return data.status;
@@ -30,13 +57,13 @@ export const createOrder = async function (order: Order) {
     });
 };
 
-export const getAllOrders = async function (filters: ShopFilters = {}) {
+export const getAllOrders = async function (filters: ShopFilters = {limit: 6, page: 1}): Promise<Shop[]> {
     let url = `${import.meta.env.VITE_BASE_URL}/api/stores`;
     if (filters && filters.id) {
         url += `/${filters.id}`;
     }else if (filters && filters.idMultiple) {
         const shops = await Promise.all(
-            filters.idMultiple.map(id => getAllOrders({ id }))
+            filters.idMultiple.map(id => getAllOrders({ id, limit: 6, page: 1 }))
         );
         return shops.flat();
     }
