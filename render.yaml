@@ -15,7 +15,7 @@ services:
       - key: PHX_HOST
         value: mzinga-delivery.onrender.com
       - key: POOL_SIZE
-        value: 10
+        value: 2
       - key: MPESA_API_URL
         sync: false
       - key: MPESA_SHORTCODE
