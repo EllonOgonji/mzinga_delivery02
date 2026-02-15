@@ -1,0 +1,155 @@
+defmodule MzingaDelivery.Accounts do
+  @moduledoc """
+  Account context -- handles user authentication and management.
+  """
+
+  import Ecto.Query, warn: false
+  alias MzingaDelivery.Repo
+  alias MzingaDelivery.Accounts.User
+
+  @doc """
+  returns list of users
+  """
+  def list_users do
+    Repo.all(User)
+  end
+
+  @doc """
+  gets single user
+  """
+  def get_user(id) do
+    Repo.get(User, id)
+  end
+
+  @doc """
+  gets single user by email
+  """
+  def get_user_by_email(email) do
+    Repo.get_by(User, email: email)
+  end
+
+  @doc """
+  Creates a user.
+  """
+  def create_user(attrs \\ %{}) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a user.
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  delete user
+  """
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
+  @doc """
+  authenticate user by email and password
+  returns {:ok, user} or {:error, :unauthorized}
+  """
+  def authenticate_user(email, password) do
+    case Repo.get_by(User, email: email) do
+      nil ->
+        Bcrypt.no_user_verify()
+        {:error, :unauthorized}
+
+      user ->
+        if Bcrypt.verify_pass(password, user.password_hash) do
+          {:ok, user}
+        else
+          {:error, :unauthorized}
+        end
+    end
+  end
+
+  @doc """
+  return list of users by role
+  """
+  def list_users_by_role(role) do
+    User
+    |> where([u], u.role == ^role)
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists available riders.
+  """
+  def list_available_riders do
+    User
+    |> where([u], u.role == "rider" and u.is_available == true)
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists available riders sorted by distance to the given location.
+  """
+  def list_nearby_available_riders(lat, lng) do
+    # Earth's radius in km
+    r = 6371
+
+    # Convert inputs to floats
+    {lat, _} = Float.parse(to_string(lat))
+    {lng, _} = Float.parse(to_string(lng))
+
+    User
+    |> where([u], u.role == "rider" and u.is_available == true)
+    |> where([u], not is_nil(u.last_lat) and not is_nil(u.last_lng))
+    |> select([u], %{
+      u
+      | distance:
+          fragment(
+            "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
+            ^r,
+            ^lat,
+            u.last_lat,
+            u.last_lng,
+            ^lng,
+            ^lat,
+            u.last_lat
+          )
+    })
+    |> order_by(
+      [u],
+      asc:
+        fragment(
+          "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
+          ^r,
+          ^lat,
+          u.last_lat,
+          u.last_lng,
+          ^lng,
+          ^lat,
+          u.last_lat
+        )
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Updates rider status (availability and location).
+  """
+  def update_rider_status(%User{} = user, attrs) do
+    user
+    |> User.update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates specifically the rider's location.
+  """
+  def update_rider_location(%User{} = user, lat, lng) do
+    user
+    |> User.update_changeset(%{last_lat: lat, last_lng: lng})
+    |> Repo.update()
+  end
+end
