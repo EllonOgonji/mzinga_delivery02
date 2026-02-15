@@ -126,6 +126,10 @@ defmodule MzingaDeliveryWeb.ProductController do
       %{"product" => %{"store_id" => store_id}} ->
         store_id
 
+      %{"product" => product_params} when is_map(product_params) ->
+        # Handle case where keys might be atoms or mixed
+        Map.get(product_params, "store_id") || Map.get(product_params, :store_id)
+
       %{"id" => product_id} ->
         case Stores.get_product(product_id) do
           nil -> nil
