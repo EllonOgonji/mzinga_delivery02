@@ -10,10 +10,6 @@ defmodule MzingaDelivery.Accounts.User do
     field :password_hash, :string
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
-    field :is_available, :boolean, default: false
-    field :last_lat, :float
-    field :last_lng, :float
-    field :distance, :float, virtual: true
 
     # Associations
     has_many :stores, MzingaDelivery.Stores.Store, foreign_key: :vendor_id
@@ -26,22 +22,10 @@ defmodule MzingaDelivery.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [
-      :full_name,
-      :email,
-      :phone_number,
-      :role,
-      :password,
-      :password_confirmation,
-      :is_available,
-      :last_lat,
-      :last_lng
-    ])
+    |> cast(attrs, [:full_name, :email, :phone_number, :role, :password, :password_confirmation])
     |> validate_required([:full_name, :email, :phone_number, :role, :password])
     |> validate_format(:email, ~r/@/)
-    |> validate_format(:phone_number, ~r/^254\d{9}$/,
-      message: "must be valid Kenyan number (254...)"
-    )
+    |> validate_format(:phone_number, ~r/^254\d{9}$/, message: "must be valid Kenyan number (254...)")
     |> validate_length(:password, min: 6)
     |> validate_confirmation(:password)
     |> unique_constraint(:email)
@@ -52,7 +36,7 @@ defmodule MzingaDelivery.Accounts.User do
   # Update changeset (without requiring password)
   def update_changeset(user, attrs) do
     user
-    |> cast(attrs, [:full_name, :email, :phone_number, :is_available, :last_lat, :last_lng])
+    |> cast(attrs, [:full_name, :email, :phone_number])
     |> validate_required([:full_name, :email, :phone_number])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email)

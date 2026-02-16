@@ -10,7 +10,6 @@ config :mzinga_delivery, MzingaDelivery.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: String.to_integer(System.get_env("DB_POOL_SIZE") || "2"),
   ssl: [verify: :verify_none],
-  prepare: :unnamed,
   socket_options: [:inet]
 
 # For development, we disable any cache and enable
@@ -23,7 +22,7 @@ config :mzinga_delivery, MzingaDelivery.Repo,
 
 config :mzinga_delivery, MzingaDeliveryWeb.Endpoint,
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "4000")],
+  http: [ip: {127, 0, 0, 1}, port: 4000],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
