@@ -34,8 +34,6 @@ defmodule MzingaDeliveryWeb.StoreJSON do
       banner: store.banner,
       category: store.category || "General",
       is_verified: store.is_verified,
-      is_open: store.is_open,
-      closing_time: store.closing_time,
       vendor: vendor_json(store.vendor),
       inserted_at: store.inserted_at,
       updated_at: store.updated_at

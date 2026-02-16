@@ -7,11 +7,6 @@ defmodule MzingaDelivery.Orders do
   alias MzingaDelivery.Repo
   alias MzingaDelivery.Orders.{Order, OrderItem}
   alias MzingaDelivery.Stores
-  alias MzingaDelivery.Accounts
-  alias MzingaDelivery.Payments
-
-  alias MzingaDelivery.Carts
-  alias MzingaDelivery.Payments.MpesaService
 
   @doc """
   Returns the list of orders.
@@ -49,7 +44,7 @@ defmodule MzingaDelivery.Orders do
   """
   def get_order(id) do
     Order
-    |> preload([:customer, [store: :vendor], order_items: :product])
+    |> preload([:customer, :store, order_items: :product])
     |> Repo.get(id)
   end
 
@@ -136,7 +131,7 @@ defmodule MzingaDelivery.Orders do
   """
   def update_order_status(%Order{} = order, status) do
     order
-    |> Order.status_changeset(%{order_status: status})
+    |> Order.update_status_changeset(%{order_status: status})
     |> Repo.update()
   end
 
@@ -145,7 +140,7 @@ defmodule MzingaDelivery.Orders do
   """
   def update_payment_status(%Order{} = order, status) do
     order
-    |> Order.status_changeset(%{payment_status: status})
+    |> Order.update_status_changeset(%{payment_status: status})
     |> Repo.update()
   end
 
@@ -204,254 +199,5 @@ defmodule MzingaDelivery.Orders do
   """
   def delete_order(%Order{} = order) do
     Repo.delete(order)
-  end
-
-  @doc """
-  Assigns a rider to an order.
-  """
-  def assign_rider(%Order{} = order, rider_id) do
-    order
-    |> Order.changeset(%{rider_id: rider_id, delivery_status: "assigned"})
-    |> Repo.update()
-  end
-
-  @doc """
-  Updates delivery status.
-  """
-  def update_delivery_status(%Order{} = order, status) do
-    order
-    |> Order.changeset(%{delivery_status: status})
-    |> Repo.update()
-  end
-
-  @doc """
-  List deliveries for a rider.
-  """
-  def list_rider_deliveries(rider_id) do
-    Order
-    |> where([o], o.rider_id == ^rider_id)
-    |> preload([:customer, :store, :order_items])
-    |> order_by([o], desc: o.inserted_at)
-    |> Repo.all()
-  end
-
-  def mark_as_ready(order_id) do
-    case get_order!(order_id) do
-      {:ok, order} ->
-        Repo.transaction(fn ->
-          updated_order =
-            order
-            |> Order.status_changeset(%{delivery_status: "ready_for_pickup"})
-            |> Repo.update!()
-
-          # Notify Tracking Channel
-          MzingaDeliveryWeb.Endpoint.broadcast(
-            "tracking:#{order.id}",
-            "order_update",
-            %{status: "ready_for_pickup", message: "Order is ready for pickup!"}
-          )
-
-          updated_order
-        end)
-
-      {:error, _} = error ->
-        error
-    end
-  end
-
-  def mark_as_picked_up(order_id) do
-    case get_order!(order_id) do
-      {:ok, order} ->
-        Repo.transaction(fn ->
-          updated_order =
-            order
-            |> Order.status_changeset(%{delivery_status: "picked_up"})
-            |> Repo.update!()
-
-          # Notify Tracking Channel
-          MzingaDeliveryWeb.Endpoint.broadcast(
-            "tracking:#{order.id}",
-            "order_update",
-            %{status: "picked_up", message: "Rider has picked up your order!"}
-          )
-
-          updated_order
-        end)
-
-      {:error, _} = error ->
-        error
-    end
-  end
-
-  @doc """
-  Rider marks order as delivered.
-  """
-  def mark_as_delivered(order_id) do
-    case get_order!(order_id) do
-      {:ok, order} ->
-        Repo.transaction(fn ->
-          updated_order =
-            order
-            |> Order.status_changeset(%{
-              delivery_status: "delivered",
-              delivered_at: DateTime.utc_now()
-            })
-            |> Repo.update!()
-
-          # Mark rider as available
-          if updated_order.rider_id do
-            rider = Accounts.get_user(updated_order.rider_id)
-            Accounts.update_rider_status(rider, %{is_available: true})
-          end
-
-          # Notify Customer
-          MzingaDeliveryWeb.Endpoint.broadcast(
-            "tracking:#{order.id}",
-            "order_update",
-            %{status: "delivered", message: "Order Delivered! Enjoy your meal."}
-          )
-
-          updated_order
-        end)
-
-      {:error, _} = error ->
-        error
-    end
-  end
-
-  @doc """
-  Customer confirms delivery.
-  This is a secondary confirmation layer.
-  """
-  def confirm_delivery(order_id, _attrs \\ %{}) do
-    order = get_order(order_id)
-
-    cond do
-      order == nil ->
-        {:error, :not_found}
-
-      true ->
-        # We don't change status (it's already delivered), just notify
-        MzingaDeliveryWeb.Endpoint.broadcast(
-          "notifications:store_#{order.store_id}",
-          "delivery_confirmed",
-          %{order_id: order.id, message: "Customer confirmed delivery"}
-        )
-
-        {:ok, order}
-    end
-  end
-
-  @doc """
-  Creates unified checkout orders for cart items.
-  Splits items by store, creates one order per store, and one payment for the total.
-  """
-  def create_unified_checkout(user, attrs \\ %{}) do
-    payment_phone = Map.get(attrs, "payment_phone") || user.phone_number
-
-    # Get Cart
-    cart = Carts.get_cart(user.id)
-
-    if is_nil(cart) or Enum.empty?(cart.items) do
-      {:error, :empty_cart}
-    else
-      Repo.transaction(fn ->
-        items = cart.items
-        checkout_group_id = Ecto.UUID.generate()
-
-        # Group items by store
-        grouped_items = Enum.group_by(items, & &1.product.store_id)
-
-        # Create Orders (one per store)
-        created_orders =
-          Enum.map(grouped_items, fn {store_id, store_items} ->
-            total_price =
-              Enum.reduce(store_items, Decimal.new(0), &Decimal.add(&1.subtotal, &2))
-
-            # Prepare Order Items attrs
-            order_items_attrs =
-              Enum.map(store_items, fn item ->
-                %{
-                  "product_id" => item.product_id,
-                  "quantity" => item.quantity,
-                  "subtotal" => item.subtotal
-                }
-              end)
-
-              order_params = %{
-                "customer_id" => user.id,
-                "store_id" => store_id,
-                "total_price" => total_price,
-                "checkout_group_id" => checkout_group_id,
-                "payment_status" => "pending",
-                "delivery_lat" => Map.get(attrs, "delivery_lat"),
-                "delivery_lng" => Map.get(attrs, "delivery_lng"),
-                "items" => order_items_attrs
-              }
-
-            case create_order_with_items(order_params) do
-              {:ok, order} -> order
-              {:error, reason} -> Repo.rollback(reason)
-            end
-          end)
-
-        # Calculate Grand Total
-        grand_total =
-          Enum.reduce(created_orders, Decimal.new(0), &Decimal.add(&1.total_price, &2))
-
-        # Create Payment
-        {:ok, payment} =
-          Payments.create_payment(%{
-            checkout_group_id: checkout_group_id,
-            amount: grand_total,
-            status: "pending",
-            provider: "M-Pesa"
-          })
-
-        # Initiate M-Pesa STK Push
-        # Use short ref for AccountReference
-        ref_id = "GRP-#{String.slice(checkout_group_id, 0, 8)}"
-
-        case MpesaService.initiate_stk_push(payment_phone, grand_total, ref_id) do
-          {:ok, mpesa_response} ->
-            # Update payment with transaction ID
-            Payments.update_payment(payment, %{
-              transaction_id: mpesa_response["CheckoutRequestID"]
-            })
-
-            # Clear Cart
-            Carts.clear_cart(user.id)
-
-            %{
-              status: "payment_initiated",
-              checkout_group_id: checkout_group_id,
-              payment: payment,
-              orders: created_orders,
-              mpesa_response: mpesa_response,
-              message: "Payment initiated for #{length(created_orders)} orders"
-            }
-
-          {:error, reason} ->
-            Repo.rollback(reason)
-        end
-      end)
-    end
-  end
-
-  @doc """
-  Updates payment status for all orders in a checkout group.
-  """
-  def update_group_orders_payment_status(group_id, status) do
-    from(o in Order, where: o.checkout_group_id == ^group_id)
-    |> Repo.update_all(set: [payment_status: status])
-  end
-
-  @doc """
-  Get all orders in a checkout group.
-  """
-  def get_orders_by_group(group_id) do
-    from(o in Order, where: o.checkout_group_id == ^group_id)
-    |> Repo.all()
-    |> Repo.preload(:customer)
   end
 end

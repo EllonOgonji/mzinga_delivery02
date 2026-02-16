@@ -8,7 +8,6 @@ defmodule MzingaDeliveryWeb.Router do
 
   pipeline :auth do
     plug MzingaDeliveryWeb.Auth.Pipeline
-    plug MzingaDeliveryWeb.Auth.SetCurrentUser
   end
 
   # Health check
@@ -24,7 +23,6 @@ defmodule MzingaDeliveryWeb.Router do
     # Auth
     post "/auth/register", AuthController, :register
     post "/auth/login", AuthController, :login
-    post "/debug/migrate", AuthController, :migrate
 
     # Public stores (only approved)
     get "/stores", StoreController, :index
@@ -59,21 +57,8 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Orders
     resources "/orders", OrderController, only: [:index, :show, :create]
-    post "/orders/:id/retry-payment", OrderController, :retry_payment
-    post "/checkout", CheckoutController, :create
-    resources "/reviews", ReviewController, only: [:create, :show]
     patch "/orders/:id/accept", OrderController, :accept
     patch "/orders/:id/reject", OrderController, :reject
-    patch "/orders/:id/ready", OrderController, :mark_ready
-    patch "/orders/:id/handover", OrderController, :handover
-    post "/orders/:id/confirm", OrderController, :confirm_delivery
-    patch "/orders/:id/confirm", OrderController, :confirm
-
-    # Cart
-    get "/cart", CartController, :show
-    post "/cart/items", CartController, :add_item
-    delete "/cart/items/:product_id", CartController, :remove_item
-    delete "/cart", CartController, :delete
 
     # Notifications
     get "/notifications", NotificationController, :index
@@ -83,17 +68,6 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Products
     resources "/products", ProductController, only: [:create, :update, :delete]
-
-    # Rider routes
-    scope "/rider", as: :rider do
-      get "/deliveries", RiderController, :index
-      patch "/deliveries/:id/status", RiderController, :update_status
-      patch "/status", RiderController, :update_availability
-
-      # Request Flow
-      post "/requests/:id/accept", RiderController, :accept_request
-      post "/requests/:id/reject", RiderController, :reject_request
-    end
   end
 
   # vendor routes

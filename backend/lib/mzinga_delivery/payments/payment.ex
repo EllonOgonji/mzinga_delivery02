@@ -7,7 +7,6 @@ defmodule MzingaDelivery.Payments.Payment do
     field :amount, :decimal
     field :status, :string, default: "pending"
     field :provider, :string, default: "M-Pesa"
-    field :checkout_group_id, Ecto.UUID
 
     belongs_to :order, MzingaDelivery.Orders.Order
 
@@ -17,8 +16,8 @@ defmodule MzingaDelivery.Payments.Payment do
   @doc false
   def changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:order_id, :transaction_id, :amount, :status, :provider, :checkout_group_id])
-    |> validate_required([:amount])
+    |> cast(attrs, [:order_id, :transaction_id, :amount, :status, :provider])
+    |> validate_required([:order_id, :amount])
     |> validate_inclusion(:status, ["pending", "completed", "failed", "cancelled"])
     |> foreign_key_constraint(:order_id)
   end

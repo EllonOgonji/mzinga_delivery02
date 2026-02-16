@@ -25,66 +25,6 @@ defmodule MzingaDelivery.Stores do
     |> Repo.all()
   end
 
-  @doc """
-  Lists active stores within a given radius (in km) of a point.
-  Uses the Haversine formula.
-  """
-  def list_nearby_stores(lat, lng, radius_km \\ 10.0) do
-    # Earth's radius in km
-    r = 6371
-
-    # Convert inputs to floats if they are strings/decimals
-    {lat, _} = Float.parse(to_string(lat))
-    {lng, _} = Float.parse(to_string(lng))
-    {radius_km, _} = Float.parse(to_string(radius_km))
-
-    Store
-    |> where([s], s.status == "Open")
-    |> select([s], %{
-      s
-      | distance:
-          fragment(
-            "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
-            ^r,
-            ^lat,
-            s.latitude,
-            s.longitude,
-            ^lng,
-            ^lat,
-            s.latitude
-          )
-    })
-    |> where(
-      [s],
-      fragment(
-        "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
-        ^r,
-        ^lat,
-        s.latitude,
-        s.longitude,
-        ^lng,
-        ^lat,
-        s.latitude
-      ) <= ^radius_km
-    )
-    |> order_by(
-      [s],
-      asc:
-        fragment(
-          "? * acos(cos(radians(?)) * cos(radians(?)) * cos(radians(?) - radians(?)) + sin(radians(?)) * sin(radians(?)))",
-          ^r,
-          ^lat,
-          s.latitude,
-          s.longitude,
-          ^lng,
-          ^lat,
-          s.latitude
-        )
-    )
-    |> preload(:vendor)
-    |> Repo.all()
-  end
-
   def get_store(id) do
     Store
     |> preload([:vendor, :approved_by, :rejected_by])

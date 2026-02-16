@@ -26,26 +26,11 @@ end
 # Configure CORS origins at runtime. Set `CORS_ALLOWED_ORIGINS` as a comma
 # separated list (example: "http://localhost:8080,https://mzinga-delivery.vercel.app").
 # If the env var is set, it will override the default origins in config/config.exs.
-# Always allow the Vercel frontend and Localhost (for testing), plus any origins from env var
-default_origins = [
-  "https://mzinga-delivery.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:8080",
-  "http://192.168.0.112:8080"
-]
+cors_allowed = System.get_env("CORS_ALLOWED_ORIGINS")
 
-cors_env = System.get_env("CORS_ALLOWED_ORIGINS") || ""
-
-context_origins =
-  cors_env
-  |> String.split(",", trim: true)
-  |> Enum.map(&String.trim/1)
-
-final_origins = (context_origins ++ default_origins) |> Enum.uniq()
-
-if length(final_origins) > 0 do
-  config :mzinga_delivery, :cors_origins, final_origins
+if cors_allowed && cors_allowed != "" do
+  origins = cors_allowed |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
+  config :cors_plug, origin: origins, credentials: true
 end
 
 # ## Using releases
@@ -80,7 +65,6 @@ if config_env() == :prod do
     # ssl: true,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
-    prepare: :unnamed,
     socket_options: maybe_ipv6
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
