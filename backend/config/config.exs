@@ -7,6 +7,26 @@
 # General application configuration
 import Config
 
+# Load .env variables if present (for development)
+if File.exists?(".env") do
+  File.read!(".env")
+  |> String.split("\n", trim: true)
+  |> Enum.each(fn line ->
+    case String.split(line, "=", parts: 2) do
+      [key, value] when key != "" ->
+        # Only set if not already set, or overwrite?
+        # Usually for dev we want .env to win or be the source if not in shell.
+        # Let's just put it.
+        key = String.trim(key)
+        value = String.trim(value, ~s("'))
+        System.put_env(key, value)
+
+      _ ->
+        :skip
+    end
+  end)
+end
+
 config :mzinga_delivery, MzingaDelivery.Auth.Guardian,
   issuer: "mzinga_delivery",
   secret_key: System.get_env("GUARDIAN_SECRET_KEY")

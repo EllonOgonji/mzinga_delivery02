@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+    
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 7%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 7%;
+    
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 43%;
+    
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --info: 217 91% 60%;
+    
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 24 100% 50%;
+    
+    --radius: 0.5rem;
+    
+    /* Cstop Shop Design Tokens */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 0%) 0%, hsl(0 0% 20%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
+    --gradient-orange: linear-gradient(135deg, hsl(24 100% 50%) 0%, hsl(24 100% 45%) 100%);
+    
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1);
+    --shadow-orange: 0 10px 30px -5px hsl(24 100% 50% / 0.3);
+    
+    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 98%;
+    
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 61%;
+    
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 0 0% 23%;
+    --input: 0 0% 23%;
+    --ring: 24 100% 50%;
+    
+    /* Dark mode specific gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 6%) 0%, hsl(0 0% 15%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 12%) 0%, hsl(0 0% 10%) 100%);
+    --gradient-orange: linear-gradient(135deg, hsl(24 100% 50%) 0%, hsl(24 100% 45%) 100%);
+    
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.5);
+    --shadow-orange: 0 10px 30px -5px hsl(24 100% 50% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer base {
+  html, body, #root {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE 10+ */
+  }
+
+  /* WebKit (Chrome, Safari, Edge) */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* Hide scrollbars while preserving scrolling (Firefox, IE, WebKit). Add after your @tailwind base; */
+@layer base {
+  .no-scrollbar {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE 10+ */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  .text-gradient-orange {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent to-orange-600;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-fly-to-cart {
+    animation: flyToCart 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flyToCart {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(100px, -100px) scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(200px, -200px) scale(0);
+    opacity: 0;
+  }
+}
