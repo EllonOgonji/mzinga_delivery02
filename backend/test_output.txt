@@ -1,0 +1,41 @@
+Loading .env variables...
+
+
+  1) test creates store and renders store when data is valid (MzingaDeliveryWeb.Vendor.StoreControllerTest)
+     test/mzinga_delivery_web/controllers/vendor/store_controller_test.exs:24
+     ** (Ecto.ConstraintError) constraint error when attempting to insert struct:
+     
+         * "status_must_be_valid" (check_constraint)
+     
+     If you would like to stop this constraint violation from raising an
+     exception and instead add it as an error to your changeset, please
+     call `check_constraint/3` on your changeset with the constraint
+     `:name` as an option.
+     
+     The changeset defined the following constraints:
+     
+         * "stores_name_index" (unique_constraint)
+         * "stores_vendor_id_fkey" (foreign_key_constraint)
+     
+     code: conn = post(conn, ~p"/api/vendor/stores", store: store_params)
+     stacktrace:
+       (ecto 3.13.4) lib/ecto/repo/schema.ex:1052: anonymous fn/4 in Ecto.Repo.Schema.constraints_to_errors/3
+       (elixir 1.15.0) lib/enum.ex:1693: Enum."-map/2-lists^map/1-1-"/2
+       (ecto 3.13.4) lib/ecto/repo/schema.ex:1035: Ecto.Repo.Schema.constraints_to_errors/3
+       (ecto 3.13.4) lib/ecto/repo/schema.ex:1005: Ecto.Repo.Schema.apply/4
+       (ecto 3.13.4) lib/ecto/repo/schema.ex:500: anonymous fn/15 in Ecto.Repo.Schema.do_insert/4
+       (mzinga_delivery 0.1.0) lib/mzinga_delivery/stores.ex:71: MzingaDelivery.Stores.create_vendor_store/2
+       (mzinga_delivery 0.1.0) lib/mzinga_delivery_web/controllers/vendor/store_controller.ex:31: MzingaDeliveryWeb.Vendor.StoreController.create/2
+       (mzinga_delivery 0.1.0) lib/mzinga_delivery_web/controllers/vendor/store_controller.ex:1: MzingaDeliveryWeb.Vendor.StoreController.action/2
+       (mzinga_delivery 0.1.0) lib/mzinga_delivery_web/controllers/vendor/store_controller.ex:1: MzingaDeliveryWeb.Vendor.StoreController.phoenix_controller_pipeline/2
+       (phoenix 1.7.21) lib/phoenix/router.ex:484: Phoenix.Router.__call__/5
+       (mzinga_delivery 0.1.0) lib/mzinga_delivery_web/endpoint.ex:1: MzingaDeliveryWeb.Endpoint.plug_builder_call/2
+       (mzinga_delivery 0.1.0) lib/mzinga_delivery_web/endpoint.ex:1: MzingaDeliveryWeb.Endpoint.call/2
+       (phoenix 1.7.21) lib/phoenix/test/conn_test.ex:225: Phoenix.ConnTest.dispatch/5
+       test/mzinga_delivery_web/controllers/vendor/store_controller_test.exs:34: (test)
+
+
+Finished in 2.9 seconds (0.00s async, 2.9s sync)
+1 test, 1 failure
+
+Randomized with seed 519067

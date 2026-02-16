@@ -9,15 +9,8 @@ defmodule MzingaDeliveryWeb.StoreController do
   List all approved public stores
   GET /api/stores
   """
-  def index(conn, params) do
-    stores =
-      if params["lat"] && params["lng"] do
-        radius = params["radius"] || 10.0
-        Stores.list_nearby_stores(params["lat"], params["lng"], radius)
-      else
-        Stores.list_public_stores()
-      end
-
+  def index(conn, _params) do
+    stores = Stores.list_public_stores()
     render(conn, :index, stores: stores)
   end
 

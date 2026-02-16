@@ -1,0 +1,45 @@
+nohup: ignoring input
+=CRASH REPORT==== 3-Dec-2025::22:26:54.453924 ===
+  crasher:
+    initial call: prim_tty:reader/1
+    pid: <0.69.0>
+    registered_name: user_drv_reader
+    exception error: no case clause matching {error,{read,ebadf}}
+      in function  prim_tty:reader_loop/6 (prim_tty.erl, line 468)
+    ancestors: [user_drv,<0.65.0>,kernel_sup,<0.47.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.66.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 376
+    stack_size: 28
+    reductions: 154
+  neighbours:
+
+=CRASH REPORT==== 3-Dec-2025::22:26:54.453924 ===
+  crasher:
+    initial call: prim_tty:reader/1
+    pid: <0.69.0>
+    registered_name: user_drv_reader
+    exception error: no case clause matching {error,{read,ebadf}}
+      in function  prim_tty:reader_loop/6 (prim_tty.erl, line 468)
+    ancestors: [user_drv,<0.65.0>,kernel_sup,<0.47.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.66.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 376
+    stack_size: 28
+    reductions: 154
+  neighbours:
+
+Loading .env variables...
+[info] Running MzingaDeliveryWeb.Endpoint with Bandit 1.8.0 at 127.0.0.1:4000 (http)
+[info] Access MzingaDeliveryWeb.Endpoint at http://localhost:4000
+[notice] Application mzinga_delivery exited: shutdown
+[notice] SIGTERM received - shutting down
+

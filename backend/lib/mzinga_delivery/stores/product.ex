@@ -50,8 +50,12 @@ defmodule MzingaDelivery.Stores.Product do
     price = get_field(changeset, :price)
     compare_at_price = get_field(changeset, :compare_at_price)
 
-    if compare_at_price && price && Decimal.compare(compare_at_price, price) != :gt do
-      add_error(changeset, :compare_at_price, "must be graeter than regular price")
+    # Ensure price and compare_at_price are valid decimals before comparison if they are present
+    if compare_at_price && price do
+      cond do
+        Decimal.compare(compare_at_price, price) == :gt -> changeset
+        true -> add_error(changeset, :compare_at_price, "must be greater than regular price")
+      end
     else
       changeset
     end

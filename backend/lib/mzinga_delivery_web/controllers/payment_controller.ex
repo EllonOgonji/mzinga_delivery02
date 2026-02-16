@@ -50,10 +50,7 @@ defmodule MzingaDeliveryWeb.PaymentController do
   end
 
   # handle successful payment
-  defp handle_successful_payment(
-         %{transaction_id: transaction_id, checkout_request_id: checkout_request_id} =
-           payment_data
-       ) do
+  defp handle_successful_payment(%{transaction_id: transaction_id, checkout_request_id: checkout_request_id} = payment_data) do
     Logger.info("Processing successful payment: TxID=#{transaction_id}")
 
     # find payment record by checkout_request_id
@@ -80,42 +77,26 @@ defmodule MzingaDeliveryWeb.PaymentController do
   # update payment and order status
   defp update_payment_and_order(payment, transaction_id, payment_data) do
     case Payments.update_payment(payment, %{
-           status: "completed",
-           transaction_id: transaction_id
-         }) do
+      status: "completed",
+      transaction_id: transaction_id
+    }) do
       {:ok, updated_payment} ->
         Logger.info("Payment #{updated_payment.id} marked as completed")
 
-        if updated_payment.checkout_group_id do
-          # Unified Checkout Flow
-          group_id = updated_payment.checkout_group_id
-          {count, _} = Orders.update_group_orders_payment_status(group_id, "paid")
-          Logger.info("#{count} orders in group #{group_id} marked as paid")
+        # update payment status
+        case Orders.get_order(payment.order_id) do
+          nil ->
+            Logger.error("Order #{payment.order_id} not found")
 
-          # Get one order for notification details
-          orders = Orders.get_orders_by_group(group_id)
+          order ->
+            case Orders.update_payment_status(order, "paid") do
+              {:ok, updated_order} ->
+                Logger.info("Order #{updated_order.id} marked as paid")
+                broadcast_payment_success(order, transaction_id, payment_data)
 
-          if List.first(orders) do
-            broadcast_payment_success(List.first(orders), transaction_id, payment_data)
-          end
-        else
-          # Single Order Flow
-          case Orders.get_order(payment.order_id) do
-            nil ->
-              Logger.error("Order #{payment.order_id} not found")
-
-            order ->
-              case Orders.update_payment_status(order, "paid") do
-                {:ok, updated_order} ->
-                  Logger.info("Order #{updated_order.id} marked as paid")
-                  broadcast_payment_success(order, transaction_id, payment_data)
-
-                {:error, changeset} ->
-                  Logger.error(
-                    "Failed to update order payment status: #{inspect(changeset.errors)}"
-                  )
-              end
-          end
+              {:error, changeset} ->
+                Logger.error("Failed to update order payment status: #{inspect(changeset.errors)}")
+            end
         end
 
       {:error, changeset} ->
@@ -140,8 +121,7 @@ defmodule MzingaDeliveryWeb.PaymentController do
     # save notification to database
     MzingaDelivery.Notifications.create_notification(%{
       user_id: order.customer.id,
-      message:
-        "Payment of KES #{payment_data.amount} received for order ##{order.id}. Receipt: #{transaction_id}",
+      message: "Payment of KES #{payment_data.amount} received for order ##{order.id}. Receipt: #{transaction_id}",
       type: "payment_completed"
     })
 
@@ -163,58 +143,26 @@ defmodule MzingaDeliveryWeb.PaymentController do
           {:ok, _updated_payment} ->
             Logger.info("Payment #{payment.id} marked as failed")
 
-            if payment.checkout_group_id do
-              # Unified Checkout Flow
-              group_id = payment.checkout_group_id
-              Orders.update_group_orders_payment_status(group_id, "failed")
+            # Update order payment status
+            case Orders.get_order(payment.order_id) do
+              nil ->
+                Logger.error("Order #{payment.order_id} not found")
 
-              # Broadcast failure (using one order for customer id)
-              orders = Orders.get_orders_by_group(group_id)
+              order ->
+                Orders.update_payment_status(order, "failed")
 
-              if order = List.first(orders) do
+                # Notify customer about failed payment
                 MzingaDeliveryWeb.Endpoint.broadcast(
                   "notifications:customer_#{order.customer_id}",
                   "payment_failed",
                   %{
-                    order_id: nil,
-                    checkout_group_id: group_id,
-                    message: "Payment failed for group order: #{result_desc}",
+                    order_id: order.id,
+                    message: "Payment failed: #{result_desc}",
                     timestamp: DateTime.utc_now()
                   }
                 )
-              end
-            else
-              # Single Order Flow
-              case Orders.get_order(payment.order_id) do
-                nil ->
-                  Logger.error("Order #{payment.order_id} not found")
 
-                order ->
-                  Orders.update_payment_status(order, "failed")
-
-                  # Notify customer about failed payment via WebSocket
-                  MzingaDeliveryWeb.Endpoint.broadcast(
-                    "notifications:customer_#{order.customer_id}",
-                    "payment_failed",
-                    %{
-                      order_id: order.id,
-                      message: "Payment failed: #{result_desc}",
-                      timestamp: DateTime.utc_now()
-                    }
-                  )
-
-                  # Save notification to database for history
-                  MzingaDelivery.Notifications.create_notification(%{
-                    user_id: order.customer_id,
-                    message:
-                      "Payment failed for order ##{order.id}: #{result_desc}. You can retry payment.",
-                    type: "payment_failed"
-                  })
-
-                  Logger.info(
-                    "Payment failure notification sent to customer #{order.customer_id}"
-                  )
-              end
+                Logger.info("Payment failure notification sent to customer #{order.customer_id}")
             end
 
           {:error, changeset} ->
