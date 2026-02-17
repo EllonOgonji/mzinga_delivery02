@@ -1,11 +1,14 @@
 defmodule MzingaDelivery.Repo.Migrations.AddRiderIdToOrders do
   use Ecto.Migration
 
-  def change do
-    alter table(:orders) do
-      add :rider_id, references(:users, on_delete: :nilify_all)
-    end
+  def up do
+    execute "ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_id bigint REFERENCES users(id) ON DELETE SET NULL"
+    create_if_not_exists index(:orders, [:rider_id])
+  end
 
-    create index(:orders, [:rider_id])
+  def down do
+    alter table(:orders) do
+      remove :rider_id
+    end
   end
 end
