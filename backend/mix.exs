@@ -45,6 +45,7 @@ defmodule MzingaDelivery.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
+      {:castore, "~> 1.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:cors_plug, "~> 3.0"},
       {:dns_cluster, "~> 0.1.1"},
