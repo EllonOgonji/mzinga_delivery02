@@ -7,6 +7,7 @@ defmodule MzingaDelivery.Orders do
   alias MzingaDelivery.Repo
   alias MzingaDelivery.Orders.{Order, OrderItem}
   alias MzingaDelivery.Stores
+  alias MzingaDeliveryWeb.Endpoint
 
   @doc """
   Returns the list of orders.
@@ -217,17 +218,56 @@ defmodule MzingaDelivery.Orders do
       {:error, :invalid_order_item}
     else
       Repo.transaction(fn ->
+        # Get old status before update
+        {:ok, old_order} = get_order!(order_id)
+        old_status = get_orders_status(old_order)
+
         case item
              |> OrderItem.changeset(%{status: status})
              |> Repo.update() do
           {:ok, _item} ->
             # Return updated order with all items to reflect new status
-            get_order!(order_id)
+            {:ok, updated_order} = get_order!(order_id)
+            new_status = get_orders_status(updated_order)
+
+            # Broadcast if status changed to "ready"
+            if old_status != "ready" && new_status == "ready" do
+              Endpoint.broadcast("riders:lobby", "order_ready", %{
+                order_id: updated_order.id,
+                store: updated_order.store.name,
+                address: updated_order.store.address,
+                # Placeholder
+                pickup_location: %{lat: -1.2921, lng: 36.8219}
+              })
+            end
+
+            updated_order
 
           {:error, changeset} ->
             Repo.rollback(changeset)
         end
       end)
     end
+  end
+
+  @doc """
+  Assigns a rider to an order.
+  """
+  def assign_rider(order_id, rider_id) do
+    Repo.transaction(fn ->
+      order = Repo.get!(Order, order_id)
+
+      if order.rider_id do
+        Repo.rollback(:order_taken)
+      else
+        order
+        |> Order.changeset(%{rider_id: rider_id})
+        |> Repo.update()
+        |> case do
+          {:ok, updated_order} -> updated_order
+          {:error, changeset} -> Repo.rollback(changeset)
+        end
+      end
+    end)
   end
 end

@@ -258,6 +258,33 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 ---
 
+### 6. Order Workflow (New Features)
+
+**6.1 Update Order Item Status (Vendor)**
+**Endpoint:** `PATCH /api/orders/:id/items/:item_id`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/items/50" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "ready"}'
+```
+
+**Status:** 200 OK (Returns updated Order JSON)
+
+**6.2 Pick Order (Rider)**
+**Endpoint:** `POST /api/orders/:id/pick`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -H "Content-Type: application/json"
+```
+
+**Status:** 200 OK (Returns updated Order JSON with rider assigned)
+
+---
+
 ## Not Yet Tested / Pending Verification
 
 ### Orders (Auth Required)

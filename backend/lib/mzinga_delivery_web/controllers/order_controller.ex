@@ -332,6 +332,41 @@ defmodule MzingaDeliveryWeb.OrderController do
     end
   end
 
+  @doc """
+  Pick order (rider only)
+  POST /api/orders/:id/pick
+  """
+  def pick_order(conn, %{"id" => id}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.role != "rider" do
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Only riders can pick orders"})
+    else
+      case Orders.assign_rider(id, user.id) do
+        {:ok, updated_order} ->
+          # Notify customer and vendor that rider is assigned? (Optional)
+          render(conn, "show.json", order: updated_order)
+
+        {:error, :not_found} ->
+          conn
+          |> put_status(:not_found)
+          |> json(%{error: "Order not found"})
+
+        {:error, :order_taken} ->
+          conn
+          |> put_status(:conflict)
+          |> json(%{error: "Order already taken by another rider"})
+
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render("error.json", changeset: changeset)
+      end
+    end
+  end
+
   # Check if user can view the order
   defp can_view_order?(user, order) do
     user.role == "admin" ||
