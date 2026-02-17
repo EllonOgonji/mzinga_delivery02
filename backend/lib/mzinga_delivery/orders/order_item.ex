@@ -16,7 +16,7 @@ defmodule MzingaDelivery.Orders.OrderItem do
   @doc false
   def changeset(order_item, attrs) do
     order_item
-    |> cast(attrs, [:order_id, :product_id, :quantity, :subtotal])
+    |> cast(attrs, [:order_id, :product_id, :quantity, :subtotal, :status])
     |> validate_required([:order_id, :product_id, :quantity, :subtotal])
     |> validate_number(:quantity, greater_than: 0)
     |> validate_number(:subtotal, greater_than: 0)
