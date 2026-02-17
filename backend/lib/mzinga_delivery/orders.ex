@@ -186,11 +186,17 @@ defmodule MzingaDelivery.Orders do
   """
   def get_orders_status(%Order{} = order) do
     order = Repo.preload(order, :order_items)
-    statuses = Enum.map(order.order_items, & &1.status) |> Enum.uniq()
+    statuses = Enum.map(order.order_items, & &1.status)
 
     cond do
-      length(statuses) == 1 -> hd(statuses)
-      true -> "mixed"
+      Enum.empty?(statuses) -> "pending"
+      Enum.all?(statuses, &(&1 == "cancelled")) -> "cancelled"
+      Enum.all?(statuses, &(&1 == "delivered")) -> "delivered"
+      Enum.all?(statuses, &(&1 == "ready")) -> "ready"
+      Enum.any?(statuses, &(&1 == "preparing")) -> "preparing"
+      Enum.any?(statuses, &(&1 == "confirmed")) -> "confirmed"
+      Enum.any?(statuses, &(&1 == "pending")) -> "pending"
+      true -> "processing"
     end
   end
 
