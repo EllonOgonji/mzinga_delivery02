@@ -59,6 +59,7 @@ defmodule MzingaDeliveryWeb.Router do
     resources "/orders", OrderController, only: [:index, :show, :create]
     patch "/orders/:id/accept", OrderController, :accept
     patch "/orders/:id/reject", OrderController, :reject
+    patch "/orders/:id/items/:item_id", OrderController, :update_item
 
     # Notifications
     get "/notifications", NotificationController, :index

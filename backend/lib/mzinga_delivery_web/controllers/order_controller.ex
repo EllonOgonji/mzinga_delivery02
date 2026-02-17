@@ -294,6 +294,44 @@ defmodule MzingaDeliveryWeb.OrderController do
     end
   end
 
+  @doc """
+  Update item status (vendor only)
+  PATCH /api/orders/:id/items/:item_id
+  """
+  def update_item(conn, %{"id" => id, "item_id" => item_id, "status" => status}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    with {:ok, order} <- Orders.get_order!(id),
+         true <- can_manage_order?(user, order),
+         {:ok, updated_order} <- Orders.update_order_item_status(id, item_id, status) do
+      # Broadcast update to customer if needed (optional)
+      MzingaDeliveryWeb.Endpoint.broadcast(
+        "notifications:customer_#{order.customer_id}",
+        "order_update",
+        %{
+          order_id: order.id,
+          message:
+            "Your order status has been updated: #{MzingaDelivery.Orders.get_orders_status(updated_order)}",
+          timestamp: DateTime.utc_now()
+        }
+      )
+
+      render(conn, "show.json", order: updated_order)
+    else
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Order not found"})
+
+      false ->
+        conn |> put_status(:forbidden) |> json(%{error: "Not authorized"})
+
+      {:error, :invalid_order_item} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Item does not belong to this order"})
+
+      {:error, changeset} ->
+        conn |> put_status(:unprocessable_entity) |> render("error.json", changeset: changeset)
+    end
+  end
+
   # Check if user can view the order
   defp can_view_order?(user, order) do
     user.role == "admin" ||
