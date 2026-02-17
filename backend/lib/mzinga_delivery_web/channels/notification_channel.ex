@@ -46,6 +46,18 @@ defmodule MzingaDeliveryWeb.NotificationChannel do
     end
   end
 
+  def join("riders:lobby", _payload, socket) do
+    user = socket.assigns.current_user
+
+    if user.role == "rider" || user.role == "admin" do
+      Logger.info("User #{user.id} joined riders lobby")
+      {:ok, socket}
+    else
+      Logger.warning("User #{user.id} unauthorized for riders lobby")
+      {:error, %{reason: "unauthorized"}}
+    end
+  end
+
   def join("notifications:" <> _channel, _payload, socket) do
     user = socket.assigns.current_user
     Logger.warning("User #{user.id} attempted to join invalid channel")
