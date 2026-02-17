@@ -60,6 +60,7 @@ defmodule MzingaDeliveryWeb.Router do
     patch "/orders/:id/accept", OrderController, :accept
     patch "/orders/:id/reject", OrderController, :reject
     patch "/orders/:id/items/:item_id", OrderController, :update_item
+    post "/orders/:id/pick", OrderController, :pick_order
 
     # Notifications
     get "/notifications", NotificationController, :index
