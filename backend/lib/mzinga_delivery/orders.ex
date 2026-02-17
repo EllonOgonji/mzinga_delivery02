@@ -206,4 +206,28 @@ defmodule MzingaDelivery.Orders do
   def delete_order(%Order{} = order) do
     Repo.delete(order)
   end
+
+  @doc """
+  Updates the status of an order item.
+  """
+  def update_order_item_status(order_id, item_id, status) do
+    item = Repo.get!(OrderItem, item_id)
+
+    if item.order_id != String.to_integer(to_string(order_id)) do
+      {:error, :invalid_order_item}
+    else
+      Repo.transaction(fn ->
+        case item
+             |> OrderItem.changeset(%{status: status})
+             |> Repo.update() do
+          {:ok, _item} ->
+            # Return updated order with all items to reflect new status
+            get_order!(order_id)
+
+          {:error, changeset} ->
+            Repo.rollback(changeset)
+        end
+      end)
+    end
+  end
 end
