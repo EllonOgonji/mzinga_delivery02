@@ -62,9 +62,11 @@ if config_env() == :prod do
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :mzinga_delivery, MzingaDelivery.Repo,
-    # ssl: true,
+    ssl: [verify: :verify_none],
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
+    # Required for Supabase Transaction Pooler (port 6543)
+    prepare: :unnamed,
     socket_options: maybe_ipv6
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
