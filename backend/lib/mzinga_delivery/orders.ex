@@ -13,7 +13,7 @@ defmodule MzingaDelivery.Orders do
   """
   def list_orders do
     Order
-    |> preload([:customer, :store, :order_items])
+    |> preload([:customer, store: :vendor, order_items: :product])
     |> Repo.all()
   end
 
@@ -23,7 +23,7 @@ defmodule MzingaDelivery.Orders do
   def list_customer_orders(customer_id) do
     Order
     |> where([o], o.customer_id == ^customer_id)
-    |> preload([:store, :order_items])
+    |> preload([:store, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
   end
@@ -34,7 +34,7 @@ defmodule MzingaDelivery.Orders do
   def list_store_orders(store_id) do
     Order
     |> where([o], o.store_id == ^store_id)
-    |> preload([:customer, :store, :order_items])
+    |> preload([:customer, store: :vendor, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
   end
@@ -44,7 +44,7 @@ defmodule MzingaDelivery.Orders do
   """
   def get_order(id) do
     Order
-    |> preload([:customer, :store, order_items: :product])
+    |> preload([:customer, store: :vendor, order_items: :product])
     |> Repo.get(id)
   end
 
