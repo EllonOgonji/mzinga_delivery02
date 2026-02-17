@@ -186,11 +186,17 @@ defmodule MzingaDelivery.Orders do
   """
   def get_orders_status(%Order{} = order) do
     order = Repo.preload(order, :order_items)
-    statuses = Enum.map(order.order_items, & &1.status) |> Enum.uniq()
+    statuses = Enum.map(order.order_items, & &1.status)
 
     cond do
-      length(statuses) == 1 -> hd(statuses)
-      true -> "mixed"
+      Enum.empty?(statuses) -> "pending"
+      Enum.all?(statuses, &(&1 == "cancelled")) -> "cancelled"
+      Enum.all?(statuses, &(&1 == "delivered")) -> "delivered"
+      Enum.all?(statuses, &(&1 == "ready")) -> "ready"
+      Enum.any?(statuses, &(&1 == "preparing")) -> "preparing"
+      Enum.any?(statuses, &(&1 == "confirmed")) -> "confirmed"
+      Enum.any?(statuses, &(&1 == "pending")) -> "pending"
+      true -> "processing"
     end
   end
 
@@ -199,5 +205,29 @@ defmodule MzingaDelivery.Orders do
   """
   def delete_order(%Order{} = order) do
     Repo.delete(order)
+  end
+
+  @doc """
+  Updates the status of an order item.
+  """
+  def update_order_item_status(order_id, item_id, status) do
+    item = Repo.get!(OrderItem, item_id)
+
+    if item.order_id != String.to_integer(to_string(order_id)) do
+      {:error, :invalid_order_item}
+    else
+      Repo.transaction(fn ->
+        case item
+             |> OrderItem.changeset(%{status: status})
+             |> Repo.update() do
+          {:ok, _item} ->
+            # Return updated order with all items to reflect new status
+            get_order!(order_id)
+
+          {:error, changeset} ->
+            Repo.rollback(changeset)
+        end
+      end)
+    end
   end
 end
