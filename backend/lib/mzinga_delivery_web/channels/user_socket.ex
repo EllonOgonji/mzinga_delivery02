@@ -5,6 +5,7 @@ defmodule MzingaDeliveryWeb.UserSocket do
 
   # Channel routes
   channel "notifications:*", MzingaDeliveryWeb.NotificationChannel
+  channel "riders:*", MzingaDeliveryWeb.NotificationChannel
 
   @doc """
   Connect to socket with JWT authentication.
