@@ -6,7 +6,7 @@ import Config
 # and secrets from environment variables or elsewhere. Do not define
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
-if File.exists?(".env") do
+if config_env() != :test && File.exists?(".env") do
   IO.puts("Loading .env variables...")
 
   File.read!(".env")
@@ -52,22 +52,24 @@ if config_env() == :prod do
     System.put_env("PHX_SERVER", "true")
   end
 
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
+  if config_env() != :test do
+    database_url =
+      System.get_env("DATABASE_URL") ||
+        raise """
+        environment variable DATABASE_URL is missing.
+        For example: ecto://USER:PASS@HOST/DATABASE
+        """
 
-  maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+    maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
-  config :mzinga_delivery, MzingaDelivery.Repo,
-    ssl: [verify: :verify_none],
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
-    # Required for Supabase Transaction Pooler (port 6543)
-    prepare: :unnamed,
-    socket_options: maybe_ipv6
+    config :mzinga_delivery, MzingaDelivery.Repo,
+      ssl: [verify: :verify_none],
+      url: database_url,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
+      # Required for Supabase Transaction Pooler (port 6543)
+      prepare: :unnamed,
+      socket_options: maybe_ipv6
+  end
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
