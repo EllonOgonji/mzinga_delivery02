@@ -72,22 +72,23 @@ export interface Shop {
 }
 
 export interface Product {
-  id: number;
+  id?: number;
   store_id: number;
   name: string;
   category: string;
   description: string;
   price: number;
   compareAtPrice?: number;
-  images: string[];
+  compare_at_price?:number;
+  images?: string[];
   image_url: string;
   stock: number;
-  ratings: number[];
+  ratings?: number[];
   specifications: Record<string, string>;
   status: 'active' | 'inactive';
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
-  average_rating: number;
+  average_rating?: number;
   // New
   searchTags?: string[];
   featured?: boolean;

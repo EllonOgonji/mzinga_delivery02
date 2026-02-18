@@ -70,3 +70,106 @@ export const getSingleProduct = async function (id: Number): Promise<Product> {
         return {} as Product;
     });
 };
+
+export const addProduct = async function (product: Product) {
+    const url = `${import.meta.env.VITE_BASE_URL}/api/products`;
+
+    return fetch(url,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({"product": product})
+    }).then(response => {
+        if (!response.ok){
+            return {
+                status: false,
+                error: "An error occurred",
+                data: null
+            }
+        }
+
+        return {
+            status: true,
+            error: null,
+            data: null
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            error: error,
+            data: null
+        }
+    });
+}
+
+export const updateProduct = async function (id: Number, updatedProduct: Product) {
+    const url = `${import.meta.env.VITE_BASE_URL}/api/products/${id}`;
+
+    return fetch(url,{
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({"product": updatedProduct})
+    }).then(response => {
+        if (!response.ok){
+            return {
+                status: false,
+                error: "An error occurred",
+                data: null
+            }
+        }
+
+        return {
+            status: true,
+            error: null,
+            data: null
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            error: error,
+            data: null
+        }
+    });
+}
+
+export const deleteProduct = async function (id: Number) {
+    const url = `${import.meta.env.VITE_BASE_URL}/api/products/${id}`;
+
+    return fetch(url,{
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+    }).then(response => {
+        if (!response.ok){
+            return {
+                status: false,
+                error: "An error occurred",
+                data: null
+            }
+        }
+
+        return {
+            status: true,
+            error: null,
+            data: null
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            error: error,
+            data: null
+        }
+    });
+}
