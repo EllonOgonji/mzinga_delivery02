@@ -107,61 +107,32 @@ export default function Checkout() {
       return;
     }
 
-    // Add each item to cart
-    // shopsData.forEach(async (shopData) => {
-    //   const orderPayload = {
-    //     "order": {
-    //       store_id: shopData.shopId,
-    //       payment_phone: phone,
-    //       items: shopData.items.map(item => ({
-    //         product_id: item.id,
-    //         quantity: item.quantity,
-    //         subtotal: item.quantity * Number(item.price)
-    //       })),
-    //     }
-    //   };
+    for (const shopData of shopsData) {
+      const orderPayload = {
+        order: {
+          store_id: shopData.shopId,
+          payment_phone: phone,
+          items: shopData.items.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            subtotal: item.quantity * Number(item.price),
+          })),
+        },
+      };
 
-    //   orderPayload.order.items.forEach(async (item) => {
-    //     const res = await addItemToCart({id: item.product_id, quantity: item.quantity});
-    //     console.log('Item added to cart response:', res);
-    //   })
-
-    //   // console.log('Order Payload for Shop', shopData.shopId, orderPayload);
-    //   // console.log('Create Order Response for Shop', shopData.shopId, res);
-    // })
-
-  for (const shopData of shopsData) {
-    const orderPayload = {
-      order: {
-        store_id: shopData.shopId,
-        payment_phone: phone,
-        items: shopData.items.map(item => ({
-          product_id: item.id,
+      for (const item of orderPayload.order.items) {
+        const res = await addItemToCart({
+          id: item.product_id,
           quantity: item.quantity,
-          subtotal: item.quantity * Number(item.price),
-        })),
-      },
-    };
-
-    for (const item of orderPayload.order.items) {
-      const res = await addItemToCart({
-        id: item.product_id,
-        quantity: item.quantity,
-      });
-      console.log('Item added to cart response:', res);
+        });
+        console.log('Item added to cart response:', res);
+      }
     }
-  }
 
     const res = await checkout(String(phone));
-    console.log('Create Order Response for Shop');
-
-    // const orderNumber = 'CST' + Date.now();
-
-    // console.log('Order placed:', { orderNumber, paymentMethod, total: orderTotal });
-    
     toast.success('Order placed successfully!');
     clearCart();
-    // navigate(`/order-confirmation/${orderNumber}`);
+    navigate(`/}`);
 
   };
 

@@ -23,10 +23,10 @@ const navigation = [
   { name: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
   { name: "Products", href: "/vendor/products", icon: Package },
   { name: "Orders", href: "/vendor/orders", icon: ShoppingBag },
-  { name: "Reviews", href: "/vendor/reviews", icon: Star },
-  { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
+  // { name: "Reviews", href: "/vendor/reviews", icon: Star },
+  // { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
   { name: "Shop Profile", href: "/vendor/shop-profile", icon: Store },
-  { name: "Settings", href: "/vendor/settings", icon: Settings },
+  // { name: "Settings", href: "/vendor/settings", icon: Settings },
 ];
 
 export const VendorLayout = ({ children }: VendorLayoutProps) => {

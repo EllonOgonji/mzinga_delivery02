@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VendorLayout } from '@/components/vendor/VendorLayout';
 import { Button } from '@/components/ui/button';
@@ -13,28 +13,93 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { mockProducts } from '@/data/mockData';
+import { useQuery } from "@tanstack/react-query";
+import { getVendorShops } from "@/data/shopData";
+import { addProduct, getSingleProduct, updateProduct } from '@/data/productData';
 
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const isNew = id === 'new';
-  
-  // Get existing product data if editing
-  const existingProduct = !isNew ? mockProducts.find(p => p.id === parseInt(id || '0')) : null;
 
-  const [images, setImages] = useState<string[]>(existingProduct?.images || []);
-  const [formData, setFormData] = useState({
-    name: existingProduct?.name || '',
-    category: existingProduct?.category || '',
-    description: existingProduct?.description || '',
-    price: existingProduct?.price?.toString() || '',
-    compareAtPrice: existingProduct?.compareAtPrice?.toString() || '',
-    stock: existingProduct?.stock?.toString() || '',
-    sku: '',
-    trackQuantity: true,
-    status: (existingProduct?.status || 'active') as 'active' | 'inactive',
+  const { data: shopData } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
+    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
   });
+
+  const { data: existingProduct } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => getSingleProduct(Number(id)),
+    enabled: !isNew
+  });
+
+  useEffect(() => {
+    if (shopData?.id) {
+      setFormData(prev => ({
+        ...prev,
+        store_id: shopData.id
+      }));
+    }
+
+    if (existingProduct) {
+      setSpecificationKeys(Object.keys(existingProduct.specifications))
+      setSpecificationValues(Object.values(existingProduct.specifications))
+      setFormData({
+        store_id: existingProduct.store_id,
+        name: existingProduct.name,
+        description: existingProduct.description,
+        price: existingProduct.price,
+        compare_at_price: existingProduct.compare_at_price,
+        stock: existingProduct.stock,
+        image_url: existingProduct.image_url,
+        category: existingProduct.category,
+        status: existingProduct.status,
+        specifications: existingProduct.specifications
+      });
+    }
+  }, [shopData?.id, existingProduct]);
+
+  const [formData, setFormData] = useState({
+    store_id: shopData?.id,
+    name: existingProduct?.name || "",
+    description: existingProduct?.description || "",
+    price: existingProduct?.price || 0,
+    compare_at_price: existingProduct?.compare_at_price || 0,
+    stock: existingProduct?.stock || 0,
+    image_url: existingProduct?.image_url || "https://imgs.search.brave.com/fIIKBiOnACoNHRZZXHWhUDSA32lMdoNl73aLuVUVScA/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly93d3cu/bGlxdW9yc2hhY2su/Y28ua2Uvd3AtY29u/dGVudC91cGxvYWRz/LzIwMjIvMDMvS2Vu/eWEtQ2FuZS1TbW9v/dGgtUnVtLTI1MG1s/LmpwZw",
+    category: existingProduct?.category || "",
+    status: existingProduct?.status || "active",
+    specifications: existingProduct?.specifications || {}
+  });
+
+  const [specificationKeys, setSpecificationKeys] = useState<string[]>(Object.keys(existingProduct?.specifications || {}));
+  const [specificationValues, setSpecificationValues] = useState<string[]>(Object.values(existingProduct?.specifications || {}));
+  const [newSpecKey, setNewSpecKey] = useState("");
+  const [newSpecValue, setNewSpecValue] = useState("");
+
+  const addProductSpecification = () => {
+    if (newSpecKey.trim() === "" || newSpecValue.trim() === "") {
+      toast({
+        title: "Error",
+        description: "Specification title and description cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSpecificationKeys([...specificationKeys, newSpecKey]);
+    setSpecificationValues([...specificationValues, newSpecValue]);
+    setFormData({
+      ...formData,
+      specifications: {
+        ...formData.specifications,
+        [newSpecKey]: newSpecValue
+      }
+    });
+    setNewSpecKey("");
+    setNewSpecValue("");
+  }
 
   const [dietary, setDietary] = useState({
     vegan: false,
@@ -44,6 +109,8 @@ const ProductForm = () => {
     dairyFree: false,
     nutFree: false,
   });
+
+  const [images, setImages] = useState([])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -58,10 +125,9 @@ const ProductForm = () => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent, asDraft = false) => {
+  const handleSubmit = async (e: React.FormEvent, asDraft = false) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.name || !formData.category || !formData.price) {
       toast({
         title: "Error",
@@ -71,16 +137,33 @@ const ProductForm = () => {
       return;
     }
 
+    let res
+
+    if (!isNew){
+      res = await updateProduct(Number(id), formData)
+    }else{
+      res = await addProduct(formData) 
+    }
+
+    if (!res.status){
+      toast({
+        title: "Error",
+        description: res.error || "An error occurred",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Success!",
       description: `Product ${isNew ? 'created' : 'updated'} successfully`,
     });
-    
+
     navigate('/vendor/products');
   };
 
-  const discountPercent = formData.compareAtPrice && formData.price 
-    ? Math.round((1 - parseFloat(formData.price) / parseFloat(formData.compareAtPrice)) * 100)
+  const discountPercent = formData.compare_at_price && formData.price 
+    ? Math.round((1 - Number(formData.price) / Number(formData.compare_at_price) * 100))
     : 0;
 
   return (
@@ -114,31 +197,34 @@ const ProductForm = () => {
               {/* Product Images */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Product Images</CardTitle>
+                  <CardTitle>Product Image</CardTitle>
                   <CardDescription>
-                    Add up to 10 images. First image will be the primary image.
+                    
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {images.map((image, index) => (
-                      <div key={index} className="relative aspect-square rounded-lg border overflow-hidden group">
-                        <img src={image} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
-                        {index === 0 && (
-                          <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 text-xs rounded">
-                            Primary
+                    {images.length == 1 ?
+                      <>
+                        {images.map((image, index) => (
+                          <div key={index} className="relative aspect-square rounded-lg border overflow-hidden group">
+                            <img src={image} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
+                            {index === 0 && (
+                              <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 text-xs rounded">
+                                Primary
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-2 right-2 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
                           </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                    {images.length < 10 && (
+                        ))}
+                      </>
+                    :  
                       <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition cursor-pointer flex flex-col items-center justify-center gap-2">
                         <Upload className="h-8 w-8 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">Upload</span>
@@ -150,7 +236,7 @@ const ProductForm = () => {
                           className="hidden"
                         />
                       </label>
-                    )}
+                    }
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Recommended: 1000x1000px, max 2MB per image
@@ -161,7 +247,7 @@ const ProductForm = () => {
               {/* Basic Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
+                  <CardTitle>Product Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -186,11 +272,8 @@ const ProductForm = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Fast Food">Fast Food</SelectItem>
-                        <SelectItem value="Groceries">Groceries</SelectItem>
-                        <SelectItem value="Electronics">Electronics</SelectItem>
-                        <SelectItem value="Fashion">Fashion</SelectItem>
-                        <SelectItem value="Beauty & Personal Care">Beauty & Personal Care</SelectItem>
-                        <SelectItem value="Home & Garden">Home & Garden</SelectItem>
+                        <SelectItem value="Alcohol">Alcohol</SelectItem>
+                        <SelectItem value="Beverages">Beverages</SelectItem>                        
                       </SelectContent>
                     </Select>
                   </div>
@@ -209,6 +292,18 @@ const ProductForm = () => {
                       {formData.description.length} characters (minimum 20)
                     </p>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Stock *</Label>
+                    <Input
+                      id="stock"
+                      type='number'
+                      placeholder=""
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value)})}
+                      required
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
@@ -222,15 +317,15 @@ const ProductForm = () => {
                     <div className="space-y-2">
                       <Label htmlFor="price">Price *</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">KES. </span>
                         <Input
                           id="price"
                           type="number"
-                          step="0.01"
-                          placeholder="0.00"
+                          step="1"
+                          placeholder="1"
                           value={formData.price}
-                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                          className="pl-7"
+                          onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                          className="pl-12"
                           required
                         />
                       </div>
@@ -239,15 +334,15 @@ const ProductForm = () => {
                     <div className="space-y-2">
                       <Label htmlFor="compareAtPrice">Compare at Price</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">KES. </span>
                         <Input
                           id="compareAtPrice"
                           type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={formData.compareAtPrice}
-                          onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value })}
-                          className="pl-7"
+                          step="1"
+                          placeholder="1"
+                          value={formData.compare_at_price}
+                          onChange={(e) => setFormData({ ...formData, compare_at_price: Number(e.target.value)})}
+                          className="pl-12"
                         />
                       </div>
                     </div>
@@ -263,98 +358,99 @@ const ProductForm = () => {
                 </CardContent>
               </Card>
 
-              {/* Inventory */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Inventory</CardTitle>
+                  <CardTitle>Specifications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Track Quantity</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Manage stock levels for this product
-                      </p>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <Label >Title</Label>
+                      <Label >Description</Label>
                     </div>
-                    <Switch
-                      checked={formData.trackQuantity}
-                      onCheckedChange={(checked) => setFormData({ ...formData, trackQuantity: checked })}
-                    />
-                  </div>
-
-                  {formData.trackQuantity && (
-                    <>
-                      <div className="grid gap-4 sm:grid-cols-2">
+                    {specificationKeys.map((key, index) =>  (
+                      <div className="grid gap-4 sm:grid-cols-3" key={index}>
                         <div className="space-y-2">
-                          <Label htmlFor="stock">Stock Quantity *</Label>
-                          <Input
-                            id="stock"
-                            type="number"
-                            placeholder="0"
-                            value={formData.stock}
-                            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              id="keyTitle"
+                              type="text"
+                              step="1"
+                              placeholder="1"
+                              value={specificationKeys[index]}
+                              onChange={(e) => {
+                                const newKeys = [...specificationKeys];
+                                newKeys[index] = e.target.value;
+                                setSpecificationKeys(newKeys);
+                              }}                              
+                            />
+                          </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="sku">SKU</Label>
+                          <div className="relative">
+                            <Input
+                              id="keyDescription"
+                              type="text"
+                              step="1"
+                              placeholder="1"
+                              value={specificationValues[index]}
+                              onChange={(e) => {
+                                const newValues = [...specificationValues];
+                                newValues[index] = e.target.value;
+                                setSpecificationValues(newValues);
+                              }}                              
+                            />
+                          </div>
+                        </div>
+                      </div>))
+                    }
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">                        
                           <Input
-                            id="sku"
-                            placeholder="ABC-12345"
-                            value={formData.sku}
-                            onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                            id="keyTitle"
+                            type="text"   
+                            placeholder='New spec title'     
+                            value={newSpecKey}                    
+                            onChange={(e) => {
+                              setNewSpecKey(e.target.value);
+                            }}
+                          />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Input
+                            id="keyDescription"
+                            type="text"  
+                            placeholder='New spec description'     
+                            value={newSpecValue}                          
+                            onChange={(e) => {
+                              setNewSpecValue(e.target.value);  
+                            }}
                           />
                         </div>
                       </div>
-                    </>
-                  )}
+
+                      <Button onClick={(e) => {
+                        e.preventDefault();
+                        addProductSpecification();
+                      }}><Plus></Plus>
+                      </Button>
+                    </div>
+
+                    {discountPercent > 0 && (
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                          Discount: {discountPercent}% off
+                        </p>
+                      </div>
+                    )}
                 </CardContent>
               </Card>
 
-              {/* Category-Specific Fields */}
-              {(formData.category === 'Fast Food' || formData.category === 'Groceries') && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Food Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="prepTime">Preparation Time (minutes)</Label>
-                      <Input
-                        id="prepTime"
-                        type="number"
-                        placeholder="30"
-                        value={formData.preparationTime}
-                        onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
-                      />
-                    </div> */}
-
-                    <div className="space-y-3">
-                      <Label>Dietary Information</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(dietary).map(([key, value]) => (
-                          <div key={key} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={key}
-                              checked={value}
-                              onCheckedChange={(checked) => 
-                                setDietary({ ...dietary, [key]: checked as boolean })
-                              }
-                            />
-                            <Label htmlFor={key} className="font-normal cursor-pointer">
-                              {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* SEO */}
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Search Engine Optimization</CardTitle>
                   <CardDescription>
@@ -382,7 +478,7 @@ const ProductForm = () => {
                     <p className="text-xs text-muted-foreground">0 / 160 characters</p>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
 
             {/* Sidebar - 1 column */}
@@ -424,33 +520,13 @@ const ProductForm = () => {
                 </CardContent>
               </Card>
 
-              {/* Product Organization */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Organization</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Featured Product</Label>
-                    <div className="flex items-center space-x-2">
-                      <Switch id="featured" />
-                      <Label htmlFor="featured" className="font-normal cursor-pointer">
-                        Show on shop homepage
-                      </Label>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Preview */}
-              {formData.name && formData.price && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Preview</CardTitle>
-                    <CardDescription>How customers will see this product</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="border rounded-lg overflow-hidden">
+                    <div className="border overflow-hidden">
                       {images[0] && (
                         <div className="aspect-square bg-muted">
                           <img src={images[0]} alt={formData.name} className="w-full h-full object-cover" />
@@ -460,11 +536,11 @@ const ProductForm = () => {
                         <h3 className="font-semibold line-clamp-2">{formData.name}</h3>
                         <div className="flex items-baseline gap-2">
                           <span className="text-lg font-bold text-primary">
-                            ${formData.price}
+                            KES. {formData.price}
                           </span>
-                          {formData.compareAtPrice && (
+                          {formData.compare_at_price && (
                             <span className="text-sm text-muted-foreground line-through">
-                              ${formData.compareAtPrice}
+                              KES. {formData.compare_at_price}
                             </span>
                           )}
                         </div>
@@ -477,7 +553,6 @@ const ProductForm = () => {
                     </div>
                   </CardContent>
                 </Card>
-              )}
             </div>
           </div>
 
@@ -491,13 +566,6 @@ const ProductForm = () => {
               Cancel
             </Button>
             <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={(e) => handleSubmit(e, true)}
-              >
-                Save as Draft
-              </Button>
               <Button type="submit">
                 {isNew ? 'Create Product' : 'Update Product'}
               </Button>
