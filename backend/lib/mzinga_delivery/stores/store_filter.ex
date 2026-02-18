@@ -55,12 +55,35 @@ defmodule MzingaDelivery.Stores.StoreFilters do
   end
 
   # Name filter (partial match, case-insensitive)
-  defp filter_by_name(query, %{"name" => name}) when is_binary(name) and name != "" do
-    pattern = "%#{name}%"
-    from s in query, where: ilike(s.name, ^pattern)
+  defp filter_by_name(query, params) do
+    name = params["name"] || params["search"]
+
+    if is_binary(name) and name != "" do
+      pattern = "%#{name}%"
+      from s in query, where: ilike(s.name, ^pattern)
+    else
+      query
+    end
   end
 
-  defp filter_by_name(query, _), do: query
+  # ==================================
+
+  defp apply_pagination(query, params) do
+    limit = parse_integer(params["limit"]) || 50
+    offset = parse_integer(params["offset"])
+
+    offset =
+      if is_nil(offset) do
+        page = parse_integer(params["page"]) || 1
+        (page - 1) * limit
+      else
+        offset
+      end
+
+    query
+    |> limit(^limit)
+    |> offset(^offset)
+  end
 
   # Category filter
   defp filter_by_category(query, %{"category" => category})
@@ -148,17 +171,6 @@ defmodule MzingaDelivery.Stores.StoreFilters do
   # Default sorting: newest first
   defp apply_sorting(query, _) do
     from s in query, order_by: [desc: s.inserted_at]
-  end
-
-  # ========== PAGINATION ==========
-
-  defp apply_pagination(query, params) do
-    limit = parse_integer(params["limit"]) || 50
-    offset = parse_integer(params["offset"]) || 0
-
-    query
-    |> limit(^limit)
-    |> offset(^offset)
   end
 
   # ========== HELPERS ==========
