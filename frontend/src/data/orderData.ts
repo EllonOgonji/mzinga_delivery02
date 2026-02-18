@@ -82,8 +82,8 @@ export const getAllOrders = async function (filters: ShopFilters = {limit: 6, pa
     });
 };
 
-export const getStoreOrders = async function (id: number): Promise<Shop | null> {
-    return fetch(`${import.meta.env.VITE_BASE_URL}/api/vendor/stores`,{
+export const getStoreOrders = async function (){
+    return fetch(`${import.meta.env.VITE_BASE_URL}/api/orders`,{
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -95,9 +95,46 @@ export const getStoreOrders = async function (id: number): Promise<Shop | null> 
         }
         return response.json();
     }).then(res => {
-        return res.data.filter((shop) => shop.is_verified === true)[0]
+        return {
+            status: true,
+            data: res,
+            error: null
+        }
     }).catch(error => {
         console.error('Error:', error);
-        return null;
+        return {
+            status: false,
+            data: null,
+            error: error
+        }
+    });
+}
+
+export const updateOrderStatus = async function (orderId: number, itemId: number, newStatus: string) {
+    return fetch(`${import.meta.env.VITE_BASE_URL}/api/orders/${orderId}/items/${itemId}`,{
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: newStatus })
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    }).then(res => {
+        return {
+            status: true,
+            data: res,
+            error: null
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            data: null,
+            error: error
+        }
     });
 }

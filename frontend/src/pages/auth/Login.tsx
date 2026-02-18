@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Loader } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -14,8 +15,11 @@ const Login = () => {
         email: '',
         password: '',
     });
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = (e: React.FormEvent, asDraft = false) => {
+        setLoading(true);
+
         e.preventDefault();
 
         if (!formData.email || !formData.password) {
@@ -24,6 +28,7 @@ const Login = () => {
                 description: "Please fill in all required fields",
                 variant: "destructive",
             });
+            setLoading(false);
             return;
         }
 
@@ -60,6 +65,7 @@ const Login = () => {
                     description: `You are trying to login as a ${loginType} but your account is registered as a ${res.data.user.role}.`,
                     variant: "destructive",
                 });
+                setLoading(false);
                 return;
             }
             
@@ -69,6 +75,7 @@ const Login = () => {
                 description: error.message,
                 variant: "destructive",
             });
+            setLoading(false);
             return;
         })
     };
@@ -112,7 +119,7 @@ const Login = () => {
                                 type="submit"
                                 className='w-full'
                             >
-                                Login
+                                {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Login'}
                             </Button>
                         </CardContent>
                         <CardFooter className='text-sm text-muted-foreground justify-center'>

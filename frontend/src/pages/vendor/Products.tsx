@@ -33,55 +33,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useQuery } from "@tanstack/react-query";
+import { getVendorShops } from "@/data/shopData";
+import { deleteProduct, getSingleStoreProducts } from "@/data/productData";
+import { Product } from "@/types";
+import { useToast } from '@/hooks/use-toast';
 
 const VendorProducts = () => {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
-  // Mock products data
-  const products = [
-    {
-      id: 1,
-      image: "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=100",
-      name: "Fresh Tomatoes",
-      sku: "FT-001",
-      category: "Vegetables",
-      price: 4.99,
-      compareAtPrice: 6.99,
-      stock: 5,
-      status: true,
-    },
-    {
-      id: 2,
-      image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=100",
-      name: "Organic Bananas",
-      sku: "OB-002",
-      category: "Fruits",
-      price: 3.49,
-      stock: 3,
-      status: true,
-    },
-    {
-      id: 3,
-      image: "https://images.unsplash.com/photo-1550828520-4cb496926fc9?w=100",
-      name: "Fresh Milk",
-      sku: "FM-003",
-      category: "Dairy",
-      price: 2.99,
-      stock: 45,
-      status: true,
-    },
-    {
-      id: 4,
-      image: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=100",
-      name: "Whole Wheat Bread",
-      sku: "WWB-004",
-      category: "Bakery",
-      price: 1.99,
-      stock: 0,
-      status: false,
-    },
-  ];
+  const { data: shopData } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
+    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
+  });
+
+  const {data: products = [] } = useQuery<Product[]>({
+    queryKey: ["vendor-dashboard-products"],
+    queryFn: () => getSingleStoreProducts(shopData.id)
+  })
 
   const getStockColor = (stock: number) => {
     if (stock === 0) return "text-red-500";
@@ -104,6 +75,24 @@ const VendorProducts = () => {
       setSelectedProducts(selectedProducts.filter((pId) => pId !== id));
     }
   };
+
+  const handleDeleteProduct = async (id: number) => {
+    const {status, error} = await deleteProduct(id)
+
+    if (!status){
+      toast({
+        title: "Error",
+        description: error || "An error occurred",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success!",
+      description: `Product deleted successfully`,
+    });
+  }
 
   return (
     <VendorLayout>
@@ -206,15 +195,15 @@ const VendorProducts = () => {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <img
-                        src={product.image}
+                        src={product.image_url}
                         alt={product.name}
                         className="h-12 w-12 rounded object-cover"
                       />
                       <div>
-                        <Link to={`/vendor/products/${product.id}/edit`} className="font-medium hover:underline">
+                        <Link to={`/vendor/products/${product.id}`} className="font-medium hover:underline">
                           {product.name}
                         </Link>
-                        <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                        <p className="text-sm text-muted-foreground">ID: {product.id}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -223,10 +212,10 @@ const VendorProducts = () => {
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <p className="font-medium">${product.price.toFixed(2)}</p>
+                      <p className="font-medium">KES. {Number(product.price).toFixed(2)}</p>
                       {product.compareAtPrice && (
                         <p className="text-sm text-muted-foreground line-through">
-                          ${product.compareAtPrice.toFixed(2)}
+                          KES. {Number(product.compareAtPrice).toFixed(2)}
                         </p>
                       )}
                     </div>
@@ -237,18 +226,16 @@ const VendorProducts = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Switch checked={product.status} />
+                    {/* <Switch checked={product.status == 'active'} /> */}
+                    {product.status}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Link to={`/vendor/products/${product.id}/edit`}>
+                      <Link to={`/vendor/products/${product.id}`}>
                         <Button variant="ghost" size="icon">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button variant="ghost" size="icon">
-                        <Copy className="h-4 w-4" />
-                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -264,7 +251,7 @@ const VendorProducts = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            <AlertDialogAction onClick={() => {handleDeleteProduct(product.id)}} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>

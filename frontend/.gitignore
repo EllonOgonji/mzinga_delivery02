@@ -26,3 +26,5 @@ implementationPlan.md
 *.njsproj
 *.sln
 *.sw?
+
+../backend/
