@@ -310,3 +310,46 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
 
 - `WS /live/websocket` (LiveView)
 - `WS /socket/websocket` (User Socket)
+
+---
+
+### 7. Image Uploads (Direct-to-Supabase)
+
+There are no dedicated Elixir API endpoints for uploading image files directly. Instead, the frontend uploads images directly to the Supabase Storage bucket (`store-images`) and passes the resulting public URL strings to the existing backend endpoints.
+
+**7.1 Update User Avatar**
+**Endpoint:** `PUT /api/users/:id` (or your user update route)
+**Method:** Pass the `avatar_url` string in the standard JSON payload.
+```json
+{
+  "user": {
+    "avatar_url": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/avatar.jpg"
+  }
+}
+```
+
+**7.2 Store Logos & Banners**
+**Endpoint:** `POST /api/vendor/stores` or `PUT /api/vendor/stores/:id`
+**Method:** Pass the `logo` and `banner` string URLs.
+```json
+{
+  "store": {
+    "name": "My Premium Store",
+    "logo": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/logo.png",
+    "banner": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/banner.jpg"
+  }
+}
+```
+
+**7.3 Product Images**
+**Endpoint:** `POST /api/products` or `PUT /api/products/:id`
+**Method:** Pass the `image_url` string.
+```json
+{
+  "product": {
+    "name": "Premium Lager",
+    "price": 250.00,
+    "image_url": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/beer.jpg"
+  }
+}
+```
