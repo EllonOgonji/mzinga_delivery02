@@ -55,12 +55,12 @@ defmodule MzingaDelivery.Orders do
           query
       end
 
-    # The order has a total_amount column, but since we are joining order_items, 
+    # The order has a total_price column, but since we are joining order_items, 
     # we should grab a distinct order amount to avoid multiplying the joined items
     # or just use fragment to sum distinct
     Repo.one(
       from [o, _item] in query,
-      select: type(fragment("COALESCE(SUM(DISTINCT ?), 0)", o.total_amount), :decimal)
+      select: type(fragment("COALESCE(SUM(DISTINCT ?), 0)", o.total_price), :decimal)
     )
   end
 
