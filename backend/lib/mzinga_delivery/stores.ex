@@ -141,6 +141,18 @@ defmodule MzingaDelivery.Stores do
     |> Repo.all()
   end
 
+  def count_verified_stores do
+    Store
+    |> where([s], s.status == "approved" and s.is_verified == true)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  def count_unverified_stores do
+    Store
+    |> where([s], s.is_verified == false or s.status != "approved")
+    |> Repo.aggregate(:count, :id)
+  end
+
   def get_public_store(id) do
     Store
     |> where([s], s.id == ^id and s.status == "approved" and s.is_verified == true)
