@@ -84,6 +84,9 @@ defmodule MzingaDeliveryWeb.Router do
   scope "/api/admin", MzingaDeliveryWeb.Admin, as: :admin do
     pipe_through [:api, :auth]
 
+    # Dashboard 
+    get "/dashboard/stats", DashboardController, :stats
+
     # Store approval management
     get "/stores/pending", StoreController, :pending
     patch "/stores/:id/approve", StoreController, :approve
