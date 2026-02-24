@@ -281,5 +281,31 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 ### Real-time
 
-- `WS /live/websocket` (LiveView)
 - `WS /socket/websocket` (User Socket)
+
+### Admin Dashboard (Tested)
+
+**6.1 Dashboard Stats**
+**Endpoint:** `GET /api/admin/dashboard/stats`
+
+```bash
+# Get all-time stats
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/dashboard/stats" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+
+# Get stats for the last 7 days
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/dashboard/stats?timeframe=week" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Status:** 200 OK
+```json
+{
+  "data": {
+    "total_order_value": "150000.00",
+    "unverified_shops": 12,
+    "verified_shops": 48,
+    "timeframe": "all"
+  }
+}
+```
