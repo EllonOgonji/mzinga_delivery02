@@ -19,6 +19,52 @@ defmodule MzingaDelivery.Orders do
   end
 
   @doc """
+  Calculates the total value of all successful (delivered) orders.
+  Accepts an optional timeframe: :all, :day, :week, :month, :year
+  """
+  def get_total_successful_order_value(timeframe \\ :all) do
+    # Filter by delivered items
+    # In MzingaDelivery, an order status is derived from its items
+    # This means an order doesn't have a direct "status" column!
+    # A successful order has all items delivered.
+
+    query =
+      Order
+      |> join(:inner, [o], item in assoc(o, :order_items))
+      |> where([o, item], item.status == "delivered")
+      
+    query = 
+      case timeframe do
+        :day ->
+          time_limit = DateTime.utc_now() |> DateTime.add(-24, :hour)
+          where(query, [o, _item], o.inserted_at >= ^time_limit)
+
+        :week ->
+          time_limit = DateTime.utc_now() |> DateTime.add(-7, :day)
+          where(query, [o, _item], o.inserted_at >= ^time_limit)
+
+        :month ->
+          time_limit = DateTime.utc_now() |> DateTime.add(-30, :day)
+          where(query, [o, _item], o.inserted_at >= ^time_limit)
+
+        :year ->
+          time_limit = DateTime.utc_now() |> DateTime.add(-365, :day)
+          where(query, [o, _item], o.inserted_at >= ^time_limit)
+
+        :all ->
+          query
+      end
+
+    # The order has a total_amount column, but since we are joining order_items, 
+    # we should grab a distinct order amount to avoid multiplying the joined items
+    # or just use fragment to sum distinct
+    Repo.one(
+      from [o, _item] in query,
+      select: type(fragment("COALESCE(SUM(DISTINCT ?), 0)", o.total_amount), :decimal)
+    )
+  end
+
+  @doc """
   Returns orders for a specific customer.
   """
   def list_customer_orders(customer_id) do
