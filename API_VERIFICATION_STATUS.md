@@ -309,3 +309,20 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/dashboard/sta
   }
 }
 ```
+
+**6.2 Admin Store Filters**
+**Endpoint:** `GET /api/admin/stores/filter`
+
+Allows admins to fetch stores without public restrictions on `status` and `is_verified`.
+
+```bash
+# Get all rejected stores
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/filter?status=rejected" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+
+# Get unverified stores with pagination
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/filter?is_verified=false&limit=10&offset=0" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Status:** 200 OK
