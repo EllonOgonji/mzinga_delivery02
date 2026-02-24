@@ -154,6 +154,20 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/ap
 
 **Status:** 200 OK (Status changes to `approved`)
 
+**3.3 Reject Store**
+**Endpoint:** `PATCH /api/admin/stores/:id/reject`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/reject" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "Store does not meet requirements"
+  }'
+```
+
+**Status:** 200 OK (Status changes to `rejected`)
+
 ---
 
 ### 4. Public Access (Verified)
