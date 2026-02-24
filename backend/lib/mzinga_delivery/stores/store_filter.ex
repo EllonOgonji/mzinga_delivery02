@@ -9,7 +9,8 @@ defmodule MzingaDelivery.Stores.StoreFilters do
   alias MzingaDelivery.Stores.{Store, Product}
 
   @doc """
-  Filters stores based on provided parameters.
+  Filters stores based on provided parameters for public users.
+  Only returns approved and verified stores.
 
   ## Parameters
     - name: string (partial match)
@@ -28,17 +29,38 @@ defmodule MzingaDelivery.Stores.StoreFilters do
     |> build_query(params)
     |> apply_sorting(params)
     |> apply_pagination(params)
-    # Always preload vendor for JSON rendering
     |> preload(:vendor)
     |> Repo.all()
   end
 
   @doc """
-  Count total stores matching filters.
+  Count total stores matching filters for public users.
   """
   def count_filtered_stores(params \\ %{}) do
     Store
     |> where([s], s.status == "approved" and s.is_verified == true)
+    |> build_query(params)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  @doc """
+  Filters stores based on provided parameters for admins.
+  Allows fetching any status or verification state.
+  """
+  def filter_admin_stores(params \\ %{}) do
+    Store
+    |> build_query(params)
+    |> apply_sorting(params)
+    |> apply_pagination(params)
+    |> preload(:vendor)
+    |> Repo.all()
+  end
+
+  @doc """
+  Count total stores matching filters for admins.
+  """
+  def count_filtered_admin_stores(params \\ %{}) do
+    Store
     |> build_query(params)
     |> Repo.aggregate(:count, :id)
   end

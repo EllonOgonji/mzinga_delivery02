@@ -87,6 +87,9 @@ defmodule MzingaDeliveryWeb.Router do
     # Dashboard 
     get "/dashboard/stats", DashboardController, :stats
 
+    # Store Filters
+    get "/stores/filter", StoreController, :filter
+
     # Store approval management
     get "/stores/pending", StoreController, :pending
     patch "/stores/:id/approve", StoreController, :approve

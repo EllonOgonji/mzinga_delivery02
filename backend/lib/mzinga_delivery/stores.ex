@@ -249,6 +249,9 @@ defmodule MzingaDelivery.Stores do
   def filter_stores(params \\ %{}), do: StoreFilters.filter_stores(params)
   def count_filtered_stores(params \\ %{}), do: StoreFilters.count_filtered_stores(params)
 
+  def filter_admin_stores(params \\ %{}), do: StoreFilters.filter_admin_stores(params)
+  def count_filtered_admin_stores(params \\ %{}), do: StoreFilters.count_filtered_admin_stores(params)
+
   def list_categories do
     Product
     |> select([p], p.category)
