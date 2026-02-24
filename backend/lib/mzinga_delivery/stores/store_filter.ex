@@ -24,6 +24,7 @@ defmodule MzingaDelivery.Stores.StoreFilters do
   """
   def filter_stores(params \\ %{}) do
     Store
+    |> where([s], s.status == "approved" and s.is_verified == true)
     |> build_query(params)
     |> apply_sorting(params)
     |> apply_pagination(params)
@@ -37,6 +38,7 @@ defmodule MzingaDelivery.Stores.StoreFilters do
   """
   def count_filtered_stores(params \\ %{}) do
     Store
+    |> where([s], s.status == "approved" and s.is_verified == true)
     |> build_query(params)
     |> Repo.aggregate(:count, :id)
   end
