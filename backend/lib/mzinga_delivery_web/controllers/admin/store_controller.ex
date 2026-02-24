@@ -21,6 +21,62 @@ defmodule MzingaDeliveryWeb.Admin.StoreController do
   end
 
   @doc """
+  Filter and paginate stores for admin (unrestricted)
+  GET /api/admin/stores/filter
+  """
+  def filter(conn, params) do
+    stores = Stores.filter_admin_stores(params)
+    total = Stores.count_filtered_admin_stores(params)
+
+    conn
+    |> put_status(:ok)
+    |> json(%{
+      data: Enum.map(stores, &build_store_json/1),
+      meta: build_meta(params, stores, total)
+    })
+  end
+
+  defp build_store_json(store) do
+    %{
+      id: store.id,
+      name: store.name,
+      status: store.status,
+      category: store.category,
+      is_verified: store.is_verified,
+      inserted_at: store.inserted_at,
+      vendor: %{
+        id: store.vendor.id,
+        name: store.vendor.full_name,
+        email: store.vendor.email
+      }
+    }
+  end
+
+  defp build_meta(params, stores, total) do
+    limit = parse_int(params["limit"], 50)
+    offset = parse_int(params["offset"], 0)
+
+    %{
+      total: total,
+      count: length(stores),
+      limit: limit,
+      offset: offset,
+      has_more: offset + length(stores) < total
+    }
+  end
+
+  defp parse_int(nil, d), do: d
+
+  defp parse_int(val, d) when is_binary(val) do
+    case Integer.parse(val) do
+      {x, _} -> x
+      _ -> d
+    end
+  end
+
+  defp parse_int(val, _), do: val
+
+  @doc """
   Create a new store (admin)
   POST /api/admin/stores
   """
