@@ -33,14 +33,14 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
-  { icon: Users, label: "Users", path: "/admin/users" },
+  // { icon: Users, label: "Users", path: "/admin/users" },
   { icon: Store, label: "Shops", path: "/admin/shops" },
-  { icon: Package, label: "Products", path: "/admin/products" },
-  { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
-  { icon: CreditCard, label: "Transactions", path: "/admin/transactions" },
-  { icon: Gift, label: "Rewards", path: "/admin/rewards" },
-  { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
-  { icon: Settings, label: "Settings", path: "/admin/settings" },
+  // { icon: Package, label: "Products", path: "/admin/products" },
+  // { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
+  // { icon: CreditCard, label: "Transactions", path: "/admin/transactions" },
+  // { icon: Gift, label: "Rewards", path: "/admin/rewards" },
+  // { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
+  // { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];
 
 export function AdminLayout() {
@@ -64,14 +64,11 @@ export function AdminLayout() {
 
           {/* Logo */}
           <Link to="/admin/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-              CS
-            </div>
-            <span className="font-bold text-lg hidden sm:inline-block">Cstop Shop Admin</span>
+            <span className="font-bold text-lg hidden sm:inline-block">Mzinga Delivery Admin</span>
           </Link>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-4 hidden md:block">
+          {/* <div className="flex-1 max-w-md mx-4 hidden md:block">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -79,12 +76,12 @@ export function AdminLayout() {
                 className="pl-9"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Right Side Actions */}
           <div className="ml-auto flex items-center gap-2">
             {/* Notifications */}
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
@@ -100,21 +97,21 @@ export function AdminLayout() {
                 <DropdownMenuLabel>Platform Alerts</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="space-y-2 p-2">
-                  <div className="p-2 hover:bg-accent rounded-md cursor-pointer">
+                  <div className="p-2 hover:bg-accent cursor-pointer">
                     <p className="text-sm font-medium">New shop registration</p>
                     <p className="text-xs text-muted-foreground">Fresh Mart needs approval</p>
                   </div>
-                  <div className="p-2 hover:bg-accent rounded-md cursor-pointer">
+                  <div className="p-2 hover:bg-accent cursor-pointer">
                     <p className="text-sm font-medium">High value order</p>
                     <p className="text-xs text-muted-foreground">Order #12345 - $850.00</p>
                   </div>
-                  <div className="p-2 hover:bg-accent rounded-md cursor-pointer">
+                  <div className="p-2 hover:bg-accent cursor-pointer">
                     <p className="text-sm font-medium">Product flagged</p>
                     <p className="text-xs text-muted-foreground">Product ID #789 reported</p>
                   </div>
                 </div>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             {/* Admin Profile */}
             <DropdownMenu>
@@ -125,19 +122,6 @@ export function AdminLayout() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/">
-                    <Eye className="mr-2 h-4 w-4" />
-                    View as Customer
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/admin/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -166,7 +150,7 @@ export function AdminLayout() {
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors",
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
