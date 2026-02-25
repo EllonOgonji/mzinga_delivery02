@@ -113,7 +113,7 @@ const Login = () => {
                {
                     
                     "store": {
-                    "name": "Mama Yao Liquor Store",
+                    "name": formData.full_name + "'s Store",
                     "address": "Lurambi",
                     "latitude": -1.286389,
                     "longitude": 36.817223,

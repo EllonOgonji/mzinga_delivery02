@@ -16,6 +16,7 @@ import { mockProducts } from '@/data/mockData';
 import { useQuery } from "@tanstack/react-query";
 import { getVendorShops } from "@/data/shopData";
 import { addProduct, getSingleProduct, updateProduct } from '@/data/productData';
+import { uploadImage } from '@/lib/utils';
 
 const ProductForm = () => {
   const { id } = useParams();
@@ -112,12 +113,19 @@ const ProductForm = () => {
 
   const [images, setImages] = useState([])
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
     if (files) {
-      // In real app, upload to server and get URLs
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setImages([...images, ...newImages]);
+      try {
+        const url = await uploadImage(files[0]);
+
+        console.log('Uploaded image URL:', url);
+
+        setImages([...images, url]);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        throw error;
+      }
     }
   };
 
@@ -139,10 +147,12 @@ const ProductForm = () => {
 
     let res
 
+    console.log({...formData, image_url: JSON.stringify(images)})
+
     if (!isNew){
-      res = await updateProduct(Number(id), formData)
+      res = await updateProduct(Number(id), {...formData, image_url: JSON.stringify(images)})
     }else{
-      res = await addProduct(formData) 
+      res = await addProduct({...formData, image_url: JSON.stringify(images)}) 
     }
 
     if (!res.status){
@@ -204,7 +214,7 @@ const ProductForm = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {images.length == 1 ?
+                    {images.length > 1 ?
                       <>
                         {images.map((image, index) => (
                           <div key={index} className="relative aspect-square rounded-lg border overflow-hidden group">

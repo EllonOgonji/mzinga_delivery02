@@ -195,7 +195,7 @@ const VendorProducts = () => {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <img
-                        src={product.image_url}
+                        src={JSON.parse(product.image_url)[0]}
                         alt={product.name}
                         className="h-12 w-12 rounded object-cover"
                       />
