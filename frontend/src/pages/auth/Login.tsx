@@ -58,8 +58,14 @@ const Login = () => {
             localStorage.setItem('user', JSON.stringify(res.data.user));
 
             if(res.data.user.role == loginType){
-                res.data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
+                res.data.user.role == 'customer' ? navigate('/') : res.data.user.role == 'vendor' ? navigate('/vendor/dashboard'):navigate('/auth/login');
             }else{
+                if(res.data.user.role == 'admin'){
+                    navigate('/admin')
+                    setLoading(false);
+                    return;
+                }
+
                 toast({
                     title: "Error",
                     description: `You are trying to login as a ${loginType} but your account is registered as a ${res.data.user.role}.`,

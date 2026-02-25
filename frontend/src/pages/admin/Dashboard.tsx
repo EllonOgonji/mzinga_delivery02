@@ -29,58 +29,55 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery, useQueryClient} from "@tanstack/react-query";
+import { getDashboardStats } from "@/data/adminData";
 
 export default function AdminDashboard() {
+
+  const { data: stats } = useQuery({
+    queryKey: ['admin', 'dashboard'],
+    queryFn: async () => {
+      return await getDashboardStats();
+    }
+  });
+
+  console.log("Dashboard stats:", stats);
+
   const kpiData = [
     {
-      title: "GMV (Gross Merchandise Value)",
-      value: "$125,430.00",
-      change: "+12.5%",
-      trend: "up",
-      icon: DollarSign,
-      description: "vs last month",
-    },
-    {
-      title: "Active Users",
-      value: "2,543",
-      change: "+8.2%",
-      trend: "up",
-      icon: Users,
-      description: "vs last month",
-    },
-    {
-      title: "Active Shops",
-      value: "48",
-      change: "+3",
+      title: "Total Verified Shops",
+      value: stats?.verified_shops,
+      change: "",
       trend: "up",
       icon: Store,
-      description: "5 pending approval",
+      description: "",
+      link: "/admin/shops",
+    },
+    {
+      title: "Shops Pending Approval",
+      value: stats?.unverified_shops,
+      change: "",
+      trend: "up",
+      icon: Store,
+      description: "",
       link: "/admin/shops",
     },
     {
       title: "Total Orders",
-      value: "1,234",
-      change: "+15.3%",
+      value: stats?.total_order_value,
+      change: "",
       trend: "up",
       icon: ShoppingCart,
       description: "vs last month",
     },
     {
-      title: "Platform Revenue",
-      value: "$12,543.00",
-      change: "+10.1%",
+      title: "Revenue",
+      value: 0.1*stats?.total_order_value,
+      change: "",
       trend: "up",
-      icon: TrendingUp,
-      description: "Commission earned",
-    },
-    {
-      title: "Average Order Value",
-      value: "$101.65",
-      change: "-2.3%",
-      trend: "down",
       icon: DollarSign,
       description: "vs last month",
-    },
+    }
   ];
 
   const recentActivity = [
@@ -194,7 +191,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, Admin!</h1>
+          {/* <h1 className="text-3xl font-bold tracking-tight">Welcome back, Admin!</h1> */}
           <p className="text-muted-foreground mt-1">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
@@ -209,17 +206,14 @@ export default function AdminDashboard() {
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
-            <SelectItem value="custom">Custom Range</SelectItem>
+            <SelectItem value="all">All time</SelectItem>
+            <SelectItem value="week">Last Week</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         {kpiData.map((kpi) => (
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -255,7 +249,7 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Recent Orders */}
-        <Card className="md:col-span-1">
+        {/* <Card className="md:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
             <Button variant="ghost" size="sm" asChild>
@@ -295,10 +289,10 @@ export default function AdminDashboard() {
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Recent Activity Feed */}
-        <Card className="md:col-span-1">
+        {/* <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
@@ -335,7 +329,7 @@ export default function AdminDashboard() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Quick Actions */}
@@ -344,7 +338,7 @@ export default function AdminDashboard() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Button variant="outline" className="h-20" asChild>
               <Link to="/admin/shops">
                 <div className="flex flex-col items-center gap-2">
@@ -358,22 +352,6 @@ export default function AdminDashboard() {
                 <div className="flex flex-col items-center gap-2">
                   <Package className="h-6 w-6" />
                   <span>Review Products</span>
-                </div>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-20" asChild>
-              <Link to="/admin/analytics">
-                <div className="flex flex-col items-center gap-2">
-                  <TrendingUp className="h-6 w-6" />
-                  <span>View Analytics</span>
-                </div>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-20" asChild>
-              <Link to="/admin/settings">
-                <div className="flex flex-col items-center gap-2">
-                  <AlertCircle className="h-6 w-6" />
-                  <span>Platform Settings</span>
                 </div>
               </Link>
             </Button>

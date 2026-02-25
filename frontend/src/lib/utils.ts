@@ -1,6 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Shop } from "@/types";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+export const supabase = createClient(supabaseUrl ?? "", supabaseAnonKey ?? "");
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -57,3 +63,28 @@ export const findDistanceBetweenCoordinates = (
 
   return distance;
 }
+
+export const uploadImage = async (file: File): Promise<string> => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase environment variables are not set");
+  }
+
+  const ext = file.name.split('.').pop() ?? '';
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext ? `.${ext}` : ''}`;
+  const filePath = `images/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('store-images')
+    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+  if (uploadError) {
+    console.error('Supabase upload error:', uploadError);
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage
+    .from('store-images')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
