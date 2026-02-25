@@ -8,6 +8,8 @@ export interface ShopFilters {
   page: number;
   // featured?: boolean;
   searchQuery?: string;
+  verified_status?: boolean | null;
+  status?: string
 }
 
 export interface ProductFilters {
@@ -68,7 +70,7 @@ export interface Shop {
   createdAt: string;
   updatedAt?: string;
   // 
-  verified?: boolean;
+  is_verified?: boolean;
 }
 
 export interface Product {
