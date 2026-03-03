@@ -192,6 +192,7 @@ defmodule MzingaDelivery.Stores do
   def list_products_by_store(store_id) do
     Product
     |> where([p], p.store_id == ^store_id)
+    |> preload(:store)
     |> Repo.all()
   end
 
@@ -250,7 +251,9 @@ defmodule MzingaDelivery.Stores do
   def count_filtered_stores(params \\ %{}), do: StoreFilters.count_filtered_stores(params)
 
   def filter_admin_stores(params \\ %{}), do: StoreFilters.filter_admin_stores(params)
-  def count_filtered_admin_stores(params \\ %{}), do: StoreFilters.count_filtered_admin_stores(params)
+
+  def count_filtered_admin_stores(params \\ %{}),
+    do: StoreFilters.count_filtered_admin_stores(params)
 
   def list_categories do
     Product
