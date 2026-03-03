@@ -4,16 +4,16 @@ defmodule MzingaDeliveryWeb.CartController do
   alias MzingaDelivery.Carts
   alias MzingaDeliveryWeb.FallbackController
 
-  action_fallback FallbackController
+  action_fallback(FallbackController)
 
   def show(conn, _params) do
-    user = conn.assigns.current_user
+    user = MzingaDelivery.Auth.Guardian.Plug.current_resource(conn)
     cart = Carts.get_cart(user.id)
     render(conn, :show, cart: cart)
   end
 
   def add_item(conn, %{"product_id" => product_id, "quantity" => quantity}) do
-    user = conn.assigns.current_user
+    user = MzingaDelivery.Auth.Guardian.Plug.current_resource(conn)
 
     case Carts.add_item(user.id, product_id, quantity) do
       {:ok, _item} ->
@@ -41,14 +41,14 @@ defmodule MzingaDeliveryWeb.CartController do
   end
 
   def remove_item(conn, %{"product_id" => product_id}) do
-    user = conn.assigns.current_user
+    user = MzingaDelivery.Auth.Guardian.Plug.current_resource(conn)
     Carts.remove_item(user.id, product_id)
     cart = Carts.get_cart(user.id)
     render(conn, :show, cart: cart)
   end
 
   def delete(conn, _params) do
-    user = conn.assigns.current_user
+    user = MzingaDelivery.Auth.Guardian.Plug.current_resource(conn)
     Carts.clear_cart(user.id)
     send_resp(conn, :no_content, "")
   end
