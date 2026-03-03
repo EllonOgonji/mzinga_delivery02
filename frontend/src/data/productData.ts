@@ -15,11 +15,11 @@ export const getAllProducts = async function (filters: ProductFilters = {limit: 
         url += `&category=${encodeURIComponent(filters.category)}`;
     }
 
-    if (filters.priceRange && filters.priceRange.min !== undefined) {
+    if (filters.priceRange && filters.priceRange.min !== 0 && filters.priceRange.min !== null) {
         url += `&min_price=${filters.priceRange.min}`;
     }
 
-    if (filters.priceRange && filters.priceRange.max !== undefined) {
+    if (filters.priceRange && filters.priceRange.max !== 0 && filters.priceRange.max !== null) {
         url += `&max_price=${filters.priceRange.max}`;
     }
 
