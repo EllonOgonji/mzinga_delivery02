@@ -3,15 +3,18 @@ defmodule MzingaDelivery.Orders.Order do
   import Ecto.Changeset
 
   schema "orders" do
-    field :total_price, :decimal
-    field :payment_status, :string, default: "pending"
+    field(:total_price, :decimal)
+    field(:payment_status, :string, default: "pending")
+    field(:delivery_lat, :float)
+    field(:delivery_lng, :float)
+    field(:checkout_group_id, Ecto.UUID)
     # field :order_status, :string, default: "pending"
 
-    belongs_to :customer, MzingaDelivery.Accounts.User
-    belongs_to :store, MzingaDelivery.Stores.Store
-    belongs_to :rider, MzingaDelivery.Accounts.User
-    has_many :order_items, MzingaDelivery.Orders.OrderItem
-    has_one :payment, MzingaDelivery.Payments.Payment
+    belongs_to(:customer, MzingaDelivery.Accounts.User)
+    belongs_to(:store, MzingaDelivery.Stores.Store)
+    belongs_to(:rider, MzingaDelivery.Accounts.User)
+    has_many(:order_items, MzingaDelivery.Orders.OrderItem)
+    has_one(:payment, MzingaDelivery.Payments.Payment)
 
     timestamps()
   end
@@ -19,7 +22,16 @@ defmodule MzingaDelivery.Orders.Order do
   @doc false
   def changeset(order, attrs) do
     order
-    |> cast(attrs, [:customer_id, :store_id, :total_price, :payment_status, :rider_id])
+    |> cast(attrs, [
+      :customer_id,
+      :store_id,
+      :total_price,
+      :payment_status,
+      :rider_id,
+      :delivery_lat,
+      :delivery_lng,
+      :checkout_group_id
+    ])
     |> validate_required([:customer_id, :store_id, :total_price])
     |> validate_number(:total_price, greater_than: 0)
     |> validate_inclusion(:payment_status, ["pending", "paid", "failed", "refunded"])
