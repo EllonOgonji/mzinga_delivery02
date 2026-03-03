@@ -57,23 +57,10 @@ const Login = () => {
             localStorage.setItem('role', res.data.user.role);
             localStorage.setItem('user', JSON.stringify(res.data.user));
 
-            if(res.data.user.role == loginType){
-                res.data.user.role == 'customer' ? navigate('/') : res.data.user.role == 'vendor' ? navigate('/vendor/dashboard'):navigate('/auth/login');
-            }else{
-                if(res.data.user.role == 'admin'){
-                    navigate('/admin')
-                    setLoading(false);
-                    return;
-                }
-
-                toast({
-                    title: "Error",
-                    description: `You are trying to login as a ${loginType} but your account is registered as a ${res.data.user.role}.`,
-                    variant: "destructive",
-                });
-                setLoading(false);
-                return;
-            }
+            res.data.user.role == 'customer' ? navigate('/') 
+                : res.data.user.role == 'vendor' ? navigate('/vendor/dashboard') 
+                : res.data.user.role == 'admin' ? navigate('/admin/dashboard') 
+                : navigate('/auth/login');
             
         }).catch((error) => {
             toast({
@@ -88,12 +75,8 @@ const Login = () => {
 
     return (
         <div className="h-[100vh] w-full flex flex-col justify-center items-center">
-            <div className='w-96'>
-                <div className='grid grid-cols-2 w-full'>
-                    <Button variant={loginType === 'vendor' ? 'active' : 'ghost'} onClick={() => setLoginType('vendor')} className='col-span-1 border-none'>Vendor Login</Button>
-                    <Button variant={loginType === 'customer' ? 'active' : 'ghost'} onClick={() => setLoginType('customer')} className='col-span-1 border-none'>Customer Login</Button>
-                </div>
-
+            <div className='w-80 md:w-96'>
+                <h1 className='text-center font-bold mb-4 text-lg'>Mzinga Delivery Login</h1>
                 <form onSubmit={handleSubmit} className='w-full'>
                     {/* Basic Information */}
                     <Card className='flex flex-col items-center pt-8'>
