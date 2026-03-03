@@ -75,7 +75,11 @@ export interface Shop {
 
 export interface Product {
   id?: number;
-  store_id: number;
+  store?: {
+    id?: number,
+    logo?: string,
+    name?: string
+  }
   name: string;
   category: string;
   description: string;
@@ -85,7 +89,7 @@ export interface Product {
   images?: string[];
   image_url: string;
   stock: number;
-  ratings?: number[];
+  ratings?: any;
   specifications: Record<string, string>;
   status: 'active' | 'inactive';
   createdAt?: string;
@@ -97,8 +101,8 @@ export interface Product {
 }
 
 export interface CartItem extends Partial<Product> {
-  id: number;
-  store_id: number;
+  id?: number;
+  store_id?: number;
   shopId?: number; // Added shop_id to CartItem
   quantity: number;
   price: number;

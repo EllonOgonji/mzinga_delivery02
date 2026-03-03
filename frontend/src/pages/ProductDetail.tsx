@@ -19,17 +19,21 @@ import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/util
 import { Product, Shop } from '@/types';
 
 export default function ProductDetail() {
-  const { id } = useParams();
   const { addToCart } = useCart();
+  const { id } = useParams();
+  const productId = id ? parseInt(id) : undefined;
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-
-  const productId = id ? parseInt(id) : undefined;
+  const [ratingsMatrix, setRatingsMatrix] = useState([])
 
   const { data: product, isLoading: isLoadingProduct } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => getSingleProduct(productId),
+    queryFn: async () => {
+      const product = await getSingleProduct(productId)
+      calculateIndividualProductRatings(product.ratings)
+      return product
+    },
     enabled: !!productId
   });
 
@@ -47,6 +51,28 @@ export default function ProductDetail() {
     },
     enabled: !!product
   });
+
+  const calculateIndividualProductRatings = (ratings: number[]) => {
+    let temp = {
+      5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
+      1: 0
+    }
+
+    ratings.map((rating) => {
+      temp[Math.round(Number(rating))] = temp[Math.round(Number(rating))] + 1
+    })
+
+    setRatingsMatrix([
+      {rating: 5, number: temp[5]},
+      {rating: 4, number: temp[4]},
+      {rating: 3, number: temp[3]},
+      {rating: 2, number: temp[2]},
+      {rating: 1, number: temp[1]}
+    ])
+  }
 
   const relatedProducts = rawRelatedProducts
   const productAverageRating = product?.ratings?.length > 0 ? (product.ratings.reduce((sum, r) => sum + r, 0) / product.ratings.length).toFixed(1) : 0;
@@ -106,12 +132,6 @@ export default function ProductDetail() {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
                 <Link to={`/shop/${shop.id}`}>{shop.name}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -133,11 +153,11 @@ export default function ProductDetail() {
                 alt={product.name}
                 className="w-full h-full object-cover cursor-zoom-in hover:scale-110 transition-transform duration-500"
               />
-              {/* {discount > 0 && (
+              {discount > 0 && (
                 <Badge className="absolute top-4 left-4 bg-destructive text-lg">
                   Save {discount}%
                 </Badge>
-              )} */}
+              )}
               <div className="absolute top-4 right-4 flex gap-2">
                 <Button
                   variant="secondary"
@@ -168,7 +188,7 @@ export default function ProductDetail() {
                     }`}
                 >
                   <img src={product.image_url} alt={`${product.name} 1`} className="w-full h-full object-cover" />
-                </button>
+              </button>
             </div>
           </div>
 
@@ -177,19 +197,6 @@ export default function ProductDetail() {
             {/* Product Header */}
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
-
-              {/* Shop Info */}
-              {/* <Link to={`/shop/${shop.id}`} className="flex items-center gap-2 mb-3 hover:text-accent">
-                <img src={shop.logo} alt={shop.name} className="w-8 h-8 rounded-full" />
-                <span className="font-medium">{shop.name}</span>
-                {shop.verified && (
-                  <Badge variant="outline" className="text-xs border-success text-success">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Verified
-                  </Badge>
-                )}
-              </Link> */}
-
               {/* Rating */}
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
@@ -215,9 +222,11 @@ export default function ProductDetail() {
                     <span className="text-xl md:text-2xl text-muted-foreground line-through">
                       KES {Number(product.compareAtPrice).toFixed(2)}
                     </span>
-                    {/* <Badge variant="destructive" className="text-sm">
-                      Save KES {(product.compareAtPrice - product.price).toFixed(2)}
-                    </Badge> */}
+                    {discount > 0 && (
+                      <Badge variant="destructive" className="text-sm">
+                        Save KES {(product.compareAtPrice - product.price).toFixed(2)}
+                      </Badge>
+                    )}
                   </>
                 )}
               </div>
@@ -281,16 +290,6 @@ export default function ProductDetail() {
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   Add to Cart
                 </Button>
-                {/* <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => {
-                    setIsWishlisted(!isWishlisted);
-                    toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist');
-                  }}
-                >
-                  <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
-                </Button> */}
               </div>
             </div>
 
@@ -310,22 +309,11 @@ export default function ProductDetail() {
                     </div> */}
                   </div>
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className={shop.status === 'approved' ? 'text-success text-sm md:text-base' : 'text-destructive text-sm md:text-base'}>
-                      {shop.status.toUpperCase()}
-                    </span>
-                  </div>
-                  {/* <p className="text-muted-foreground">200+ products from this shop</p> */}
-                </div>
+
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm" asChild className="flex-1">
                     <Link to={`/shop/${shop.id}`}>Visit Shop</Link>
                   </Button>
-                  {/* <Button variant="outline" size="sm" className="flex-1">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Contact
-                  </Button> */}
                 </div>
               </CardContent>
             </Card>
@@ -334,12 +322,6 @@ export default function ProductDetail() {
 
         {/* Tabs Section */}
         <Tabs defaultValue="specifications" className="mb-12">
-          {/* <TabsList className="w-full justify-start">
-            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({product.reviewCount})</TabsTrigger>
-            <TabsTrigger value="related">Related Products</TabsTrigger>
-          </TabsList> */}
-
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
             <TabsTrigger value="specifications" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
               Specifications
@@ -373,42 +355,42 @@ export default function ProductDetail() {
               <CardContent className="p-6">
                 <div className="flex items-start gap-8 mb-8">
                   <div className="text-center">
-                    <div className="text-5xl font-bold mb-2">{productAverageRating}</div>
+                    <div className="text-5xl font-bold mb-2">{product.average_rating}</div>
                     <div className="flex items-center justify-center gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(Number(productAverageRating)) ? 'fill-warning text-warning' : 'text-muted'}`} />
+                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(Number(product.average_rating)) ? 'fill-warning text-warning' : 'text-muted'}`} />
                       ))}
                     </div>
                     <p className="text-sm text-muted-foreground">{product.ratings.length} reviews</p>
                   </div>
 
                   <div className="flex-1 space-y-2">
-                    {[5, 4, 3, 2, 1].map(rating => (
-                      <div key={rating} className="flex items-center gap-3">
-                        <span className="text-sm w-8">{rating} ★</span>
+                    {ratingsMatrix.map(matrix => (
+                      <div key={matrix.rating} className="flex items-center gap-3">
+                        <span className="text-sm w-8">{matrix.rating} ★</span>
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-warning"
-                            style={{ width: `${rating === 5 ? 80 : rating === 4 ? 15 : 5}%` }}
+                            style={{ width: `${(matrix.number/product.ratings.length)*100}%` }}
                           />
                         </div>
                         <span className="text-sm text-muted-foreground w-12 text-right">
-                          {rating === 5 ? '80%' : rating === 4 ? '15%' : '5%'}
+                          {(matrix.number/product.ratings.length)*100} %
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <Separator className="my-6" />
+                {/* <Separator className="my-6" /> */}
 
-                <div className="space-y-6">
+                {/* <div className="space-y-6">
                   <h4 className="font-semibold text-sm md:text-base">Customer Reviews</h4>
                   <div className="text-center py-8 text-muted-foreground">
                     <p className='text-sm md:text-base'>No reviews yet. Be the first to review this product!</p>
                     <Button className="mt-4">Write a Review</Button>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           </TabsContent>
