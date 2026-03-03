@@ -3,12 +3,13 @@ defmodule MzingaDelivery.Payments.Payment do
   import Ecto.Changeset
 
   schema "payments" do
-    field :transaction_id, :string
-    field :amount, :decimal
-    field :status, :string, default: "pending"
-    field :provider, :string, default: "M-Pesa"
+    field(:transaction_id, :string)
+    field(:amount, :decimal)
+    field(:status, :string, default: "pending")
+    field(:provider, :string, default: "M-Pesa")
+    field(:checkout_group_id, Ecto.UUID)
 
-    belongs_to :order, MzingaDelivery.Orders.Order
+    belongs_to(:order, MzingaDelivery.Orders.Order)
 
     timestamps()
   end
@@ -16,8 +17,8 @@ defmodule MzingaDelivery.Payments.Payment do
   @doc false
   def changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:order_id, :transaction_id, :amount, :status, :provider])
-    |> validate_required([:order_id, :amount])
+    |> cast(attrs, [:order_id, :transaction_id, :amount, :status, :provider, :checkout_group_id])
+    |> validate_required([:amount])
     |> validate_inclusion(:status, ["pending", "completed", "failed", "cancelled"])
     |> foreign_key_constraint(:order_id)
   end
