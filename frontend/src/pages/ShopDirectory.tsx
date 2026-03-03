@@ -299,19 +299,6 @@ const ShopDirectory = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      {/* Banner */}
-      <section className="bg-gradient-hero py-16">
-        <div className="container text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Explore All Shops</h1>
-          <p className="text-base md:text-lg text-muted-foreground mb-6">
-            Browse through our amazing collection of shops
-          </p>
-          <Button size="lg" className="bg-primary hover:bg-primary/90">
-            Become a Vendor
-          </Button>
-        </div>
-      </section>
-
       <div className="container py-8">
         <div className="flex gap-6">
           {/* Filters Sidebar */}
@@ -385,6 +372,7 @@ const ShopDirectory = () => {
 
           {/* Main Content */}
           <div className="flex-1">
+
             {/* Search and Controls */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="flex flex-1 gap-2">
@@ -430,22 +418,6 @@ const ShopDirectory = () => {
                 </SheetContent>
               </Sheet> */}
 
-              {/* <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div> */}
             </div>
 
             {/* Results Count */}
@@ -461,73 +433,52 @@ const ShopDirectory = () => {
                 return (
                   <Card key={shop.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardContent className="p-0">
-                      {/* Banner */}
-                      <div className="relative h-32 bg-gradient-hero overflow-hidden">
-                        <img
-                          src={shop.banner}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 bg-background/80 hover:bg-background"
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                        {/* Logo */}
-                        <div className="absolute bottom-0 left-4 translate-y-1/2">
+                      <Link to={`/shop/${shop.id}`}>
+                        {/* Banner */}
+                        <div className="relative h-32 bg-gradient-hero overflow-hidden">
                           <img
-                            src={shop.logo}
+                            src={shop.banner}
                             alt=""
-                            className="w-16 h-16 rounded-full border-4 border-background"
+                            className="w-full h-full object-cover"
                           />
+                          {/* Logo */}
+                          <div className="absolute bottom-0 left-4 translate-y-1/2">
+                            <img
+                              src={shop.logo}
+                              alt=""
+                              className="w-16 h-16 rounded-full border-4 border-background"
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Content */}
-                      <div className="p-4 pt-10">
-                        <div className="mb-3">
-                          <h3 className="font-semibold text-lg mb-1">{shop.name}</h3>
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {/* {shop.category.slice(0, 2).map((cat) => (
-                              <Badge key={cat} variant="secondary" className="text-xs">
-                                {cat}
+                        {/* Content */}
+                        <div className="p-4 pt-10">
+                          <div className="mb-3">
+                            <h3 className="font-semibold text-lg mb-1">{shop.name}</h3>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {/* {shop.category.slice(0, 2).map((cat) => (
+                                <Badge key={cat} variant="secondary" className="text-xs">
+                                  {cat}
+                                </Badge>
+                              ))} */}
+
+                              <Badge variant="shopCard" className="text-xs mt-4">
+                                {shop.category}
                               </Badge>
-                            ))} */}
-
-                            <Badge variant="secondary" className="text-xs">
-                              {shop.category}
-                            </Badge>
+                            </div>
                           </div>
+
+                          <div className="space-y-2 text-sm">
+                            {/* <div className="flex items-center gap-2">
+                              <Star className="w-4 h-4 fill-primary text-primary" />
+                              <span className="font-medium">{averageRating}</span>
+                              <span className="text-muted-foreground">({shop.rating.length} reviews)</span>
+                            </div> */}
+                          </div>
+                          
                         </div>
-
-                        <div className="space-y-2 text-sm">
-                          {/* <div className="flex items-center gap-2">
-                            <Star className="w-4 h-4 fill-primary text-primary" />
-                            <span className="font-medium">{averageRating}</span>
-                            <span className="text-muted-foreground">({shop.rating.length} reviews)</span>
-                          </div> */}
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <MapPin className="w-4 h-4" />
-                            <span>{distanceToUser.toFixed(1)} km away</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Truck className="w-4 h-4" />
-                            <span>KES. {deliveryFees}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            <span className={shop.status === "approved" ? "text-success" : "text-destructive"}>
-                              {shop.status.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-
-                        <Button asChild className="w-full mt-4">
-                          <Link to={`/shop/${shop.id}`}>Visit Shop</Link>
-                        </Button>
-                      </div>
+                      </Link>
+                      
                     </CardContent>
                   </Card>
                 );

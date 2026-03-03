@@ -15,13 +15,14 @@ export default function useAuth() {
     try { const u = JSON.parse(localStorage.getItem("user") || "null"); setUser(u); } catch {}
   }, []);
 
-  const login = (u: User, t?: string) => {
-    if (t) localStorage.setItem("token", t);
-    localStorage.setItem("user", JSON.stringify(u));
-    if (u.role) localStorage.setItem("role", u.role);
-    setUser(u);
-  };
-  const logout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); localStorage.removeItem("role"); setUser(null); navigate('/auth/login'); };
+  const logout = () => { 
+    localStorage.removeItem("token"); 
+    localStorage.removeItem("user"); 
+    localStorage.removeItem("role"); 
+    localStorage.removeItem("cart"); 
+    localStorage.removeItem("selectedShops"); 
+    setUser(null); 
+    navigate('/auth/login'); };
 
-  return { user, role, token, isAuthenticated: Boolean(token), login, logout };
+  return { user, role, token, isAuthenticated: Boolean(token), logout };
 }

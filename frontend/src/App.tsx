@@ -67,7 +67,7 @@ const App = () => (
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/register" element={<Register />} />
 
-                <Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute requiredRole="customer" />}>
                   <Route path="/" element={<ShopDirectory />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />

@@ -31,8 +31,10 @@ export default function Checkout() {
   const [currentStep, setCurrentStep] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState('Lurambi');
   const [phone, setPhone] = useState('254712345678');
+  const [paymentPhone, setPaymentPhone] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   if (cartCount === 0) {
     return (
@@ -52,10 +54,10 @@ export default function Checkout() {
   }
 
   const cartByShop = cart.reduce((acc, item) => {
-    if (!acc[item.store_id]) {
-      acc[item.store_id] = [];
+    if (!acc[item.store.id]) {
+      acc[item.store.id] = [];
     }
-    acc[item.store_id].push(item);
+    acc[item.store.id].push(item);
     return acc;
   }, {} as Record<number, typeof cart>);
 
@@ -102,8 +104,11 @@ export default function Checkout() {
   const orderTotal = cartTotal + totalDeliveryFees;
 
   const handlePlaceOrder = async () => {
+    setLoading(true)
+
     if (!agreedToTerms) {
       toast.error('Please agree to the Terms of Service');
+      setLoading(false)
       return;
     }
 
@@ -111,7 +116,7 @@ export default function Checkout() {
       const orderPayload = {
         order: {
           store_id: shopData.shopId,
-          payment_phone: phone,
+          payment_phone: paymentPhone,
           items: shopData.items.map(item => ({
             product_id: item.id,
             quantity: item.quantity,
@@ -125,15 +130,22 @@ export default function Checkout() {
           id: item.product_id,
           quantity: item.quantity,
         });
-        console.log('Item added to cart response:', res);
+        
+        console.log(res)
       }
     }
 
-    const res = await checkout(String(phone));
+    const res = await checkout(String(paymentPhone));
+    if (!res){
+      toast.error('An issue occurred while creating your order')
+      setLoading(false)
+      return
+    }
+
     toast.success('Order placed successfully!');
     clearCart();
-    navigate(`/}`);
-
+    setLoading(false)
+    navigate(`/`);
   };
 
   return (
@@ -269,9 +281,9 @@ export default function Checkout() {
                           <Label htmlFor="mpesa-phone">M-Pesa Phone Number</Label>
                           <Input
                             id="mpesa-phone"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="254712345678"
+                            value={paymentPhone}
+                            onChange={(e) => setPaymentPhone(e.target.value)}
+                            placeholder={phone}
                             className="mt-2"
                           />
                           <p className="text-xs text-muted-foreground mt-2">
@@ -336,7 +348,7 @@ export default function Checkout() {
                         {paymentMethod === 'mpesa' ? 'M-Pesa' : 'Cash on Delivery'}
                       </p>
                       {paymentMethod === 'mpesa' && (
-                        <p className="text-sm text-muted-foreground">{phone}</p>
+                        <p className="text-sm text-muted-foreground">{paymentPhone}</p>
                       )}
                     </div>
 
