@@ -334,86 +334,89 @@ defmodule MzingaDelivery.Orders do
     if is_nil(cart) or Enum.empty?(cart.items) do
       {:error, :empty_cart}
     else
-      Repo.transaction(fn ->
-        items = cart.items
-        checkout_group_id = Ecto.UUID.generate()
+      Repo.transaction(
+        fn ->
+          items = cart.items
+          checkout_group_id = Ecto.UUID.generate()
 
-        # Group items by store
-        grouped_items = Enum.group_by(items, & &1.product.store_id)
+          # Group items by store
+          grouped_items = Enum.group_by(items, & &1.product.store_id)
 
-        # Create Orders (one per store)
-        created_orders =
-          Enum.map(grouped_items, fn {store_id, store_items} ->
-            total_price =
-              Enum.reduce(store_items, Decimal.new(0), &Decimal.add(&1.subtotal, &2))
+          # Create Orders (one per store)
+          created_orders =
+            Enum.map(grouped_items, fn {store_id, store_items} ->
+              total_price =
+                Enum.reduce(store_items, Decimal.new(0), &Decimal.add(&1.subtotal, &2))
 
-            # Prepare Order Items attrs
-            order_items_attrs =
-              Enum.map(store_items, fn item ->
-                %{
-                  "product_id" => item.product_id,
-                  "quantity" => item.quantity,
-                  "subtotal" => item.subtotal
-                }
-              end)
+              # Prepare Order Items attrs
+              order_items_attrs =
+                Enum.map(store_items, fn item ->
+                  %{
+                    "product_id" => item.product_id,
+                    "quantity" => item.quantity,
+                    "subtotal" => item.subtotal
+                  }
+                end)
 
-            order_params = %{
-              "customer_id" => user.id,
-              "store_id" => store_id,
-              "total_price" => total_price,
-              "checkout_group_id" => checkout_group_id,
-              "payment_status" => "pending",
-              "delivery_lat" => Map.get(attrs, "delivery_lat"),
-              "delivery_lng" => Map.get(attrs, "delivery_lng"),
-              "items" => order_items_attrs
-            }
+              order_params = %{
+                "customer_id" => user.id,
+                "store_id" => store_id,
+                "total_price" => total_price,
+                "checkout_group_id" => checkout_group_id,
+                "payment_status" => "pending",
+                "delivery_lat" => Map.get(attrs, "delivery_lat"),
+                "delivery_lng" => Map.get(attrs, "delivery_lng"),
+                "items" => order_items_attrs
+              }
 
-            case create_order_with_items(order_params) do
-              {:ok, order} -> order
-              {:error, reason} -> Repo.rollback(reason)
-            end
-          end)
+              case create_order_with_items(order_params) do
+                {:ok, order} -> order
+                {:error, reason} -> Repo.rollback(reason)
+              end
+            end)
 
-        # Calculate Grand Total
-        grand_total =
-          Enum.reduce(created_orders, Decimal.new(0), &Decimal.add(&1.total_price, &2))
+          # Calculate Grand Total
+          grand_total =
+            Enum.reduce(created_orders, Decimal.new(0), &Decimal.add(&1.total_price, &2))
 
-        # Create Payment
-        {:ok, payment} =
-          Payments.create_payment(%{
-            checkout_group_id: checkout_group_id,
-            amount: grand_total,
-            status: "pending",
-            provider: "M-Pesa"
-          })
-
-        # Initiate M-Pesa STK Push
-        # Use short ref for AccountReference
-        ref_id = "GRP-#{String.slice(checkout_group_id, 0, 8)}"
-
-        case MpesaService.initiate_stk_push(payment_phone, grand_total, ref_id) do
-          {:ok, mpesa_response} ->
-            # Update payment with transaction ID
-            Payments.update_payment(payment, %{
-              transaction_id: mpesa_response["CheckoutRequestID"]
+          # Create Payment
+          {:ok, payment} =
+            Payments.create_payment(%{
+              checkout_group_id: checkout_group_id,
+              amount: grand_total,
+              status: "pending",
+              provider: "M-Pesa"
             })
 
-            # Clear Cart
-            Carts.clear_cart(user.id)
+          # Initiate M-Pesa STK Push
+          # Use short ref for AccountReference
+          ref_id = "GRP-#{String.slice(checkout_group_id, 0, 8)}"
 
-            %{
-              status: "payment_initiated",
-              checkout_group_id: checkout_group_id,
-              payment: payment,
-              orders: created_orders,
-              mpesa_response: mpesa_response,
-              message: "Payment initiated for #{length(created_orders)} orders"
-            }
+          case MpesaService.initiate_stk_push(payment_phone, grand_total, ref_id) do
+            {:ok, mpesa_response} ->
+              # Update payment with transaction ID
+              Payments.update_payment(payment, %{
+                transaction_id: mpesa_response["CheckoutRequestID"]
+              })
 
-          {:error, reason} ->
-            Repo.rollback(reason)
-        end
-      end)
+              # Clear Cart
+              Carts.clear_cart(user.id)
+
+              %{
+                status: "payment_initiated",
+                checkout_group_id: checkout_group_id,
+                payment: payment,
+                orders: created_orders,
+                mpesa_response: mpesa_response,
+                message: "Payment initiated for #{length(created_orders)} orders"
+              }
+
+            {:error, reason} ->
+              Repo.rollback(reason)
+          end
+        end,
+        timeout: 60_000
+      )
     end
   end
 
