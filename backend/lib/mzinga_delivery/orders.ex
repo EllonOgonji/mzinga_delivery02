@@ -74,7 +74,7 @@ defmodule MzingaDelivery.Orders do
   def list_customer_orders(customer_id) do
     Order
     |> where([o], o.customer_id == ^customer_id)
-    |> preload([:store, order_items: :product])
+    |> preload([:customer, store: :vendor, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
   end
