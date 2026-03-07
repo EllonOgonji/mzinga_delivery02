@@ -10,7 +10,8 @@ defmodule MzingaDeliveryWeb.AuthJSON do
           full_name: user.full_name,
           email: user.email,
           phone_number: user.phone_number,
-          role: user.role
+          role: user.role,
+          avatar_url: user.avatar_url
         },
         token: token
       }
@@ -27,7 +28,8 @@ defmodule MzingaDeliveryWeb.AuthJSON do
         full_name: user.full_name,
         email: user.email,
         phone_number: user.phone_number,
-        role: user.role
+        role: user.role,
+        avatar_url: user.avatar_url
       }
     }
   end
