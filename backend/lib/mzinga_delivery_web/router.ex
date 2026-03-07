@@ -55,6 +55,9 @@ defmodule MzingaDeliveryWeb.Router do
     get("/auth/me", AuthController, :me)
     post("/auth/logout", AuthController, :logout)
 
+    # Delivery Calculation
+    post("/delivery/calculate", DeliveryController, :calculate_fee)
+
     # Orders
     resources("/orders", OrderController, only: [:index, :show, :create])
     patch("/orders/:id/accept", OrderController, :accept)
