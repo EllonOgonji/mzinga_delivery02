@@ -52,6 +52,7 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Auth
     get("/auth/me", AuthController, :me)
+    put("/auth/me", AuthController, :update_profile)
     post("/auth/logout", AuthController, :logout)
 
     # Delivery Calculation
