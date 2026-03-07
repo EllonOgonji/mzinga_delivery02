@@ -315,11 +315,60 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
 
 ## Not Yet Tested / Pending Verification
 
-### Orders (Auth Required)
+### Orders (Verified)
 
-- `GET /api/orders` (List Orders)
-- `POST /api/orders` (Create Order)
-- `GET /api/orders/:id` (Order Details)
+**6.3 List My Orders (Customer/Vendor/Admin)**
+**Endpoint:** `GET /api/orders`
+**Method:** Returns orders based on the authenticated user's role.
+
+- **Customer:** Returns all orders placed by the customer.
+- **Vendor:** Returns all orders for all stores owned by the vendor.
+- **Admin:** Returns all orders in the system.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**6.4 Get Single Order Details**
+**Endpoint:** `GET /api/orders/:id`
+**Method:** Returns details for a specific order. User must be auth'd and own the order (or be vendor of the store, or admin).
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**6.5 Create Order**
+**Endpoint:** `POST /api/orders`
+**Method:** Creates an order and initiates an M-Pesa STK push. (Customer Auth Required)
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "order": {
+      "store_id": 5,
+      "items": [
+        {"product_id": 1, "quantity": 2, "subtotal": 500.00}
+      ]
+    }
+  }'
+```
+
+**Status:** 201 Created
+
+---
+
+## Not Yet Tested / Pending Verification
+
+### Order Vendor Actions (Pending)
+
 - `PATCH /api/orders/:id/accept` (Accept Order)
 - `PATCH /api/orders/:id/reject` (Reject Order)
 
