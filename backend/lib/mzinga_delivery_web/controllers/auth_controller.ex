@@ -65,6 +65,27 @@ defmodule MzingaDeliveryWeb.AuthController do
   end
 
   @doc """
+  Update current user profile
+  PUT /api/auth/me
+  """
+  def update_profile(conn, params) do
+    user = Guardian.Plug.current_resource(conn)
+    user_params = params["user"] || params
+
+    case Accounts.update_user(user, user_params) do
+      {:ok, updated_user} ->
+        conn
+        |> put_status(:ok)
+        |> render(:user, user: updated_user)
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, changeset: changeset)
+    end
+  end
+
+  @doc """
   Logout user (client should delete token)
   POST /api/auth/logout
   """
