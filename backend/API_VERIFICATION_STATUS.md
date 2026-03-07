@@ -270,6 +270,20 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 **Status:** 204 No Content
 
+**5.6 Rate Product**
+**Endpoint:** `POST /api/products/:id/rate`
+**Method:** Pass the `rating` for the product in the request body. (Currently does not require Auth Token).
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products/1/rate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rating": 4.5
+  }'
+```
+
+**Status:** 200 OK (Returns updated Product JSON)
+
 ---
 
 ### 6. Order Workflow (New Features)
