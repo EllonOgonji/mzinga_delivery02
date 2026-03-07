@@ -22,6 +22,62 @@ defmodule MzingaDelivery.Orders do
   end
 
   @doc """
+  Filters and paginates orders.
+  Supports: customer_id, store_id, payment_status, page, limit
+  """
+  def filter_orders(params) do
+    limit = parse_int(params["limit"], 10)
+    page = parse_int(params["page"], 1)
+    offset = (page - 1) * limit
+
+    Order
+    |> filter_by_customer(params)
+    |> filter_by_store(params)
+    |> filter_by_payment_status(params)
+    |> order_by([o], desc: o.inserted_at)
+    |> preload([:customer, store: :vendor, order_items: :product])
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def count_filtered_orders(params) do
+    Order
+    |> filter_by_customer(params)
+    |> filter_by_store(params)
+    |> filter_by_payment_status(params)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  defp filter_by_customer(query, %{"customer_id" => cid}) when cid != "" and not is_nil(cid),
+    do: where(query, [o], o.customer_id == ^cid)
+
+  defp filter_by_customer(query, _), do: query
+
+  defp filter_by_store(query, %{"store_id" => sid}) when sid != "" and not is_nil(sid),
+    do: where(query, [o], o.store_id == ^sid)
+
+  defp filter_by_store(query, _), do: query
+
+  defp filter_by_payment_status(query, %{"payment_status" => ps})
+       when ps != "" and not is_nil(ps),
+       do: where(query, [o], o.payment_status == ^ps)
+
+  defp filter_by_payment_status(query, _), do: query
+
+  defp parse_int(nil, default), do: default
+
+  defp parse_int(val, default) when is_binary(val) do
+    case Integer.parse(val) do
+      {x, _} -> x
+      _ -> default
+    end
+  end
+
+  defp parse_int(val, _default) when is_integer(val), do: val
+  defp parse_int(_val, default), do: default
+
+  @doc """
   Calculates the total value of all successful (delivered) orders.
   Accepts an optional timeframe: :all, :day, :week, :month, :year
   """
