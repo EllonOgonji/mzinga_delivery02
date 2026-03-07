@@ -334,6 +334,7 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.1 Update User Avatar**
 **Endpoint:** `PUT /api/users/:id` (or your user update route)
 **Method:** Pass the `avatar_url` string in the standard JSON payload.
+
 ```json
 {
   "user": {
@@ -345,6 +346,7 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.2 Store Logos & Banners**
 **Endpoint:** `POST /api/vendor/stores` or `PUT /api/vendor/stores/:id`
 **Method:** Pass the `logo` and `banner` string URLs.
+
 ```json
 {
   "store": {
@@ -358,12 +360,45 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.3 Product Images**
 **Endpoint:** `POST /api/products` or `PUT /api/products/:id`
 **Method:** Pass the `image_url` string.
+
 ```json
 {
   "product": {
     "name": "Premium Lager",
-    "price": 250.00,
+    "price": 250.0,
     "image_url": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/beer.jpg"
+  }
+}
+```
+
+---
+
+### 8. Delivery & Logistics
+
+**8.1 Calculate Delivery Fee (Customer)**
+**Endpoint:** `POST /api/delivery/calculate`
+**Method:** Pass the `store_id` and the customer's delivery destination coordinates (`delivery_lat`, `delivery_lng`).
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/delivery/calculate" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "store_id": 5,
+    "delivery_lat": "-1.2921",
+    "delivery_lng": "36.8219"
+  }'
+```
+
+**Status:** 200 OK (Returns distance and cost information)
+
+```json
+{
+  "data": {
+    "distance_km": 1.5,
+    "delivery_fee": 150.0,
+    "duration_text": "12 mins",
+    "distance_text": "1.5 km"
   }
 }
 ```
