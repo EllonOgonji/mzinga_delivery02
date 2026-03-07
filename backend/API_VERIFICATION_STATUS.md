@@ -270,6 +270,20 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 **Status:** 204 No Content
 
+**5.6 Rate Product**
+**Endpoint:** `POST /api/products/:id/rate`
+**Method:** Pass the `rating` for the product in the request body. (Currently does not require Auth Token).
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products/1/rate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rating": 4.5
+  }'
+```
+
+**Status:** 200 OK (Returns updated Product JSON)
+
 ---
 
 ### 6. Order Workflow (New Features)
@@ -301,11 +315,60 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
 
 ## Not Yet Tested / Pending Verification
 
-### Orders (Auth Required)
+### Orders (Verified)
 
-- `GET /api/orders` (List Orders)
-- `POST /api/orders` (Create Order)
-- `GET /api/orders/:id` (Order Details)
+**6.3 List My Orders (Customer/Vendor/Admin)**
+**Endpoint:** `GET /api/orders`
+**Method:** Returns orders based on the authenticated user's role.
+
+- **Customer:** Returns all orders placed by the customer.
+- **Vendor:** Returns all orders for all stores owned by the vendor.
+- **Admin:** Returns all orders in the system.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**6.4 Get Single Order Details**
+**Endpoint:** `GET /api/orders/:id`
+**Method:** Returns details for a specific order. User must be auth'd and own the order (or be vendor of the store, or admin).
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**6.5 Create Order**
+**Endpoint:** `POST /api/orders`
+**Method:** Creates an order and initiates an M-Pesa STK push. (Customer Auth Required)
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "order": {
+      "store_id": 5,
+      "items": [
+        {"product_id": 1, "quantity": 2, "subtotal": 500.00}
+      ]
+    }
+  }'
+```
+
+**Status:** 201 Created
+
+---
+
+## Not Yet Tested / Pending Verification
+
+### Order Vendor Actions (Pending)
+
 - `PATCH /api/orders/:id/accept` (Accept Order)
 - `PATCH /api/orders/:id/reject` (Reject Order)
 
@@ -334,6 +397,7 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.1 Update User Avatar**
 **Endpoint:** `PUT /api/users/:id` (or your user update route)
 **Method:** Pass the `avatar_url` string in the standard JSON payload.
+
 ```json
 {
   "user": {
@@ -345,6 +409,7 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.2 Store Logos & Banners**
 **Endpoint:** `POST /api/vendor/stores` or `PUT /api/vendor/stores/:id`
 **Method:** Pass the `logo` and `banner` string URLs.
+
 ```json
 {
   "store": {
@@ -358,12 +423,45 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.3 Product Images**
 **Endpoint:** `POST /api/products` or `PUT /api/products/:id`
 **Method:** Pass the `image_url` string.
+
 ```json
 {
   "product": {
     "name": "Premium Lager",
-    "price": 250.00,
+    "price": 250.0,
     "image_url": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/beer.jpg"
+  }
+}
+```
+
+---
+
+### 8. Delivery & Logistics
+
+**8.1 Calculate Delivery Fee (Customer)**
+**Endpoint:** `POST /api/delivery/calculate`
+**Method:** Pass the `store_id` and the customer's delivery destination coordinates (`delivery_lat`, `delivery_lng`).
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/delivery/calculate" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "store_id": 5,
+    "delivery_lat": "-1.2921",
+    "delivery_lng": "36.8219"
+  }'
+```
+
+**Status:** 200 OK (Returns distance and cost information)
+
+```json
+{
+  "data": {
+    "distance_km": 1.5,
+    "delivery_fee": 150.0,
+    "duration_text": "12 mins",
+    "distance_text": "1.5 km"
   }
 }
 ```
