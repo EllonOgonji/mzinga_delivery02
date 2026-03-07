@@ -60,6 +60,13 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configures Delivery variables
+config :mzinga_delivery, :delivery,
+  google_maps_api_key: System.get_env("GOOGLE_MAPS_API_KEY", "PLACEHOLDER_KEY"),
+  fuel_rate_per_km: String.to_integer(System.get_env("DELIVERY_FUEL_RATE", "15")),
+  maintenance_rate_per_km: String.to_integer(System.get_env("DELIVERY_MAINTENANCE_RATE", "5")),
+  rider_pay_per_km: String.to_integer(System.get_env("DELIVERY_RIDER_PAY", "20"))
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 

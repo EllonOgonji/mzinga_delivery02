@@ -32,10 +32,9 @@ defmodule MzingaDelivery.Stores do
   end
 
   def get_store!(id) do
-    case get_store(id) do
-      nil -> {:error, :not_found}
-      store -> {:ok, store}
-    end
+    Store
+    |> preload([:vendor, :approved_by, :rejected_by])
+    |> Repo.get!(id)
   end
 
   def get_stores_by_vendor(vendor_id) do
