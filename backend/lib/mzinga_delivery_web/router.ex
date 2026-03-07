@@ -59,6 +59,7 @@ defmodule MzingaDeliveryWeb.Router do
     post("/delivery/calculate", DeliveryController, :calculate_fee)
 
     # Orders
+    get("/orders/filter", OrderFilterController, :filter)
     resources("/orders", OrderController, only: [:index, :show, :create])
     patch("/orders/:id/accept", OrderController, :accept)
     patch("/orders/:id/reject", OrderController, :reject)
