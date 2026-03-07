@@ -97,6 +97,27 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
 
 ---
 
+**1.6 Update Current User**
+**Endpoint:** `PUT /api/auth/me`
+**Method:** Allows any authenticated user to update their personal details. (Password cannot be updated here).
+
+```bash
+curl -X PUT "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "full_name": "Updated Name",
+      "phone_number": "254700000000",
+      "avatar_url": "https://example.com/avatar.jpg"
+    }
+  }'
+```
+
+**Status:** 200 OK (Returns updated User JSON)
+
+---
+
 ### 2. Vendor Store Management (Verified)
 
 **2.1 Create Store**
