@@ -345,8 +345,30 @@ defmodule MzingaDelivery.Orders do
           # Create Orders (one per store)
           created_orders =
             Enum.map(grouped_items, fn {store_id, store_items} ->
-              total_price =
+              items_total =
                 Enum.reduce(store_items, Decimal.new(0), &Decimal.add(&1.subtotal, &2))
+
+              store = MzingaDelivery.Stores.get_store!(store_id)
+              delivery_lat = Map.get(attrs, "delivery_lat")
+              delivery_lng = Map.get(attrs, "delivery_lng")
+
+              # Try to calculate delivery fee
+              delivery_fee =
+                if is_nil(delivery_lat) or is_nil(delivery_lng) do
+                  Decimal.new(0)
+                else
+                  case MzingaDelivery.Delivery.Calculator.calculate_delivery(
+                         store.latitude,
+                         store.longitude,
+                         delivery_lat,
+                         delivery_lng
+                       ) do
+                    {:ok, result} -> Decimal.from_float(result.fee)
+                    _ -> Decimal.new(0)
+                  end
+                end
+
+              total_price = Decimal.add(items_total, delivery_fee)
 
               # Prepare Order Items attrs
               order_items_attrs =
@@ -362,10 +384,11 @@ defmodule MzingaDelivery.Orders do
                 "customer_id" => user.id,
                 "store_id" => store_id,
                 "total_price" => total_price,
+                "delivery_fee" => delivery_fee,
                 "checkout_group_id" => checkout_group_id,
                 "payment_status" => "pending",
-                "delivery_lat" => Map.get(attrs, "delivery_lat"),
-                "delivery_lng" => Map.get(attrs, "delivery_lng"),
+                "delivery_lat" => delivery_lat,
+                "delivery_lng" => delivery_lng,
                 "items" => order_items_attrs
               }
 
