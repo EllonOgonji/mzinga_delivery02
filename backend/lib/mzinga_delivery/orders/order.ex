@@ -4,6 +4,7 @@ defmodule MzingaDelivery.Orders.Order do
 
   schema "orders" do
     field(:total_price, :decimal)
+    field(:delivery_fee, :decimal, default: 0.0)
     field(:payment_status, :string, default: "pending")
     field(:delivery_lat, :float)
     field(:delivery_lng, :float)
@@ -26,14 +27,16 @@ defmodule MzingaDelivery.Orders.Order do
       :customer_id,
       :store_id,
       :total_price,
+      :delivery_fee,
       :payment_status,
       :rider_id,
       :delivery_lat,
       :delivery_lng,
       :checkout_group_id
     ])
-    |> validate_required([:customer_id, :store_id, :total_price])
+    |> validate_required([:customer_id, :store_id, :total_price, :delivery_fee])
     |> validate_number(:total_price, greater_than: 0)
+    |> validate_number(:delivery_fee, greater_than_or_equal_to: 0)
     |> validate_inclusion(:payment_status, ["pending", "paid", "failed", "refunded"])
     # |> validate_inclusion(:order_status, ["pending", "accepted", "rejected", "awaiting_pickup", "in_transit", "delivered", "cancelled"])
     |> foreign_key_constraint(:customer_id)
