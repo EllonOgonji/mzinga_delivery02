@@ -462,7 +462,7 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 ```
 
 **7.2 Store Logos & Banners**
-**Endpoint:** `POST /api/vendor/stores` or `PUT /api/vendor/stores/:id`
+**Endpoint:** `POST /api/vendor/stores` or `PATCH /api/vendor/stores/:id` or `PATCH /api/admin/stores/:id`
 **Method:** Pass the `logo` and `banner` string URLs.
 
 ```json
