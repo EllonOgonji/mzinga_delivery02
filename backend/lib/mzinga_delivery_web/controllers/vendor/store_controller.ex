@@ -65,6 +65,38 @@ defmodule MzingaDeliveryWeb.Vendor.StoreController do
     end
   end
 
+  @doc """
+  Update a vendor store
+  PATCH /api/vendor/stores/:id
+  """
+  def update(conn, %{"id" => id, "store" => store_params}) do
+    vendor = Guardian.Plug.current_resource(conn)
+
+    case Stores.get_store(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Store not found"})
+
+      store ->
+        if store.vendor_id == vendor.id do
+          case Stores.update_vendor_store(store, store_params) do
+            {:ok, updated_store} ->
+              render(conn, :show, store: updated_store)
+
+            {:error, changeset} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> render(:error, changeset: changeset)
+          end
+        else
+          conn
+          |> put_status(:forbidden)
+          |> json(%{error: "Not authorized to update this store"})
+        end
+    end
+  end
+
   # Authorization
   defp ensure_vendor(conn, _opts) do
     user = Guardian.Plug.current_resource(conn)
