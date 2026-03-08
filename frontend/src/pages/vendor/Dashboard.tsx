@@ -47,9 +47,13 @@ type Shop = {
 
 const Dashboard = () => {
   const [userData, setUserData] = useState(JSON.parse(localStorage.getItem("user")))
-  const { data: shopData } = useQuery({
+
+  const { data: shopData = [] } = useQuery({
     queryKey: ['store', 'index', userData.id],
-    queryFn: () => getVendorShops(userData.id)
+    queryFn: async () => {
+      const {data} = await getVendorShops(userData.id)
+      return data.data[0]
+    }
   });
 
   // Mock data
@@ -86,28 +90,6 @@ const Dashboard = () => {
       linkText: "View Reviews",
     },
   ];
-
-  // const shopData?: Shop = {
-  //   id: 1,
-  //   vendor_id: userData.id,
-  //   name: "Mama Yao",
-  //   address: "Lurambi",
-  //   latitude: -1.2921,
-  //   longitude: 36.8219,
-  //   status: "open",
-  //   inserted_at: "2024-01-15T10:00:00Z",
-  //   updated_at: "2024-03-10T12:00:00Z",
-  //   logo: "https://example.com/logo.png",
-  //   banner: "https://example.com/banner.png",
-  //   category: "alcogol and beverages",
-  //   metadata: {},
-  //   is_verified: true,
-  //   rejection_reason: "",
-  //   approved_at: "2024-01-20T09:00:00Z",
-  //   approved_by_id: 2,
-  //   rejected_at: "",
-  //   rejected_by_id: 0,
-  // };
 
   const recentOrders = [
     {
