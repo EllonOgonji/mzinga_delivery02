@@ -118,6 +118,40 @@ curl -X PUT "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
 
 ---
 
+**1.7 Forgot Password**
+**Endpoint:** `POST /api/auth/forgot_password`
+**Method:** Triggers an email with a reset link if the account exists. Returns success regardless to prevent user enumeration.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/forgot_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "venom@example.com"
+  }'
+```
+
+**Status:** 200 OK
+
+---
+
+**1.8 Reset Password**
+**Endpoint:** `POST /api/auth/reset_password`
+**Method:** Resets user password using the token sent to their email.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/reset_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "<RESET_TOKEN>",
+    "password": "NewPassword123",
+    "password_confirmation": "NewPassword123"
+  }'
+```
+
+**Status:** 200 OK
+
+---
+
 ### 2. Vendor Store Management (Verified)
 
 **2.1 Create Store**

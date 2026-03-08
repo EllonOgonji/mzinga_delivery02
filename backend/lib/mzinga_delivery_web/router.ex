@@ -22,6 +22,8 @@ defmodule MzingaDeliveryWeb.Router do
     # Auth
     post("/auth/register", AuthController, :register)
     post("/auth/login", AuthController, :login)
+    post("/auth/forgot_password", AuthController, :forgot_password)
+    post("/auth/reset_password", AuthController, :reset_password)
 
     # Public stores (only approved)
     get("/stores", StoreController, :index)
