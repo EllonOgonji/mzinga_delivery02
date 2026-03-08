@@ -73,6 +73,60 @@ const Login = () => {
         })
     };
 
+    const handleForgotPassword = () => {
+        setLoading(true);
+
+        if (!formData.email || !formData.password) {
+            toast({
+                title: "Error",
+                description: "Please fill in all required fields",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return;
+        }
+
+        
+        fetch(`${import.meta.env.VITE_BASE_URL}/api/auth/login`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        }).then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
+            }
+
+            return response.json();
+        }).then((res) => {
+            toast({
+                title: "Success!",
+                description: `Successfully logged in as ${res.data.user.role}.`,
+            });
+
+            localStorage.setItem('token', res.data.token);
+            localStorage.setItem('role', res.data.user.role);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+
+            res.data.user.role == 'customer' ? navigate('/') 
+                : res.data.user.role == 'vendor' ? navigate('/vendor/dashboard') 
+                : res.data.user.role == 'admin' ? navigate('/admin/dashboard') 
+                : navigate('/auth/login');
+            
+        }).catch((error) => {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+            });
+            setLoading(false);
+            return;
+        })
+    };
+
     return (
         <div className="h-[100vh] w-full flex flex-col justify-center items-center">
             <div className='w-80 md:w-96'>
@@ -111,9 +165,16 @@ const Login = () => {
                                 {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Login'}
                             </Button>
                         </CardContent>
-                        <CardFooter className='text-sm text-muted-foreground justify-center'>
-                            <span>Don't have an account? </span>
-                            <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
+                        <CardFooter className='text-sm text-muted-foreground justify-center flex flex-col'>
+                            <div>
+                                <span>Don't have an account? </span>
+                                <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
+                            </div>
+
+                            <div>
+                                <span>Forgot your password? </span>
+                                <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/forgot-password')}>Reset</Button>
+                            </div>
                         </CardFooter>
                     </Card>
                 </form>

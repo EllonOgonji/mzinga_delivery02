@@ -185,7 +185,6 @@ export const Header = () => {
   const navLinks = [
     { label: "Shops", href: "/" },
     { label: "Products", href: "/products" },
-    { label: "Orders", href: "#why-us" },
   ];
 
   const [open, setOpen] = useState(false);
@@ -207,22 +206,27 @@ export const Header = () => {
             </Link>
           ))}
 
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground transition-all duration-400 relative" asChild aria-label="Cart">
+          <button className="relative text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Toggle theme">
             <Link to="/cart">
-              <ShoppingBag className="h-5 w-5" />
+              <ShoppingBag className="h-4 w-4" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
+                <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
                   {cartCount}
                 </Badge>
               )}
             </Link>
-          </Button>
+          </button>
+
+          <button onClick={toggleTheme} className="text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Toggle theme">
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Profile">
-                <User className="h-5 w-5" />
-              </Button>
+              <button className="text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Profile">
+                <User className="h-4 w-4" />
+              </button>
+              {/* <span className="cursor text-xs text-muted-foreground hover:text-foreground transition-all duration-400 uppercase tracking-wider">Profile</span> */}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
@@ -235,10 +239,6 @@ export const Header = () => {
               <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <button onClick={toggleTheme} className="text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Toggle theme">
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
         </div>
         
         <div className="md:hidden flex items-center gap-4">

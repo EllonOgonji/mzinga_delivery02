@@ -1,4 +1,5 @@
-import { Shop, ShopFilters } from "@/types";
+import { ReturnData, Shop, ShopFilters } from "@/types";
+import { error } from "console";
 
 type ShopResponse = {
     data: Shop[];
@@ -8,6 +9,13 @@ type ShopResponse = {
         total: number;
     }
 };
+
+type ShopInfo = {
+    banner: string,
+    logo: string,
+    name: string,
+    address: string
+}
 
 export const getAllShops = async function (filters: ShopFilters = {limit: 6, page: 1}): Promise<ShopResponse>{
     let filterUrl = `${import.meta.env.VITE_BASE_URL}/api/stores/filter?`;
@@ -97,7 +105,7 @@ export const getSingleShop = async function (id: number): Promise<Shop> {
     });
 };
 
-export const getVendorShops = async function (id: number): Promise<Shop | null> {
+export const getVendorShops = async function (id: number): Promise<ReturnData | null> {
     return fetch(`${import.meta.env.VITE_BASE_URL}/api/vendor/stores`,{
         method: 'GET',
         headers: {
@@ -110,10 +118,18 @@ export const getVendorShops = async function (id: number): Promise<Shop | null> 
         }
         return response.json();
     }).then(res => {
-        return res.data.filter((shop) => shop.is_verified === true)[0]
+        return {
+            status: true,
+            data: res, 
+            error: null
+        }
     }).catch(error => {
         console.error('Error:', error);
-        return null;
+         return {
+            status: false,
+            data: null, 
+            error: error
+        }
     });
 }
 
@@ -151,6 +167,33 @@ export const rejectShop = async (id: number, reasonForRejection: string) => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({reason : reasonForRejection})
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return {
+            status: true,
+            data: null,
+            error: null
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            data: null,
+            error: error
+        }
+    });
+}
+
+export const updateShopInfo = async (shopInfo: ShopInfo) => {
+    return fetch(`${import.meta.env.VITE_BASE_URL}/api/vendor/stores`,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({store : shopInfo})
     }).then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok');

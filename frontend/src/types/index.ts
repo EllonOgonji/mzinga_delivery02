@@ -1,3 +1,9 @@
+export interface ReturnData {
+  status: boolean,
+  data: any,
+  error: any
+}
+
 export interface ShopFilters {
   idMultiple?: number[];
   id?: number;
@@ -69,6 +75,7 @@ export interface Shop {
   status: 'open' | 'suspended' | 'closed' | 'approved';
   createdAt: string;
   updatedAt?: string;
+  address: string
   // 
   is_verified?: boolean;
 }
