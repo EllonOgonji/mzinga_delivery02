@@ -7,10 +7,7 @@ config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: MzingaDelivery.F
 config :swoosh, local: false
 
 # Use Brevo (formerly Sendinblue) for sending transactional emails in production
-# Set BREVO_API_KEY env var on Render with your Brevo v3 API key
-config :mzinga_delivery, MzingaDelivery.Mailer,
-  adapter: Swoosh.Adapters.Brevo,
-  api_key: System.get_env("BREVO_API_KEY")
+config :mzinga_delivery, MzingaDelivery.Mailer, adapter: Swoosh.Adapters.Brevo
 
 # Do not print debug messages in production
 config :logger, level: :info
