@@ -49,18 +49,18 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
 
             {/* Product Name */}
-            <h3 className="uppercase text-md leading-tight truncate">
+            <h3 className="uppercase text-md leading-tight truncate" title={product.name}>
               {product.name}
             </h3>
 
             {/* Rating */}
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-warning text-warning" />
               <span className="text-sm font-medium">{product.average_rating}</span>
               <span className="text-xs text-muted-foreground">
                 ({product.ratings.length})
               </span>
-            </div>
+            </div> */}
 
             {/* Price */}
             <div className="flex items-baseline gap-2">

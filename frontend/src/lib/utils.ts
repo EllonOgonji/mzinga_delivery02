@@ -6,31 +6,66 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
+type DeliveryFee = {
+  distance_km: number,
+  delivery_fee: number,
+  duration_text: string,
+  distance_text: string
+}
+
+type ReturnData = {
+  status: boolean,
+  data: any,
+  error: any
+  
+}
+
 export const supabase = createClient(supabaseUrl ?? "", supabaseAnonKey ?? "");
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const calculateDeliveryFee = (coordinates: { lat: number; lon: number }): number => {
-  const distanceKm = findDistanceBetweenCoordinates(
-    coordinates.lat,
-    coordinates.lon,
-    parseFloat(localStorage.getItem("userLat")) || -1.2828,
-    parseFloat(localStorage.getItem("userLon")) || 36.8029
-  );
-  const feeTiers = {
-    "0-2km": 70.0,
-    "2-5km": 100.0,
-    "5-10km": 120.0,
-    "10km+": 150.0,
-  };
+// export const calculateDeliveryFee = (coordinates: { lat: number; lon: number }, storeId: number): ReturnData => {
+//   const getDeliveryMeta = async ():Promise<ReturnData> => {
+//     const url = `${import.meta.env.VITE_BASE_URL}/api/delivery/calculate`
 
-  if (distanceKm <= 2) return feeTiers["0-2km"] || 0;
-  if (distanceKm <= 5) return feeTiers["2-5km"] || 0;
-  if (distanceKm <= 10) return feeTiers["5-10km"] || 0;
-  return feeTiers["10km+"] || 0;
-};
+//     try {const fecthResponse = await fetch(url,{
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${localStorage.getItem('token')}`
+//         },
+//         body: JSON.stringify({
+//           store_id: storeId,
+//           delivery_lat: coordinates.lat,
+//           delivery_lng: coordinates.lon
+//         })
+//     })
+
+//     if (!fecthResponse.ok) {
+//       throw new Error('Network response was not ok');
+//     }
+
+//     const parsedResponse = await fecthResponse.json()
+
+//     return {
+//       status: true,
+//       data: parsedResponse,
+//       error: null
+//     }
+//     } catch (error){
+//         console.error('Error:', error);
+//         return {
+//             status: false,
+//             data: null,
+//             error: error
+//         }
+//     }
+//   }
+  
+//   return getDeliveryMeta()
+// };
 
 export const findDistanceBetweenUserAndShop = (shopCoordinates: { lat: number; lon: number }): number => {
   const userLat = parseFloat(localStorage.getItem("userLat"));

@@ -11,25 +11,26 @@ import { useCart } from '@/contexts/CartContext';
 import { mockShops, mockProducts } from '@/data/mockData';
 import { getAllShops } from '@/data/shopData';
 import { useQuery } from "@tanstack/react-query";
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
-import { useMemo } from 'react';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+// import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
+import { useMemo, useEffect, useState } from 'react';
+import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, clearCart, cartTotal, cartCount } = useCart();
   
-  const cartByShop = cart.reduce((acc, item) => {
-    if (!acc[item.store?.id]) {
-      acc[item.store?.id] = [];
-    }
-    acc[item.store?.id].push(item);
-    return acc;
-  }, {} as Record<number, typeof cart>);
+  const cartByShop = useMemo(() => {
+    return cart.reduce((acc, item) => {
+      if (!acc[item.store.id]) {
+        acc[item.store.id] = [];
+      }
+      acc[item.store.id].push(item);
+      return acc;
+    }, {} as Record<number, typeof cart>);
+  }, [cart]);
 
-  console.log(cart)
-  console.log(cartByShop)
-
-  const shopIds = Object.keys(cartByShop).map(Number);
+  const shopIds = useMemo(() => {
+    return Object.keys(cartByShop).map(Number);
+  }, [cartByShop]);
 
   const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops', 'cart', shopIds],
@@ -40,35 +41,9 @@ export default function Cart() {
     enabled: shopIds.length > 0
   });
 
-  const shopsData = useMemo(() => {
-    return shopIds.map(shopId => {
-      const shop = allShops.find(s => s.id === shopId);
-      const shopItems = cartByShop[shopId];
-      const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      
-      const deliveryFee = shop 
-        ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude })
-        : 0;
-      
-      const distance = shop
-        ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
-        : 0;
-      
-      const shopTotal = shopSubtotal + deliveryFee;
-
-      return {
-        shopId,
-        shop,
-        items: shopItems,
-        subtotal: shopSubtotal,
-        total: shopTotal,
-        distanceFromUser: distance,
-        deliveryFee: deliveryFee
-      };
-    });
-  }, [allShops, cartByShop, shopIds]);
-
-  const totalDeliveryFee = shopsData.reduce((sum, item) => sum + item.deliveryFee, 0)
+  const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
+  const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
+  const orderTotal = cartTotal + totalDeliveryFees;
 
   // List of shop ids in the cart
   // for each id: fetch the shop details, calculate delivery fee, calculate the cumulative totals
@@ -238,14 +213,14 @@ export default function Cart() {
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Total Delivery Fees:</span>
-                    <span>KES. {totalDeliveryFee}</span>
+                    <span>KES. {totalDeliveryFees}</span>
                   </div>
                   
                   <Separator />
                   
                   <div className="flex justify-between text-lg font-bold text-accent">
                     <span>Order Total:</span>
-                    <span>KES. {(cartTotal + totalDeliveryFee)}</span>
+                    <span>KES. {(cartTotal + totalDeliveryFees)}</span>
                   </div>
                 </div>
 
