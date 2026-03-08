@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getStoreOrders, updateOrderStatus } from "@/data/orderData";
+import { getOrders, updateOrderStatus } from "@/data/orderData";
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 
@@ -41,7 +41,7 @@ const VendorOrders = () => {
   const { data: orders = [] } = useQuery<Array<any>>({
     queryKey: ['store', 'orders', JSON.parse(localStorage.getItem('user') || '{}').id],
     queryFn: async () => {
-      const res = await getStoreOrders();
+      const res = await getOrders();
       return res.data.data;
     }
   });

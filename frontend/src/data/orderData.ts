@@ -11,6 +11,11 @@ type Order = {
     }
 }
 
+type OrderFilters = {
+    limit?: number,
+    page?: number
+}
+
 type cartItem = {
     
 }
@@ -48,12 +53,24 @@ export const checkout = async function (paymentPhoneNumber: string) {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ payment_phone: paymentPhoneNumber }),
-    }).then(response => response.json()).then(data => {
-        console.log('Order created:', data);
-        return data.status;
+    }).then(response => {
+        if (!response.ok){
+           throw new Error("Checkout request failed")
+        }
+        return response.json()
+    }).then(data => {
+        return {
+            status: true,
+            data: data,
+            error: null
+        }
     }).catch(error => {
         console.error('Error:', error);
-        return [];
+        return {
+            status: false,
+            data: null,
+            error: error
+        }
     });
 };
 
@@ -82,8 +99,15 @@ export const getAllOrders = async function (filters: ShopFilters = {limit: 6, pa
     });
 };
 
-export const getStoreOrders = async function (){
-    return fetch(`${import.meta.env.VITE_BASE_URL}/api/orders`,{
+// Returns all orders belonging to authenticated user (vendor, customer, admin)
+export const getOrders = async function (filters: OrderFilters = {limit:6, page: 1}){
+    let url = `${import.meta.env.VITE_BASE_URL}/api/orders`;
+    
+    if (filters.page && filters.limit) {
+        url += `/filter?page=${filters.page}&limit=${filters.limit}`;
+    }
+
+    return fetch(url,{
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

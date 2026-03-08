@@ -17,13 +17,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sheet, SheetHeader, SheetTitle, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Shop } from "@/types";
 import { getAllShops } from "@/data/shopData";
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
+// import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 import { Pagination, PaginationContent,
   PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious, } from "@/components/ui/pagination";
+import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
 
 const ShopDirectory = () => {
   type expandableSections = 'categories' | 'rating' | 'delivery' | 'features' | 'distance';
@@ -428,8 +429,6 @@ const ShopDirectory = () => {
             {/* Shop Grid/List */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredShops.map((shop) => {
-                const deliveryFees = calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude });
-                const distanceToUser = findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude });
                 return (
                   <Card key={shop.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardContent className="p-0">
