@@ -404,7 +404,63 @@ curl -X POST https://mzinga-delivery02-t6rg.onrender.com/api/stores \
 
 ---
 
-### Update Store (Vendor/Admin)
+### Update Vendor Store (Vendor Only)
+
+**Endpoint**: `PATCH /api/vendor/stores/:id`  
+**Authentication**: Required (Vendor role only)  
+**Status Code**: `200 OK`
+
+**Request Body**:
+
+```json
+{
+  "store": {
+    "name": "My Updated Premium Store",
+    "location": "Nairobi CBD",
+    "logo": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/new_logo.png",
+    "banner": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/new_banner.png"
+  }
+}
+```
+
+_Note: Fields like `status` and `is_verified` are ignored even if provided by the vendor._
+
+**Success Response (200)**:
+
+```json
+{
+  "data": {
+    "id": 5,
+    "name": "My Updated Premium Store",
+    "location": "Nairobi CBD",
+    "description": "Quality groceries and fresh produce",
+    "logo": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/new_logo.png",
+    "banner": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/new_banner.png",
+    "rating": 4.5,
+    "vendor_id": 5,
+    "is_active": true
+  }
+}
+```
+
+**cURL**:
+
+```bash
+curl -X PATCH https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores/5 \
+  -H "Authorization: Bearer YOUR_VENDOR_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "store": {
+      "name": "My Updated Premium Store",
+      "logo": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/new_logo.png",
+      "banner": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/new_banner.png"
+    }
+  }'
+```
+
+---
+
+### Update Store (Admin)
 
 **Endpoint**: `PATCH /api/stores/:id`  
 **Authentication**: Required  

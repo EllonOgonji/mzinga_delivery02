@@ -45,6 +45,18 @@ defmodule MzingaDelivery.Stores.Store do
   end
 
   @doc """
+  Changeset for a vendor updating their own existing store.
+  Restricted from modifying status, is_verified, or vendor_id.
+  """
+  def vendor_update_changeset(store, attrs) do
+    store
+    |> cast(attrs, [:name, :address, :latitude, :longitude, :logo, :banner, :category])
+    |> validate_required([:name, :address])
+    |> validate_inclusion(:category, @valid_categories, allow_nil: true)
+    |> unique_constraint(:name)
+  end
+
+  @doc """
   Admin changeset for general updates.
   """
   def admin_changeset(store, attrs) do
