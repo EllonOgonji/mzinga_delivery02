@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Check, ChevronRight, MapPin, Phone, Smartphone } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Phone, Smartphone, Loader } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,9 @@ import { toast } from 'sonner';
 import { useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { getAllShops } from '@/data/shopData';
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
+// import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 import { checkout, addItemToCart } from '@/data/orderData';
+import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
 
 const steps = [
   { id: 1, name: 'Delivery', completed: false, active: true },
@@ -53,15 +54,29 @@ export default function Checkout() {
     );
   }
 
-  const cartByShop = cart.reduce((acc, item) => {
-    if (!acc[item.store.id]) {
-      acc[item.store.id] = [];
-    }
-    acc[item.store.id].push(item);
-    return acc;
-  }, {} as Record<number, typeof cart>);
+  // const cartByShop = cart.reduce((acc, item) => {
+  //   if (!acc[item.store.id]) {
+  //     acc[item.store.id] = [];
+  //   }
+  //   acc[item.store.id].push(item);
+  //   return acc;
+  // }, {} as Record<number, typeof cart>);
 
-  const shopIds = Object.keys(cartByShop).map(Number);
+  // const shopIds = Object.keys(cartByShop).map(Number);
+
+  const cartByShop = useMemo(() => {
+    return cart.reduce((acc, item) => {
+      if (!acc[item.store.id]) {
+        acc[item.store.id] = [];
+      }
+      acc[item.store.id].push(item);
+      return acc;
+    }, {} as Record<number, typeof cart>);
+  }, [cart]);
+
+  const shopIds = useMemo(() => {
+    return Object.keys(cartByShop).map(Number);
+  }, [cartByShop]);
 
   const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops', 'cart', shopIds],
@@ -72,36 +87,39 @@ export default function Checkout() {
     enabled: shopIds.length > 0
   });
 
-  const shopsData = useMemo(() => {
-    return shopIds.map(shopId => {
-      const shop = allShops.find(s => s.id === shopId);
-      const shopItems = cartByShop[shopId];
-      const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      
-      const deliveryFee = shop 
-        ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude })
-        : 0;
-      
-      const distance = shop
-        ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
-        : 0;
-      
-      const shopTotal = shopSubtotal + deliveryFee;
+  const isMounted = useRef(true);
 
-      return {
-        shopId,
-        shop,
-        items: shopItems,
-        subtotal: shopSubtotal,
-        deliveryFee,
-        distance,
-        total: shopTotal
-      };
-    });
-  }, [allShops, cartByShop, shopIds]);
+//  const shopsData = useMemo(() => {
+//     return shopIds.map(shopId => {
+//       const shop = allShops.find(s => s.id === shopId);
+//       const shopItems = cartByShop[shopId];
+//       const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      
+//       const {data} = shop && calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude }, shopId)
+      
+//       const distance = shop
+//         ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
+//         : 0;
+      
+//       const shopTotal = shopSubtotal + data.deliveryFee;
 
+//       return {
+//         shopId,
+//         shop,
+//         items: shopItems,
+//         subtotal: shopSubtotal,
+//         deliveryFee: data.deliveryFee,
+//         distance: data.distance_km,
+//         total: shopTotal
+//       };
+//     });
+//   }, [allShops, cartByShop, shopIds]);
+
+  const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
   const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
   const orderTotal = cartTotal + totalDeliveryFees;
+
+  console.log(shopsData)
 
   const handlePlaceOrder = async () => {
     setLoading(true)
@@ -112,6 +130,8 @@ export default function Checkout() {
       return;
     }
 
+    if (loading) return;
+
     for (const shopData of shopsData) {
       const orderPayload = {
         order: {
@@ -120,7 +140,7 @@ export default function Checkout() {
           items: shopData.items.map(item => ({
             product_id: item.id,
             quantity: item.quantity,
-            subtotal: item.quantity * Number(item.price),
+            subtotal: (item.quantity * Number(item.price)),
           })),
         },
       };
@@ -130,13 +150,12 @@ export default function Checkout() {
           id: item.product_id,
           quantity: item.quantity,
         });
-        
-        console.log(res)
       }
     }
 
     const res = await checkout(String(paymentPhone));
-    if (!res){
+
+    if (res.status == false){
       toast.error('An issue occurred while creating your order')
       setLoading(false)
       return
@@ -392,17 +411,17 @@ export default function Checkout() {
                 <h3 className="font-bold mb-4">Order Summary</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span>Items ({cartCount}):</span>
-                    <span>KES. {cartTotal.toFixed(2)}</span>
+                    <span>Items :</span>
+                    <span>KES. {cartTotal}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Delivery Fees:</span>
-                    <span>KES. {totalDeliveryFees.toFixed(2)}</span>
+                    <span>KES. {totalDeliveryFees}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold text-accent">
                     <span>Total:</span>
-                    <span>KES. {orderTotal.toFixed(2)}</span>
+                    <span>KES. {cartTotal + totalDeliveryFees}</span>
                   </div>
                   <div className="flex items-start space-x-2">
                     <Checkbox
@@ -426,7 +445,7 @@ export default function Checkout() {
                     onClick={handlePlaceOrder}
                     disabled={!agreedToTerms}
                   >
-                    Place Order - KES. {orderTotal.toFixed(2)}
+                    {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Place Order'}
                   </Button>
                 </div>
               </Card>

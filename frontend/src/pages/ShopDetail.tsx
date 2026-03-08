@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { getAllShops, getSingleShop } from "@/data/shopData";
 import { getAllProducts, getSingleStoreProducts } from "@/data/productData";
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 import { Shop } from "@/types";
 import { useToast } from '@/hooks/use-toast';
 
@@ -82,9 +81,6 @@ const ShopDetail = () => {
   const filteredProducts = shopProducts.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const deliveryFees = calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude });
-  const distanceToUser = findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude });
 
   const handleShopShare = (shopId: number) => {
     navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL}/shop/${shopId}`)

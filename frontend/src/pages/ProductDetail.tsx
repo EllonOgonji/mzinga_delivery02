@@ -15,7 +15,6 @@ import { Heart, Share2, ShoppingCart, Star, MapPin, Clock, Truck, Package, Shiel
 import { toast } from 'sonner';
 import { getAllProducts, getSingleProduct, getSingleStoreProducts } from '@/data/productData';
 import { getAllShops, getSingleShop } from '@/data/shopData';
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 import { Product, Shop } from '@/types';
 
 export default function ProductDetail() {
@@ -38,15 +37,15 @@ export default function ProductDetail() {
   });
 
   const { data: shop, isLoading: isLoadingShop } = useQuery({
-    queryKey: ['shop', product?.store_id],
-    queryFn: () => getSingleShop(product?.store_id),
-    enabled: !!product?.store_id
+    queryKey: ['shop', product?.store.id],
+    queryFn: () => getSingleShop(product?.store.id),
+    enabled: !!product?.store.id
   });
   
   const { data: rawRelatedProducts = [] } = useQuery({
-    queryKey: ['relatedProducts', product?.category, product?.store_id],
+    queryKey: ['relatedProducts', product?.category, product?.store.id],
     queryFn: async () => {
-      const productsFromSameShop = await getSingleStoreProducts(product?.store_id)
+      const productsFromSameShop = await getSingleStoreProducts(product?.store.id)
       return productsFromSameShop.filter(p => p.category === product?.category && p.id !== product?.id).slice(0, 8);
     },
     enabled: !!product
@@ -75,8 +74,6 @@ export default function ProductDetail() {
   }
 
   const relatedProducts = rawRelatedProducts
-  const productAverageRating = product?.ratings?.length > 0 ? (product.ratings.reduce((sum, r) => sum + r, 0) / product.ratings.length).toFixed(1) : 0;
-  const deliveryFee = shop ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude }) : 0;
 
   if (isLoadingProduct || isLoadingShop) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
