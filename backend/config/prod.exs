@@ -6,9 +6,11 @@ config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: MzingaDelivery.F
 # Disable Swoosh Local Memory Storage
 config :swoosh, local: false
 
-# Use Logger adapter for emails in production (logs email content instead of sending)
-# Replace with a real adapter (e.g., Swoosh.Adapters.Mailgun) when ready
-config :mzinga_delivery, MzingaDelivery.Mailer, adapter: Swoosh.Adapters.Logger
+# Use Brevo (formerly Sendinblue) for sending transactional emails in production
+# Set BREVO_API_KEY env var on Render with your Brevo v3 API key
+config :mzinga_delivery, MzingaDelivery.Mailer,
+  adapter: Swoosh.Adapters.Brevo,
+  api_key: System.get_env("BREVO_API_KEY")
 
 # Do not print debug messages in production
 config :logger, level: :info
