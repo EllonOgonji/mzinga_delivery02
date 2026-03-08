@@ -91,7 +91,7 @@ defmodule MzingaDeliveryWeb.Router do
     pipe_through([:api, :auth])
 
     # Vendor store management
-    resources("/stores", StoreController, only: [:index, :show, :create])
+    resources("/stores", StoreController, only: [:index, :show, :create, :update])
   end
 
   # admin routes
