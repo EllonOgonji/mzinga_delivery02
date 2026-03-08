@@ -110,6 +110,9 @@ if config_env() == :prod do
     consumer_secret:
       System.get_env("MPESA_CONSUMER_SECRET") || raise("MPESA_CONSUMER_SECRET not set"),
     callback_url: System.get_env("MPESA_CALLBACK_URL") || raise("MPESA_CALLBACK_URL not set")
+
+  config :mzinga_delivery, MzingaDelivery.Mailer,
+    api_key: System.get_env("BREVO_API_KEY") || raise("BREVO_API_KEY not set")
 else
   # DEVELOPMENT/TEST CONFIGURATION
 
