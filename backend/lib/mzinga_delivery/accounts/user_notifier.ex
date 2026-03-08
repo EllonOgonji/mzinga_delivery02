@@ -10,7 +10,7 @@ defmodule MzingaDelivery.Accounts.UserNotifier do
     email =
       new()
       |> to({user.full_name, user.email})
-      |> from({"Mzinga Delivery", "noreply@mzingadelivery.com"})
+      |> from({"Mzinga Delivery", "stoneportus@gmail.com"})
       |> subject("Reset Password Instructions")
       |> html_body("""
       <h1>Hi #{user.full_name},</h1>
