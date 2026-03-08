@@ -67,7 +67,7 @@ defmodule MzingaDelivery.Carts do
                 |> Repo.insert()
 
               item ->
-                new_qty = item.quantity + quantity
+                new_qty = quantity
                 new_subtotal = Decimal.mult(product.price, Decimal.new(new_qty))
 
                 item
