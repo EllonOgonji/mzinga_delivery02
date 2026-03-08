@@ -3,11 +3,9 @@ defmodule MzingaDelivery.Accounts.UserNotifier do
 
   alias MzingaDelivery.Mailer
 
-  # In a real app this would come from config
-  @frontend_url "http://localhost:3000"
-
   def send_password_reset_instructions(user) do
-    url = "#{@frontend_url}/reset-password?token=#{user.reset_password_token}"
+    frontend_url = Application.get_env(:mzinga_delivery, :frontend_url, "http://localhost:3000")
+    url = "#{frontend_url}/auth/reset?token=#{user.reset_password_token}"
 
     email =
       new()
