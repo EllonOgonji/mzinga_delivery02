@@ -24,9 +24,12 @@ const ProductForm = () => {
   const { toast } = useToast();
   const isNew = id === 'new';
 
-  const { data: shopData } = useQuery({
-    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
-    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
+  const { data: shopData = {} } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user')).id],
+    queryFn: async() => {
+      const {data} = await getVendorShops(JSON.parse(localStorage.getItem('user')).id)
+      return data.data[0]
+    }
   });
 
   const { data: existingProduct } = useQuery({
@@ -47,7 +50,7 @@ const ProductForm = () => {
       setSpecificationKeys(Object.keys(existingProduct.specifications))
       setSpecificationValues(Object.values(existingProduct.specifications))
       setFormData({
-        store_id: existingProduct.store_id,
+        store_id: existingProduct.store.id,
         name: existingProduct.name,
         description: existingProduct.description,
         price: existingProduct.price,

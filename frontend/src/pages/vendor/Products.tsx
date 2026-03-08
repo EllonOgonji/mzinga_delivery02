@@ -44,14 +44,20 @@ const VendorProducts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
-  const { data: shopData } = useQuery({
-    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
-    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
+  const { data: shopData = {} } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user')).id],
+    queryFn: async () => {
+      const {status, error, data} = await getVendorShops(JSON.parse(localStorage.getItem('user')).id)
+      return data.data[0]
+    }
   });
 
   const {data: products = [] } = useQuery<Product[]>({
     queryKey: ["vendor-dashboard-products"],
-    queryFn: () => getSingleStoreProducts(shopData.id)
+    queryFn: () => {
+      return getSingleStoreProducts(shopData.id)
+    },
+    enabled: Object.keys(shopData).length > 0
   })
 
   const getStockColor = (stock: number) => {

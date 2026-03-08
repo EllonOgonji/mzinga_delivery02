@@ -210,7 +210,7 @@ export const Header = () => {
             <Link to="/cart">
               <ShoppingBag className="h-4 w-4" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
+                <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
                   {cartCount}
                 </Badge>
               )}
