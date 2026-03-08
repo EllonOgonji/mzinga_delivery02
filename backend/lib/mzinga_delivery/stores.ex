@@ -85,6 +85,12 @@ defmodule MzingaDelivery.Stores do
     |> Repo.all()
   end
 
+  def update_vendor_store(%Store{} = store, attrs) do
+    store
+    |> Store.vendor_update_changeset(attrs)
+    |> Repo.update()
+  end
+
   # admin store approval management
   def list_pending_stores do
     Store

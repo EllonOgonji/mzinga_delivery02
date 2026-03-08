@@ -118,6 +118,40 @@ curl -X PUT "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
 
 ---
 
+**1.7 Forgot Password**
+**Endpoint:** `POST /api/auth/forgot_password`
+**Method:** Triggers an email with a reset link if the account exists. Returns success regardless to prevent user enumeration.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/forgot_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "venom@example.com"
+  }'
+```
+
+**Status:** 200 OK
+
+---
+
+**1.8 Reset Password**
+**Endpoint:** `POST /api/auth/reset_password`
+**Method:** Resets user password using the token sent to their email.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/reset_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "<RESET_TOKEN>",
+    "password": "NewPassword123",
+    "password_confirmation": "NewPassword123"
+  }'
+```
+
+**Status:** 200 OK
+
+---
+
 ### 2. Vendor Store Management (Verified)
 
 **2.1 Create Store**
@@ -428,7 +462,7 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 ```
 
 **7.2 Store Logos & Banners**
-**Endpoint:** `POST /api/vendor/stores` or `PUT /api/vendor/stores/:id`
+**Endpoint:** `POST /api/vendor/stores` or `PATCH /api/vendor/stores/:id` or `PATCH /api/admin/stores/:id`
 **Method:** Pass the `logo` and `banner` string URLs.
 
 ```json
