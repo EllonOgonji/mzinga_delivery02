@@ -103,7 +103,14 @@ defmodule MzingaDeliveryWeb.AuthController do
   def forgot_password(conn, %{"email" => email}) do
     if user = Accounts.get_user_by_email(email) do
       {:ok, updated_user} = Accounts.generate_reset_password_token(user)
-      MzingaDelivery.Accounts.UserNotifier.send_password_reset_instructions(updated_user)
+
+      try do
+        MzingaDelivery.Accounts.UserNotifier.send_password_reset_instructions(updated_user)
+      rescue
+        e ->
+          require Logger
+          Logger.error("Failed to send password reset email: #{inspect(e)}")
+      end
     end
 
     # Always return success to prevent email enumeration
