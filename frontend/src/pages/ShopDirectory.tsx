@@ -104,8 +104,8 @@ const ShopDirectory = () => {
                 return (
                   <Card key={shop.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardContent className="p-0">
-                      <Link to={`/shop/${shop.id}`} className="relative">
-                        {/* Banner */}
+                      {/* <Link to={`/shop/${shop.id}`} className="relative">
+                        
                         <div className="relative h-32 bg-gradient-hero overflow-hidden">
                           <img
                             src={shop.banner}
@@ -114,7 +114,7 @@ const ShopDirectory = () => {
                           />
                         </div>
 
-                        {/* Logo */}
+                        
                         <div className="absolute z-2 bottom-32 left-4 translate-y-1/2">
                           <img
                             src={shop.logo}
@@ -123,16 +123,11 @@ const ShopDirectory = () => {
                           />
                         </div>
 
-                        {/* Content */}
+                        
                         <div className="relative inset-0 z-1 p-4 pt-10">
                           <div className="mb-3">
                             <h3 className="font-semibold text-lg mb-1">{shop.name}</h3>
                             <div className="flex flex-wrap gap-1 mb-2">
-                              {/* {shop.category.slice(0, 2).map((cat) => (
-                                <Badge key={cat} variant="secondary" className="text-xs">
-                                  {cat}
-                                </Badge>
-                              ))} */}
 
                               <Badge variant="shopCard" className="text-xs mt-4">
                                 {shop.category}
@@ -140,16 +135,39 @@ const ShopDirectory = () => {
                             </div>
                           </div>
 
-                          <div className="space-y-2 text-sm">
-                            {/* <div className="flex items-center gap-2">
-                              <Star className="w-4 h-4 fill-primary text-primary" />
-                              <span className="font-medium">{averageRating}</span>
-                              <span className="text-muted-foreground">({shop.rating.length} reviews)</span>
-                            </div> */}
-                          </div>
-                          
                         </div>
-                      </Link>
+                      </Link> */}
+
+                      <Link to={`/shop/${shop.id}`} className="relative block">
+  {/* Banner */}
+  <div className="relative h-32 bg-gradient-hero overflow-hidden">
+    <img
+      src={shop.banner}
+      alt=""
+      className="w-full h-full object-cover"
+    />
+  </div>
+
+  {/* Logo - Fixed positioning */}
+  <div className="absolute left-4" style={{ bottom: '8rem' }}>
+    <div className="relative" style={{ transform: 'translateY(50%)' }}>
+      <img
+        src={shop.logo}
+        alt={shop.name}
+        className="w-16 h-16 rounded-full border-4 border-background object-cover bg-white"
+        style={{ display: 'block' }}
+      />
+    </div>
+  </div>
+
+  {/* Content */}
+  <div className="p-4" style={{ paddingTop: '3rem' }}>
+    <h3 className="font-semibold text-lg mb-1">{shop.name}</h3>
+    <Badge variant="shopCard" className="text-xs">
+      {shop.category}
+    </Badge>
+  </div>
+</Link>
                       
                     </CardContent>
                   </Card>
