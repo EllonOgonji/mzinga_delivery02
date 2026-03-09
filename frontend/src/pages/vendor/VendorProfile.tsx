@@ -86,13 +86,13 @@ const VendorSettings = () => {
 
   return (
     <VendorLayout>
-        <div className="space-y-6 flex flex-col">
-            <main className="flex-1 container py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Main Content */}
-                <div className="lg:col-span-3">
-                    <div className="space-y-6">
-                        <Card>
+        <div className="space-y-6">
+            <main className="w-full mx-auto">
+                <div className="w-full h-full">
+                  {/* Main Content */}
+                  <div className="">
+                    <div className="md:space-y-6">
+                      <Card>
                         <CardHeader>
                             <CardTitle>Profile Information</CardTitle>
                         </CardHeader>
@@ -107,9 +107,9 @@ const VendorSettings = () => {
                             </div>
                             <Button className="w-[4em]" onClick={handleUserInfoUpdate}>{loading ? <Loader className="animate-spin h-5 w-5" /> : 'Save'}</Button>
                         </CardContent>
-                        </Card>
+                      </Card>
                     </div>
-                </div>
+                  </div>
                 </div>
             </main>
         </div>

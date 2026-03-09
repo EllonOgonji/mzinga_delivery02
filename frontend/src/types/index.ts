@@ -108,11 +108,17 @@ export interface Product {
 }
 
 export interface CartItem extends Partial<Product> {
-  id?: number;
-  store_id?: number;
-  shopId?: number; // Added shop_id to CartItem
-  quantity: number;
-  price: number;
+  id: number,
+  product: {
+      id: number,
+      name: string,
+      store_id: number,
+      image_url: string
+  },
+  product_id: number,
+  quantity: string,
+  subtotal: string,    
+  unit_price: string
 }
 
 export interface Order {

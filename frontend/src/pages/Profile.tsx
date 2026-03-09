@@ -45,6 +45,7 @@ import { updateUserInfo } from "@/data/userData";
 import { UserInfo } from "@/data/userData";
 
 const Profile = () => {
+  const {logout} = useAuth();
   const [activeTab, setActiveTab] = useState("orders");
   const { toast } = useToast();
   const { user} = useAuth()
@@ -151,7 +152,7 @@ const Profile = () => {
                     </Button>
                   ))}
                   <Separator className="my-4" />
-                  <Button variant="ghost" className="w-full justify-start text-destructive">
+                  <Button variant="ghost" className="w-full justify-start text-destructive" onClick={logout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </Button>
