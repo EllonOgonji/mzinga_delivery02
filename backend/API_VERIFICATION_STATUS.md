@@ -462,7 +462,59 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
 
 ---
 
-### 7. Image Uploads (Direct-to-Supabase)
+### 7. Cart Management (Auth Required)
+
+These endpoints manage the user's shopping cart. A user can only add items from **one store** at a time. Trying to add an item from a different store returns a `409 Conflict` error.
+
+**7.1 View Cart**
+**Endpoint:** `GET /api/cart`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK (Returns the cart, its items, and the subtotal)
+
+**7.2 Add Item to Cart**
+**Endpoint:** `POST /api/cart/items`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{
+    "product_id": 1,
+    "quantity": 2
+  }'
+```
+
+**Status:** 201 Created (Returns updated cart)
+_Note:_ Returns `409 Conflict` if the product belongs to a different store than what is already in the cart.
+
+**7.3 Remove Item from Cart**
+**Endpoint:** `DELETE /api/cart/items/:product_id`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items/1" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK (Returns updated cart)
+
+**7.4 Clear Entire Cart**
+**Endpoint:** `DELETE /api/cart`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 204 No Content
+
+---
+
+### 8. Image Uploads (Direct-to-Supabase)
 
 There are no dedicated Elixir API endpoints for uploading image files directly. Instead, the frontend uploads images directly to the Supabase Storage bucket (`store-images`) and passes the resulting public URL strings to the existing backend endpoints.
 
