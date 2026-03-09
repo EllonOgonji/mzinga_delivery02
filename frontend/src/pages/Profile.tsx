@@ -178,26 +178,26 @@ const Profile = () => {
                               <img 
                                 src={order.items[0]?.product.image_url || "/placeholder-image.jpg"} 
                                 alt={order.items[0]?.product.name || "Product"} 
-                                className="w-12 h-12 rounded object-cover"
+                                className="hidden md:block w-12 h-12 object-cover"
                               />
                               
                               <div>
                                 {/* Order Details */}
                                 <div className="flex items-center gap-2">
-                                  <p className="font-semibold">#{order.id}</p>
+                                  {/* <p className="font-semibold">#{order.id}</p> */}
                                   <span className="text-xs px-2 py-1 rounded-full bg-gray-100">
                                     {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                                   </span>
                                 </div>
                                 
                                 {/* Customer Info */}
-                                <p className="text-sm font-medium">{order.customer.full_name}</p>
+                                {/* <p className="text-sm font-medium">{order.customer.full_name}</p> */}
                                 
                                 {/* Store Name */}
                                 <p className="text-xs text-muted-foreground">{order.store.name}</p>
                                 
                                 {/* Order Date */}
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground italic">
                                   {new Date(order.created_at).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'short',

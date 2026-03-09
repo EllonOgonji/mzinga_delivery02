@@ -53,7 +53,7 @@ export const Header = () => {
                 </div>
               ) : 
               <>
-                <Link to="/cart">
+                <Link to="/cart" className='relative'>
                   <ShoppingBag className="h-4 w-4" />
                   {cartCount > 0 && (
                     <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
@@ -101,7 +101,7 @@ export const Header = () => {
                 </div>
               ) : 
               <>
-                <Link to="/cart">
+                <Link to="/cart" className='relative'>
                   <ShoppingBag className="h-4 w-4" />
                   {cartCount > 0 && (
                     <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
@@ -128,6 +128,9 @@ export const Header = () => {
                   {link.label}
                 </a>
               ))}
+              <a href="/profile" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-all duration-400 uppercase tracking-wider">
+                Profile
+              </a>
               <Button
                   variant="ghost"
                   className="text-destructive w-full mt-3 border border-destructive"
