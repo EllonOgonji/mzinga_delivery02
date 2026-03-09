@@ -74,9 +74,17 @@ config :phoenix, :json_library, Jason
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
 
+# Frontend URL for password reset emails
+config :mzinga_delivery,
+  frontend_url: System.get_env("FRONTEND_URL", "https://mzinga-delivery.vercel.app")
+
 # Default CORS settings (development-friendly). Override in runtime.exs
 config :cors_plug,
-  origin: ["http://localhost:8080", "http://localhost:3000"],
+  origin: [
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "https://mzinga-delivery.vercel.app"
+  ],
   max_age: 86_400,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   headers: ["authorization", "content-type", "accept"],
