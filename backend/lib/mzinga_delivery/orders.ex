@@ -408,23 +408,51 @@ defmodule MzingaDelivery.Orders do
               delivery_lat = Map.get(attrs, "delivery_lat")
               delivery_lng = Map.get(attrs, "delivery_lng")
 
+              require Logger
+
+              Logger.info(
+                "Checkout delivery calc: delivery_lat=#{inspect(delivery_lat)}, delivery_lng=#{inspect(delivery_lng)}, store_lat=#{inspect(store.latitude)}, store_lng=#{inspect(store.longitude)}"
+              )
+
               # Try to calculate delivery fee
               delivery_fee =
                 if is_nil(delivery_lat) or is_nil(delivery_lng) do
+                  Logger.warning(
+                    "Checkout: delivery_lat or delivery_lng is nil, defaulting delivery_fee to 0"
+                  )
+
                   Decimal.new(0)
                 else
-                  case MzingaDelivery.Delivery.Calculator.calculate_delivery(
-                         store.latitude,
-                         store.longitude,
-                         delivery_lat,
-                         delivery_lng
-                       ) do
-                    {:ok, result} -> Decimal.from_float(result.fee)
-                    _ -> Decimal.new(0)
+                  if is_nil(store.latitude) or is_nil(store.longitude) do
+                    Logger.warning(
+                      "Checkout: Store #{store_id} has nil latitude/longitude, defaulting delivery_fee to 0"
+                    )
+
+                    Decimal.new(0)
+                  else
+                    case MzingaDelivery.Delivery.Calculator.calculate_delivery(
+                           store.latitude,
+                           store.longitude,
+                           delivery_lat,
+                           delivery_lng
+                         ) do
+                      {:ok, result} ->
+                        fee = Decimal.from_float(result.fee)
+                        Logger.info("Checkout: Delivery fee calculated = #{inspect(fee)}")
+                        fee
+
+                      {:error, reason} ->
+                        Logger.error("Checkout: Delivery calculation failed: #{inspect(reason)}")
+                        Decimal.new(0)
+                    end
                   end
                 end
 
               total_price = Decimal.add(items_total, delivery_fee)
+
+              Logger.info(
+                "Checkout: items_total=#{inspect(items_total)}, delivery_fee=#{inspect(delivery_fee)}, total_price=#{inspect(total_price)}"
+              )
 
               # Prepare Order Items attrs
               order_items_attrs =
