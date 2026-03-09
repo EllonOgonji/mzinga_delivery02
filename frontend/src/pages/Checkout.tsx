@@ -30,48 +30,21 @@ const steps = [
 export default function Checkout() {
   const {user} = useAuth()
   const navigate = useNavigate();
-  const { cart, cartTotal, cartCount, clearCart } = useCart();
+  const { cart, cartTotal, cartCount, clearCart, isCartLoading } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState('Lurambi');
-  const [phone, setPhone] = useState('');
-  const [paymentPhone, setPaymentPhone] = useState('')
+  const [phone, setPhone] = useState(user.phone_number);
+  const [paymentPhone, setPaymentPhone] = useState(phone)
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false)
 
-  if (cartCount === 0) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center py-16">
-          <div className="text-center space-y-6">
-            <h1 className="text-3xl font-bold">Your cart is empty</h1>
-            <Button asChild className="bg-accent hover:bg-accent/90">
-              <Link to="/">Start Shopping</Link>
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // const cartByShop = cart.reduce((acc, item) => {
-  //   if (!acc[item.store.id]) {
-  //     acc[item.store.id] = [];
-  //   }
-  //   acc[item.store.id].push(item);
-  //   return acc;
-  // }, {} as Record<number, typeof cart>);
-
-  // const shopIds = Object.keys(cartByShop).map(Number);
-
   const cartByShop = useMemo(() => {
     return cart.reduce((acc, item) => {
-      if (!acc[item.store.id]) {
-        acc[item.store.id] = [];
+      if (!acc[item.product.store_id]) {
+        acc[item.product.store_id] = [];
       }
-      acc[item.store.id].push(item);
+      acc[item.product.store_id].push(item);
       return acc;
     }, {} as Record<number, typeof cart>);
   }, [cart]);
@@ -91,37 +64,9 @@ export default function Checkout() {
 
   const isMounted = useRef(true);
 
-//  const shopsData = useMemo(() => {
-//     return shopIds.map(shopId => {
-//       const shop = allShops.find(s => s.id === shopId);
-//       const shopItems = cartByShop[shopId];
-//       const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      
-//       const {data} = shop && calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude }, shopId)
-      
-//       const distance = shop
-//         ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
-//         : 0;
-      
-//       const shopTotal = shopSubtotal + data.deliveryFee;
-
-//       return {
-//         shopId,
-//         shop,
-//         items: shopItems,
-//         subtotal: shopSubtotal,
-//         deliveryFee: data.deliveryFee,
-//         distance: data.distance_km,
-//         total: shopTotal
-//       };
-//     });
-//   }, [allShops, cartByShop, shopIds]);
-
   const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
   const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
   const orderTotal = cartTotal + totalDeliveryFees;
-
-  console.log(shopsData)
 
   const handlePlaceOrder = async () => {
     setLoading(true)
@@ -134,27 +79,6 @@ export default function Checkout() {
 
     if (loading) return;
 
-    for (const shopData of shopsData) {
-      const orderPayload = {
-        order: {
-          store_id: shopData.shopId,
-          payment_phone: paymentPhone,
-          items: shopData.items.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            subtotal: (item.quantity * Number(item.price)),
-          })),
-        },
-      };
-
-      for (const item of orderPayload.order.items) {
-        const res = await addItemToCart({
-          id: item.product_id,
-          quantity: item.quantity,
-        });
-      }
-    }
-
     const res = await checkout(String(paymentPhone));
 
     if (res.status == false){
@@ -164,10 +88,46 @@ export default function Checkout() {
     }
 
     toast.success('Order placed successfully!');
-    clearCart();
+
+    const clearCartaRes = await clearCart();
+
+    if(!clearCartaRes.status){
+      const {status} = await clearCart()
+
+      if (!status){
+        toast.error('Failed to clear cart. Please try again')
+      }
+    }
+
     setLoading(false)
     navigate(`/`);
   };
+
+  if (cartCount === 0) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-16">
+          <div className="text-center space-y-6">
+             {isLoadingDelivery || isLoadingShops || isCartLoading ? 
+                (   
+                  <div className="text-center py-16 flex justify-center items-center h-96">
+                    <Loader className="animate-spin h-5 w-5" />
+                  </div>
+                ) : 
+                <>
+                  <h1 className="text-3xl font-bold">Your cart is empty</h1>
+                  <Button asChild className="bg-accent hover:bg-accent/90">
+                    <Link to="/">Start Shopping</Link>
+                  </Button>
+                </>
+              }
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -234,9 +194,8 @@ export default function Checkout() {
                       <Input
                         id="phone"
                         value={phone}
-                        defaultValue={user.phone_number}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+254712345678"
+                        placeholder={user.phone_number}
                         className="mt-2"
                       />
                     </div>
@@ -244,7 +203,7 @@ export default function Checkout() {
                     <div>
                       <Label>Delivery Method</Label>
                       <RadioGroup defaultValue="standard" className="mt-2 space-y-3">
-                        <div className="flex items-center space-x-2 border rounded-lg p-4">
+                        <div className="flex items-center space-x-2 border p-4">
                           <RadioGroupItem value="standard" id="standard" />
                           <Label htmlFor="standard" className="flex-1 cursor-pointer">
                             <p className="font-medium">Standard Delivery</p>
@@ -304,7 +263,6 @@ export default function Checkout() {
                           <Input
                             id="mpesa-phone"
                             value={paymentPhone}
-                            defaultValue={phone}
                             onChange={(e) => setPaymentPhone(e.target.value)}
                             className="mt-2"
                           />
@@ -382,16 +340,16 @@ export default function Checkout() {
                         return (
                           <div key={item.id} className="flex gap-3 text-sm">
                             <img
-                              src={item.image_url}
-                              alt={item.name}
+                              src={item.product.image_url}
+                              alt={item.product.name}
                               className="h-16 w-16 object-cover rounded"
                             />
                             <div className="flex-1">
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                              <p className="font-medium">{item.product.name}</p>
+                              <p className="text-muted-foreground">Qty: {Number(item.quantity)}</p>
                             </div>
                             <p className="font-medium">
-                              KES. {(item.price * item.quantity).toFixed(2)}
+                              KES. {(Number(item.unit_price) * Number(item.quantity)).toFixed(2)}
                             </p>
                           </div>
                         );

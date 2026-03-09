@@ -1,4 +1,4 @@
-import { ShoppingBag, Heart, User, Sun, Moon, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, Heart, User, Sun, Moon, Search, Menu, X, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
@@ -18,7 +18,7 @@ import { useState } from 'react';
 export const Header = () => {
   const { isDark, toggleTheme } = useTheme();
   const {logout} = useAuth();
-  const { cartCount } = useCart();
+  const { cartCount, isCartLoading } = useCart();
   const [searchTerm, setSearchTerm] = useState('');
 
   const navLinks = [
@@ -46,14 +46,23 @@ export const Header = () => {
           ))}
 
           <button className="relative text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Cart">
-            <Link to="/cart">
-              <ShoppingBag className="h-4 w-4" />
-              {cartCount > 0 && (
-                <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
-                  {cartCount}
-                </Badge>
-              )}
-            </Link>
+            { isCartLoading ? 
+              (   
+                <div className="text-center py-16 flex justify-center items-center h-96">
+                  <Loader className="animate-spin h-5 w-5" />
+                </div>
+              ) : 
+              <>
+                <Link to="/cart">
+                  <ShoppingBag className="h-4 w-4" />
+                  {cartCount > 0 && (
+                    <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
+                      {cartCount}
+                    </Badge>
+                  )}
+                </Link>
+              </>
+            }
           </button>
 
           <button onClick={toggleTheme} className="text-muted-foreground hover:text-foreground transition-all duration-400" aria-label="Toggle theme">
@@ -85,14 +94,23 @@ export const Header = () => {
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <button className="text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-400" aria-label="Cart">
-            <Link to="/cart">
-              <ShoppingBag className="h-5 w-5" />
-              {cartCount > 0 && (
-                <Badge className="absolute top-3 right-14 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
-                  {cartCount}
-                </Badge>
-              )}
-            </Link>
+            { isCartLoading ? 
+              (   
+                <div className="text-center py-16 flex justify-center items-center h-96">
+                  <Loader className="animate-spin h-5 w-5" />
+                </div>
+              ) : 
+              <>
+                <Link to="/cart">
+                  <ShoppingBag className="h-4 w-4" />
+                  {cartCount > 0 && (
+                    <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent">
+                      {cartCount}
+                    </Badge>
+                  )}
+                </Link>
+              </>
+            }
           </button>
           <button className="text-foreground" onClick={() => setOpen(!open)}>
             {open ? <X size={18} /> : <Menu size={18} />}

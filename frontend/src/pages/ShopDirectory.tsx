@@ -104,7 +104,7 @@ const ShopDirectory = () => {
                 return (
                   <Card key={shop.id} className="group hover:shadow-lg transition-all duration-300">
                     <CardContent className="p-0">
-                      <Link to={`/shop/${shop.id}`}>
+                      <Link to={`/shop/${shop.id}`} className="relative">
                         {/* Banner */}
                         <div className="relative h-32 bg-gradient-hero overflow-hidden">
                           <img
@@ -112,18 +112,19 @@ const ShopDirectory = () => {
                             alt=""
                             className="w-full h-full object-cover"
                           />
-                          {/* Logo */}
-                          <div className="absolute bottom-0 left-4 translate-y-1/2">
-                            <img
-                              src={shop.logo}
-                              alt=""
-                              className="w-16 h-16 rounded-full border-4 border-background"
-                            />
-                          </div>
+                        </div>
+
+                        {/* Logo */}
+                        <div className="absolute z-2 bottom-32 left-4 translate-y-1/2">
+                          <img
+                            src={shop.logo}
+                            alt=""
+                            className="w-16 h-16 rounded-full border-4 border-background"
+                          />
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 pt-10">
+                        <div className="relative inset-0 z-1 p-4 pt-10">
                           <div className="mb-3">
                             <h3 className="font-semibold text-lg mb-1">{shop.name}</h3>
                             <div className="flex flex-wrap gap-1 mb-2">

@@ -1,10 +1,11 @@
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product } from '@/types';
 import { mockShops } from '@/data/mockData';
 import { useCart } from '@/contexts/CartContext';
+import { useState } from 'react';
 
 interface ProductCardProps {
   product: any;
@@ -12,12 +13,15 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const [loading, setLoading] = useState(false)
   const discount = product.compareAtPrice
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
   
-  const handleAddToCart = () => {
-    addToCart(product)
+  const handleAddToCart = async () => {
+    setLoading(true)
+    await addToCart(product, 1)
+    setLoading(false)
   }
 
   return (
@@ -83,8 +87,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             className="w-full bg-accent hover:bg-accent/90"
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Add to Cart
+            {
+              loading ? 
+              <Loader className="animate-spin h-5 w-5" /> 
+              : 
+              <>
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Add to Cart
+              </>
+            }
           </Button>
         </div>
       </div>
