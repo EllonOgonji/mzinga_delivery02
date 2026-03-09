@@ -300,89 +300,89 @@ const VendorOrders = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-             {isOrdersLoading ? 
-            (   
-              <div className="text-center py-16 flex justify-center items-center h-96">
-                <Loader className="animate-spin h-5 w-5 mr-3" />
-              </div>
-            ) : 
-              <>
-                <div className="hidden md:block border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Items</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Payment</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orders.map((order) => (
-                        <TableRow key={order.id}>
-                          {/* <TableCell>
-                            <div>
-                              <p className="font-medium">{order.customer}</p>
-                              <p className="text-sm text-muted-foreground">{order.phone}</p>
-                            </div>
-                          </TableCell> */}
-                          <TableCell className="text-sm">{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell>{order.items.length} items</TableCell>
-                          <TableCell className="font-medium">KES. {Number(order.total_price).toFixed(2)}</TableCell>
-                          <TableCell>
-                            <div>
-                              <Badge variant="outline" className="text-xs">{order.payment_status}</Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>{getStatusBadge(order.order_status)}</TableCell>
-                          <TableCell>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View
-                                </Button>
-                              </DialogTrigger>
-                              <OrderDetailDialog order={order} />
-                            </Dialog>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+            {isOrdersLoading ? 
+              (   
+                <div className="text-center py-16 flex justify-center items-center h-96">
+                  <Loader className="animate-spin h-5 w-5 mr-3" />
                 </div>
+              ) : 
+                <>
+                  <div className="hidden md:block border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Items</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead>Payment</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            {/* <TableCell>
+                              <div>
+                                <p className="font-medium">{order.customer}</p>
+                                <p className="text-sm text-muted-foreground">{order.phone}</p>
+                              </div>
+                            </TableCell> */}
+                            <TableCell className="text-sm">{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>{order.items.length} items</TableCell>
+                            <TableCell className="font-medium">KES. {Number(order.total_price).toFixed(2)}</TableCell>
+                            <TableCell>
+                              <div>
+                                <Badge variant="outline" className="text-xs">{order.payment_status}</Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(order.order_status)}</TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                </DialogTrigger>
+                                <OrderDetailDialog order={order} />
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
-                <div className="md:hidden border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell>{getStatusBadge(order.order_status)}</TableCell>
-                          <TableCell>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="w-full">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View
-                                </Button>
-                              </DialogTrigger>
-                              <OrderDetailDialog order={order} />
-                            </Dialog>
-                          </TableCell>
+                  <div className="md:hidden border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell>{getStatusBadge(order.order_status)}</TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="w-full">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                </DialogTrigger>
+                                <OrderDetailDialog order={order} />
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
             }
           </TabsContent>
         </Tabs>

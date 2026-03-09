@@ -1,7 +1,7 @@
 import { VendorLayout } from "@/components/vendor/VendorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, ShoppingBag, Eye, Star, TrendingUp, TrendingDown, Package, AlertCircle } from "lucide-react";
+import { DollarSign, ShoppingBag, Eye, Star, TrendingUp, TrendingDown, Package, AlertCircle, Loader } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import {
@@ -48,7 +48,7 @@ type Shop = {
 const Dashboard = () => {
   const [userData, setUserData] = useState(JSON.parse(localStorage.getItem("user")))
 
-  const { data: shopData = {} } = useQuery({
+  const { data: shopData = {}, isLoading: isShopDataLoading } = useQuery({
     queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user')).id],
     queryFn: async () => {
       const {status, error, data} = await getVendorShops(JSON.parse(localStorage.getItem('user')).id)
@@ -152,7 +152,17 @@ const Dashboard = () => {
               day: "numeric",
             })}</p>
             <div className="mt-2 flex items-center gap-2">
-              {shopData.is_verified ? (<Badge className="bg-green-500">Your shop is verified</Badge>) : (<Badge className="bg-red-500">Your shop is not verified</Badge>)}
+              {isShopDataLoading ? 
+                (
+                  <Loader className="animate-spin h-5 w-5 mr-3" />
+                ) : 
+                <>
+                  { shopData.is_verified ? 
+                    (<Badge className="bg-green-500">Your shop is verified</Badge>) 
+                    : (<Badge className="bg-red-500">Your shop is not verified</Badge>)
+                  }
+                </>
+              }
             </div>
           </div>
           {/* <Select defaultValue="week">
