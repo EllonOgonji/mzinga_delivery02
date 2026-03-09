@@ -9,6 +9,8 @@ config :mzinga_delivery, MzingaDelivery.Repo,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: String.to_integer(System.get_env("DB_POOL_SIZE") || "2"),
+  queue_target: 5000,
+  queue_interval: 5000,
   ssl: [verify: :verify_none],
   socket_options: [:inet]
 
