@@ -66,6 +66,8 @@ if config_env() == :prod do
       ssl: [verify: :verify_none],
       url: database_url,
       pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
+      queue_target: 5000,
+      queue_interval: 5000,
       # Required for Supabase Transaction Pooler (port 6543)
       prepare: :unnamed,
       socket_options: maybe_ipv6
