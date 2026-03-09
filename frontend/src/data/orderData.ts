@@ -43,6 +43,46 @@ export const addItemToCart = async function (item) {
     });
 };
 
+export const removeItemFromCart = async function (item) {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart/items`;
+
+    return fetch(url,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({product_id: item.id, quantity: item.quantity}),
+    }).then(response => response.json()).then(data => {
+        console.log('item added to cart:');
+        return data.status;
+    }).catch(error => {
+        console.error('Error:', error);
+        return [];
+    });
+};
+
+export const updateCartItem = async function (item) {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart/items`;
+
+    return fetch(url,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({product_id: item.id, quantity: item.quantity}),
+    }).then(response => response.json()).then(data => {
+        console.log('item added to cart:');
+        return data.status;
+    }).catch(error => {
+        console.error('Error:', error);
+        return [];
+    });
+};
+
+
+
 export const checkout = async function (paymentPhoneNumber: string) {
     let url = `${import.meta.env.VITE_BASE_URL}/api/checkout`;
 

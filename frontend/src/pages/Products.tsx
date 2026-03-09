@@ -16,7 +16,7 @@ import { Slider } from '@/components/ui/slider';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
-import { Filter, Grid, List, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Filter, Grid, List, X, ChevronDown, ChevronUp, Search, Loader } from 'lucide-react';
 import { Product, ProductFilters } from '@/types';
 import { getAllProducts } from '@/data/productData';
 import { Pagination, PaginationContent,
@@ -102,73 +102,77 @@ export default function Products() {
       max: 0
     }
    })
+   setIsFilterOpen(false)
   };
 
-  const FilterSidebar = () => (
-    <div className="space-y-6">
-      {/* Category Filter */}
-      <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('categories')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Categories</h3>
-          {expandedSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.categories && (
-          <div className="space-y-2">
-            {categories.map(category => (
-              <div key={category} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`category-${category}`}
-                  checked={selectedCategory == category}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setPaginationSettings({...paginationSettings, category: category})
-                    }
-                  }}
-                />
-                <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
-                  {category}
-                </Label>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Price Range */}
-      <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('price')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Price Range</h3>
-          {expandedSections.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.price && (
-          <div className="space-y-4">
-            {/* <Slider
-              value={priceRange}
-              onValueChange={(value) => {
-                setPriceRange(value);
-                setMinPrice(value[0].toString());
-                setMaxPrice(value[1].toString());
-              }}
-              max={500}
-              step={5}
+  const DesktopFilters = () => (
+    <div className='grid grid-cols-1 md:grid-cols-10 gap-4'>
+      <div className="md:col-span-5 md:mt-7">
+        <div className="relative w-full flex gap-2">
+          <form className='flex items-center gap-2 w-full' onSubmit={(e) => {e.preventDefault(); setIsFilterOpen(false); setPaginationSettings({...paginationSettings, searchQuery: searchTermRef.current.value})}}>
+            <Input
+              ref={searchTermRef}
+              name='searchTerm'
+              type="search"
+              placeholder="Search products"
               className="w-full"
-            /> */}
-          </div>
-        )}
+            />
+            <Button type='submit' variant="outline">
+              <Search/>
+            </Button>
+          </form>
+        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="space-y-2">
+      <div className="md:col-span-1">
+        <div className="flex flex-col items-start justify-center gap-2">
+          <Label className='text-sm text-muted-foreground font-light'>Category</Label>
+          <Select value={paginationSettings.category} onValueChange={(value) => setPaginationSettings({...paginationSettings, category: value})}>
+            <SelectTrigger className="w-full rounded-none">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>{category}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 md:col-span-2">
+        <div className='flex flex-col'>
+          <Label className='mb-2 text-sm text-muted-foreground font-light'>Min price</Label>
+          <Input
+            type="number"
+            placeholder="Min price"
+            value={minPrice}
+            onChange={(e) => {
+              setPaginationSettings({...paginationSettings, priceRange: {...paginationSettings.priceRange, min: Number(e.target.value)}})
+            }}
+            className="w-full"
+          />
+        </div>
+        <div className='flex flex-col'>
+          <Label className='mb-2 text-sm text-muted-foreground font-light'>Max price</Label>
+            <Input
+            type="number"
+            placeholder="Max price"
+            value={maxPrice}
+            onChange={(e) => {
+            setPaginationSettings({...paginationSettings, priceRange: {...paginationSettings.priceRange, max: Number(e.target.value)}})
+            }}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2 col-span-2 flex items-end">
         <Button variant="outline" className="w-full" onClick={clearAllFilters}>
           Clear All Filters
         </Button>
       </div>
+
     </div>
   );
 
@@ -176,7 +180,7 @@ export default function Products() {
     <div className='grid grid-cols-1 md:grid-cols-9 gap-4'>
       <div className="md:col-span-6 md:mt-7">
         <div className="relative w-full flex gap-2">
-          <form className='flex items-center gap-2 w-full' onSubmit={(e) => {e.preventDefault(); setPaginationSettings({...paginationSettings, searchQuery: searchTermRef.current.value})}}>
+          <form className='flex items-center gap-2 w-full' onSubmit={(e) => {e.preventDefault(); setIsFilterOpen(false); setPaginationSettings({...paginationSettings, searchQuery: searchTermRef.current.value})}}>
             <Input
               ref={searchTermRef}
               name='searchTerm'
@@ -235,6 +239,12 @@ export default function Products() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Button variant="outline" className="w-full" onClick={clearAllFilters}>
+          Clear All Filters
+        </Button>
+      </div>
+
     </div>
   );
 
@@ -244,12 +254,6 @@ export default function Products() {
 
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="flex gap-6">
-          {/* Desktop Sidebar */}
-          {/* <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-20">
-              <FilterSidebar />
-            </div>
-          </aside> */}
 
           {/* Main Content */}
           <div className="flex-1">
@@ -257,25 +261,7 @@ export default function Products() {
             <div className="flex md:flex-col items-end md:items-start justify-between gap-4 mb-6">
               <div className="flex items-center justify-between gap-4">
 
-                {/* Mobile Filter Button */}
-                {/* <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="lg:hidden">
-                      <Filter className="h-4 w-4" />
-
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80 overflow-y-auto">
-                    <SheetHeader>
-                      <SheetTitle>Filters</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6">
-                      <FilterSidebar />
-                    </div>
-                  </SheetContent>
-                </Sheet> */}
-
-                {/* Mobile Categories Button */}
+                {/* Mobile filters button */}
                 <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="icon" className="lg:hidden">
@@ -294,7 +280,7 @@ export default function Products() {
               </div>
               
               <div className='hidden md:block'>
-                <MobileSidebar />
+                <DesktopFilters />
               </div>
               
               <h1 className="text-sm uppercase text-accent-foreground">
@@ -304,28 +290,35 @@ export default function Products() {
 
             {/* Product Grid */}
             {products.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="mb-4 text-6xl">🛍️</div>
-                <h2 className="text-2xl font-semibold mb-2">No products found</h2>
-                <p className="text-muted-foreground mb-6">Try adjusting your filters or browse all shops</p>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Suggestions:</p>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>
-                      <Button onClick={clearAllFilters} className="mt-6">
-                        Clear Filters
-                      </Button>
-                    </li>
-                    <li>
-                      <Link to={"/"}>
+              <>
+               {isLoading ? (   
+                <div className="text-center py-16 flex justify-center items-center h-96">
+                  <Loader className="animate-spin h-5 w-5 mr-3" />
+                </div>) : 
+                <div className="text-center py-16">
+                  <div className="mb-4 text-6xl">🛍️</div>
+                  <h2 className="text-2xl font-semibold mb-2">No products found</h2>
+                  <p className="text-muted-foreground mb-6">Try adjusting your filters or browse all shops</p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Suggestions:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>
                         <Button onClick={clearAllFilters} className="mt-6">
-                          View all shops
+                          Clear Filters
                         </Button>
-                      </Link>
-                    </li>
-                  </ul>
+                      </li>
+                      <li>
+                        <Link to={"/"}>
+                          <Button onClick={clearAllFilters} className="mt-6">
+                            View all shops
+                          </Button>
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
+               }
+              </>
             ) : (
               <div className={'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6'}>
                 {products.map(product => (
