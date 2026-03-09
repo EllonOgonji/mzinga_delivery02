@@ -77,8 +77,6 @@ export default function Checkout() {
       return;
     }
 
-    if (loading) return;
-
     const res = await checkout(String(paymentPhone));
 
     if (res.status == false){
