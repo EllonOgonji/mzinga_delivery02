@@ -382,6 +382,8 @@ defmodule MzingaDelivery.Orders do
   Splits items by store, creates one order per store, and one payment for the total.
   """
   def create_unified_checkout(user, attrs \\ %{}) do
+    require Logger
+    Logger.info("Checkout attrs received: #{inspect(attrs)}")
     payment_phone = Map.get(attrs, "payment_phone") || user.phone_number
 
     # Get Cart
@@ -498,6 +500,10 @@ defmodule MzingaDelivery.Orders do
           # Initiate M-Pesa STK Push
           # Use short ref for AccountReference
           ref_id = "GRP-#{String.slice(checkout_group_id, 0, 8)}"
+
+          Logger.info(
+            "Checkout: grand_total for STK push = #{inspect(grand_total)}, phone = #{inspect(payment_phone)}"
+          )
 
           case MpesaService.initiate_stk_push(payment_phone, grand_total, ref_id) do
             {:ok, mpesa_response} ->
