@@ -20,6 +20,7 @@ import { getAllShops } from '@/data/shopData';
 import { checkout, addItemToCart } from '@/data/orderData';
 import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
 import useAuth from "@/hooks/useAuth";
+import { useClientLocation } from '@/hooks/useClientLocation';
 
 const steps = [
   { id: 1, name: 'Delivery', completed: false, active: true },
@@ -31,6 +32,7 @@ export default function Checkout() {
   const {user} = useAuth()
   const navigate = useNavigate();
   const { cart, cartTotal, cartCount, clearCart, isCartLoading } = useCart();
+  const { latitude, longitude, error, locationLoading, getLocation } = useClientLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState('Lurambi');
   const [phone, setPhone] = useState(user.phone_number);
@@ -38,6 +40,15 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false)
+  const [shouldFetchDeliveryInformation, setShouldFetchDeliveryInformation] = useState(false)
+
+  useEffect(() => {
+    // console.log(latitude, longitude)
+
+    if(latitude && longitude){
+      setShouldFetchDeliveryInformation(true)
+    }
+  }, [latitude, longitude])
 
   const cartByShop = useMemo(() => {
     return cart.reduce((acc, item) => {
@@ -62,11 +73,20 @@ export default function Checkout() {
     enabled: shopIds.length > 0
   });
 
-  const isMounted = useRef(true);
+  // const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
+  const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(
+    shopIds, 
+    allShops, 
+    cartByShop, 
+    latitude, 
+    longitude,
+    { enabled: shouldFetchDeliveryInformation } // Skip fetching if conditions not met
+  );
 
-  const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
-  const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
-  const orderTotal = cartTotal + totalDeliveryFees;
+  const totalDeliveryFees = useMemo(() => {
+    if (!shopsData?.length) return 0;
+    return shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
+  }, [shopsData]);
 
   const handlePlaceOrder = async () => {
     setLoading(true)
@@ -77,7 +97,7 @@ export default function Checkout() {
       return;
     }
 
-    const res = await checkout(String(paymentPhone));
+    const res = await checkout(String(paymentPhone), String(latitude), String(longitude));
 
     if (res.status == false){
       toast.error('An issue occurred while creating your order')
@@ -89,14 +109,6 @@ export default function Checkout() {
 
     const clearCartaRes = await clearCart();
 
-    if(!clearCartaRes.status){
-      const {status} = await clearCart()
-
-      if (!status){
-        toast.error('Failed to clear cart. Please try again')
-      }
-    }
-
     setLoading(false)
     navigate(`/`);
   };
@@ -107,7 +119,7 @@ export default function Checkout() {
         <Header />
         <main className="flex-1 flex items-center justify-center py-16">
           <div className="text-center space-y-6">
-             {isLoadingDelivery || isLoadingShops || isCartLoading ? 
+             { isLoadingShops || isCartLoading ? 
                 (   
                   <div className="text-center py-16 flex justify-center items-center h-96">
                     <Loader className="animate-spin h-5 w-5" />
@@ -175,15 +187,22 @@ export default function Checkout() {
                     <div>
                       <Label htmlFor="address">Delivery Address</Label>
                       <div className="flex gap-2 mt-2">
-                        <Input
+                        {/* <Input
                           id="address"
                           value={deliveryAddress}
                           onChange={(e) => setDeliveryAddress(e.target.value)}
                           placeholder="Enter delivery address"
-                        />
-                        <Button variant="outline" size="icon">
-                          <MapPin className="h-4 w-4" />
+                        /> */}
+                        <Button variant="outline" size="default" onClick={getLocation}>
+                          {locationLoading ? 
+                          (   
+                            <Loader className="animate-spin h-5 w-5" />
+                          ) : 
+                            // <MapPin className="h-4 w-4" />
+                            "Set delivery location"
+                        }
                         </Button>
+
                       </div>
                     </div>
 
@@ -402,7 +421,7 @@ export default function Checkout() {
                   <Button
                     className="w-full bg-accent hover:bg-accent/90"
                     onClick={handlePlaceOrder}
-                    disabled={!agreedToTerms}
+                    disabled={!agreedToTerms || !latitude || !longitude}
                   >
                     {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Place Order'}
                   </Button>

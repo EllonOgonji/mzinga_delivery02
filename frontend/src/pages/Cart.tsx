@@ -42,10 +42,6 @@ export default function Cart() {
     enabled: shopIds.length > 0
   });
 
-  const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
-  const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
-  const orderTotal = cartTotal + totalDeliveryFees;
-
   // List of shop ids in the cart
   // for each id: fetch the shop details, calculate delivery fee, calculate the cumulative totals
 
@@ -85,14 +81,11 @@ export default function Cart() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content - Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {shopsData.map(({ shopId, shop, items, subtotal, total, distanceFromUser, deliveryFee }) => {
-                if (!shop) return null;
-
-                const shopItems = items;
-                const shopSubtotal = subtotal;
-                const shopTotal = total;
+              {allShops.length > 0 && shopIds.map(id => {
+                const shop = allShops.find(shop => shop.id == id)
+                
                 return (
-                  <Card key={shopId} className="p-6">
+                  <Card key={shop.id} className="p-6">
                     
                     <div className="flex items-center justify-between mb-4 pb-4 border-b">
                       <div className="flex items-center gap-3 w-full">
@@ -100,7 +93,7 @@ export default function Cart() {
                           <Store className="h-6 w-6" />
                         </div>
                         <div className='flex flex-col w-full'>
-                          <Link to={`/shop/${shopId}`} className="font-semibold hover:text-accent">
+                          <Link to={`/shop/${shop.id}`} className="font-semibold hover:text-accent">
                             {shop?.name}
                           </Link>
                           <Badge variant="outline" className="w-max ml-0 mt-2 text-xs border-success text-success">
@@ -110,22 +103,8 @@ export default function Cart() {
                       </div>
                     </div>
 
-                    {/* {
-                            "id": 27,
-                            "product": {
-                                "id": 21,
-                                "name": "Burger",
-                                "store_id": 80,
-                                "image_url": "https://imgs.search.brave.com/NYn-JEIE_LoKPQ3noBW4eyir59oRLDclkUmZg_n0JsI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTM5/ODg1NDg0My9waG90/by9mcmllZC1jaGlj/a2VuLXNhbmR3aWNo/LmpwZz9zPTYxMng2/MTImdz0wJms9MjAm/Yz1iaW5QZldUVElR/MzN5NnVVU21MSkdi/X2t4M3ZvMmExN1RN/LWJRbHNDamlrPQ"
-                            },
-                            "product_id": 21,
-                            "quantity": 2,
-                            "subtotal": "1000.00",
-                            "unit_price": "500.00"
-                        } */}
-                    
                     <div className="space-y-4">
-                      {shopItems.map(item => {
+                      {cart.filter(items => items.product.store_id == id).map(item => {
                         if (!item) return null;
 
                         return (
@@ -142,7 +121,7 @@ export default function Cart() {
                             
                             <div className="flex-1 min-w-0">
                               <Link
-                                to={`/product/${item.product.id.id}`}
+                                to={`/product/${item.product.id}`}
                                 className="font-semibold hover:text-accent line-clamp-1"
                               >
                                 {item.product.name}
@@ -162,7 +141,7 @@ export default function Cart() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.product.id, Number(item.quantity) - 1)}
                                 >
                                   -
                                 </Button>
@@ -170,15 +149,15 @@ export default function Cart() {
                                 <Input
                                   type="number"
                                   min="1"
-                                  value={item.quantity}
-                                  onChange={(e) => updateQuantity(item.productid, parseInt(e.target.value) || 1)}
+                                  value={Number(item.quantity)}
+                                  onChange={(e) => updateQuantity(item.product.id, parseInt(e.target.value) || 1)}
                                   className="w-16 text-center"
                                 />
 
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {updateQuantity(item.product.id, item.quantity + 1);}}
+                                  onClick={() => {updateQuantity(item.product.id, Number(item.quantity) + 1);}}
                                 >
                                   +
                                 </Button>
@@ -188,7 +167,7 @@ export default function Cart() {
                             
                             <div className="h-max flex flex-col items-end gap-2">
                               <p className="font-bold text-lg">
-                                KES. {(Number(item.unit_price) * item.quantity)}
+                                KES. {(Number(item.unit_price) * Number(item.quantity))}
                               </p>
                             </div>
                           </div>
@@ -217,7 +196,7 @@ export default function Cart() {
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-1">
               <Card className="p-6 sticky top-24">
-                <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                {/* <h2 className="text-xl font-bold mb-4">Order Summary</h2>
 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
@@ -235,7 +214,7 @@ export default function Cart() {
                     <span>Order Total:</span>
                     <span>KES. {(cartTotal + totalDeliveryFees)}</span>
                   </div>
-                </div>
+                </div> */}
 
                 <Button className="w-full mt-6 bg-accent hover:bg-accent/90" size="lg" asChild>
                   <Link to="/checkout">Proceed to Checkout</Link>
