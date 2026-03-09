@@ -17,13 +17,14 @@ import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, clearCart, cartTotal, cartCount } = useCart();
+  const [loading, setLoading] = useState(false)
   
   const cartByShop = useMemo(() => {
     return cart.reduce((acc, item) => {
-      if (!acc[item.store.id]) {
-        acc[item.store.id] = [];
+      if (!acc[item.product.store_id]) {
+        acc[item.product.store_id] = [];
       }
-      acc[item.store.id].push(item);
+      acc[item.product.store_id].push(item);
       return acc;
     }, {} as Record<number, typeof cart>);
   }, [cart]);
@@ -109,19 +110,31 @@ export default function Cart() {
                       </div>
                     </div>
 
+                    {/* {
+                            "id": 27,
+                            "product": {
+                                "id": 21,
+                                "name": "Burger",
+                                "store_id": 80,
+                                "image_url": "https://imgs.search.brave.com/NYn-JEIE_LoKPQ3noBW4eyir59oRLDclkUmZg_n0JsI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTM5/ODg1NDg0My9waG90/by9mcmllZC1jaGlj/a2VuLXNhbmR3aWNo/LmpwZz9zPTYxMng2/MTImdz0wJms9MjAm/Yz1iaW5QZldUVElR/MzN5NnVVU21MSkdi/X2t4M3ZvMmExN1RN/LWJRbHNDamlrPQ"
+                            },
+                            "product_id": 21,
+                            "quantity": 2,
+                            "subtotal": "1000.00",
+                            "unit_price": "500.00"
+                        } */}
                     
                     <div className="space-y-4">
                       {shopItems.map(item => {
-                        const product = item
-                        if (!product) return null;
+                        if (!item) return null;
 
                         return (
                           <div key={item.id} className="flex gap-4">
                             
-                            <Link to={`/product/${product.id}`} className="flex-shrink-0">
+                            <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
                               <img
-                                src={product.image_url}
-                                alt={product.name}
+                                src={item.product.image_url}
+                                alt={item.product.name}
                                 className="h-20 w-20 object-cover rounded-md"
                               />
                             </Link>
@@ -129,19 +142,19 @@ export default function Cart() {
                             
                             <div className="flex-1 min-w-0">
                               <Link
-                                to={`/product/${product.id}`}
+                                to={`/product/${item.product.id.id}`}
                                 className="font-semibold hover:text-accent line-clamp-1"
                               >
-                                {product.name}
+                                {item.product.name}
                               </Link>
-                              <p className="text-sm text-muted-foreground">KES. {Number(product.price)}</p>
+                              <p className="text-sm text-muted-foreground">KES. {Number(item.unit_price)}</p>
                               
                               <div className="flex items-center gap-2 mt-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="text-destructive"
-                                  onClick={() => removeFromCart(item.id)}
+                                  onClick={() => removeFromCart(item.product.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -149,7 +162,7 @@ export default function Cart() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                                 >
                                   -
                                 </Button>
@@ -158,14 +171,14 @@ export default function Cart() {
                                   type="number"
                                   min="1"
                                   value={item.quantity}
-                                  onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                  onChange={(e) => updateQuantity(item.productid, parseInt(e.target.value) || 1)}
                                   className="w-16 text-center"
                                 />
 
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {updateQuantity(item.id, item.quantity + 1);}}
+                                  onClick={() => {updateQuantity(item.product.id, item.quantity + 1);}}
                                 >
                                   +
                                 </Button>
@@ -175,7 +188,7 @@ export default function Cart() {
                             
                             <div className="h-max flex flex-col items-end gap-2">
                               <p className="font-bold text-lg">
-                                KES. {(product.price * item.quantity)}
+                                KES. {(Number(item.unit_price) * item.quantity)}
                               </p>
                             </div>
                           </div>

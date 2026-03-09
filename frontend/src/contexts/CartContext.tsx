@@ -1,75 +1,108 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CartItem } from '@/types';
+import { CartItem, ReturnData } from '@/types';
 import { toast } from 'sonner';
 import { addItemToCart } from '@/data/orderData';
 import { add } from 'date-fns';
+import { fetchCart, updateCartItem, removeItemFromCart, clearCartItems } from '@/data/orderData';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  addToCart: (item: Omit<CartItem, 'quantity'>, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
-  clearCart: () => void;
+  clearCart: () => Promise<ReturnData>;
   cartTotal: number;
   cartCount: number;
+  isCartLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const stored = localStorage.getItem('cart');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+  const {data: cart = [], isLoading: isCartLoading } = useQuery<CartItem[]>({
+    queryKey: ["cart"],
+    queryFn: async () => {
+      const {status, data, error} = await fetchCart()
 
-  const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
-    // const res = await addItemToCart(item)
-    // toast.success('Added to cart!')
-
-    setCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
-      if (existing) {
-        toast.success('Cart updated!');
-        return prev.map(i =>
-          i.id === item.id
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
-        );
+      if(!status){
+        toast.error("Failed to fetch cart")
+        return []
       }
-      
-      toast.success('Added to cart!');
-      return [...prev, { ...item, quantity: 1 }];
-    });
-  };
 
-  const removeFromCart = (productId: number) => {
-    setCart(prev => prev.filter(i => i.id !== productId));
-    toast.success('Removed from cart');
-  };
+      return data.items
+    },
+  })
 
-  const updateQuantity = (productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
+  const addToCart = async (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
+    const {status, data, error} = await addItemToCart({
+      id: item.id,
+      quantity: quantity
+    })
+
+    if(!status){
+      toast.error("Failed to add item to cart. Please try again")
+      return
     }
-    setCart(prev =>
-      prev.map(i =>
-        i.id === productId ? { ...i, quantity } : i
-      )
-    );
+
+    toast.success("Item added to cart")
+
+    queryClient.invalidateQueries({ queryKey: ['cart'] });   
+
+    return
   };
 
-  const clearCart = () => {
-    setCart([]);
-    toast.success('Cart cleared');
+  const removeFromCart = async (productId: number) => {
+    const {status, data, error} = await removeItemFromCart(productId)
+
+    if(!status){
+      toast.error("Failed to add item to cart. Please try again")
+      return
+    }
+
+    toast.success("Item removed from cart successfully")
+
+    queryClient.invalidateQueries({ queryKey: ['cart'] });   
+
+    return
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const updateQuantity = async (productId: number, quantity: number) => {
+    const {status, data, error} = await addItemToCart({
+      id: productId,
+      quantity: quantity
+    })
+
+    if(!status){
+      toast.error("Failed to update cart item. Please try again")
+      return
+    }
+
+    toast.success("Cart item updated")
+
+    queryClient.invalidateQueries({ queryKey: ['cart'] });   
+    return
+  };
+
+  const clearCart = async (): Promise<ReturnData> => {
+    const {status, data, error} = await clearCartItems()
+
+    if(!status){
+      toast.error("Failed to clear cart. Please try again")
+      return
+    }
+
+    toast.success("Cart cleared successfully")
+
+    queryClient.invalidateQueries({ queryKey: ['cart'] });   
+
+    return
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
+  const cartCount = cart.length;
 
   return (
     <CartContext.Provider value={{
@@ -79,7 +112,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateQuantity,
       clearCart,
       cartTotal,
-      cartCount
+      cartCount,
+      isCartLoading
     }}>
       {children}
     </CartContext.Provider>
