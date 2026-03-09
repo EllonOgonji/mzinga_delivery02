@@ -167,7 +167,7 @@ export const fetchCart = async function () {
 
 
 
-export const checkout = async function (paymentPhoneNumber: string) {
+export const checkout = async function (paymentPhoneNumber: string, latitude, longitude) {
     let url = `${import.meta.env.VITE_BASE_URL}/api/checkout`;
 
     return fetch(url,{
@@ -176,7 +176,7 @@ export const checkout = async function (paymentPhoneNumber: string) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ payment_phone: paymentPhoneNumber }),
+        body: JSON.stringify({ payment_phone: paymentPhoneNumber, delivery_lat: latitude, delivery_lng:  longitude}),
     }).then(response => {
         if (!response.ok){
            throw new Error("Checkout request failed")

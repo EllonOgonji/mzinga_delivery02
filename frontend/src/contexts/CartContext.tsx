@@ -32,7 +32,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return []
       }
 
-      return data.items
+      return data ? data.items : []
     },
   })
 

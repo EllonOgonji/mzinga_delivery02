@@ -7,6 +7,10 @@ type ReturnData = {
   
 }
 
+type Enabled = {
+  enabled: boolean
+}
+
 export const calculateDeliveryFee = async (
   coordinates: { lat: number; lon: number }, 
   storeId: number
@@ -49,11 +53,17 @@ export const calculateDeliveryFee = async (
 };
 
 // Then create a custom hook in your component
-export const useShopDeliveryData = (shopIds: number[], allShops: any[], cartByShop: any) => {
+export const useShopDeliveryData = (shopIds: number[], allShops: any[], cartByShop: any, latitude, longitude, status: Enabled) => {
   const [shopsData, setShopsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (!status.enabled) {
+      return;
+    }
+
+    let isMounted = true; // Prevent state updates if component unmounts
+    
     const fetchDeliveryData = async () => {
       if (shopIds.length === 0 || allShops.length === 0) return;
       
@@ -69,7 +79,7 @@ export const useShopDeliveryData = (shopIds: number[], allShops: any[], cartBySh
           const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
           
           const result = await calculateDeliveryFee(
-            { lat: shop.latitude, lon: shop.longitude }, 
+            { lat: latitude, lon: longitude }, 
             shopId
           );
           
@@ -92,15 +102,25 @@ export const useShopDeliveryData = (shopIds: number[], allShops: any[], cartBySh
         });
         
         const resolvedData = await Promise.all(shopsDataPromises);
-        setShopsData(resolvedData.filter(item => item !== null));
+
+        if (isMounted) {
+          setShopsData(resolvedData.filter(item => item !== null));
+        }
+
       } catch (error) {
         console.error('Error fetching delivery data:', error);
       } finally {
-        setIsLoading(false);
+         if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchDeliveryData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [shopIds, allShops, cartByShop]);
 
   return { shopsData, isLoading };
