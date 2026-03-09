@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { VendorLayout } from "@/components/vendor/VendorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Pencil, Trash2, Copy } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Copy, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Table,
@@ -42,7 +42,7 @@ const ShopProfile = () => {
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [userData, setUserData] = useState<any>(JSON.parse(localStorage.getItem('user') || '{}'));
 
-  const { data: shopData } = useQuery({
+  const { data: shopData, isLoading: isShopDataLoading } = useQuery({
     queryKey: ['store', 'index', userData.id],
     queryFn: async () => {
       const {data} = await getVendorShops(userData.id)
@@ -59,48 +59,56 @@ const ShopProfile = () => {
     <VendorLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex justify-between items-end gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Shop Profile</h1>
+            <h1 className="text-xl md:text-3xl font-bold">Shop Profile</h1>
           </div>
           <Link to="/vendor/shop-profile/edit">
-            <Button size="lg">
-              <Plus className="mr-2 h-4 w-4" />
+            <Button>
               Edit shop
             </Button>
           </Link>
         </div>
 
         {/* Products Table */}
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-            <TableRow>
-                <TableCell className="font-medium">
-                    {shopData?.name}
-                </TableCell>
+        {isShopDataLoading ? 
+          (   
+            <div className="text-center py-16 flex justify-center items-center h-96">
+              <Loader className="animate-spin h-5 w-5 mr-3" />
+            </div>
+          ) : 
+          <>
+            <div className="border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                <TableRow>
+                    <TableCell className="font-medium">
+                        {shopData?.name}
+                    </TableCell>
 
-                <TableCell className="font-medium">
-                    {shopData?.address}
-                </TableCell>
+                    <TableCell className="font-medium">
+                        {shopData?.address}
+                    </TableCell>
 
-                <TableCell>
-                    <span className={`font-medium ${getActiveColour(shopData?.is_verified)}`}>
-                        {shopData?.is_verified ? "Active" : "Inactive"}
-                    </span>
-                </TableCell>
+                    <TableCell>
+                        <span className={`font-medium ${getActiveColour(shopData?.is_verified)}`}>
+                            {shopData?.is_verified ? "Active" : "Inactive"}
+                        </span>
+                    </TableCell>
 
-            </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+                </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        }
 
       </div>
     </VendorLayout>

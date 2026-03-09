@@ -65,11 +65,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             {/* Price */}
             <div className="flex items-baseline gap-2">
               <span className="text-md font-semibold">
-                KES {Number(product.price).toFixed(2)}
+                KES {Number(product.price)}
               </span>
               {product.compareAtPrice && (
                 <span className="text-sm text-muted-foreground line-through">
-                  KES {Number(product.compareAtPrice).toFixed(2)}
+                  KES {Number(product.compareAtPrice)}
                 </span>
               )}
             </div>

@@ -126,7 +126,7 @@ const ProfileForm = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">
+              <h1 className="text-xl md:text-3xl font-bold">
                 Update Shop Profile
               </h1>
             </div>

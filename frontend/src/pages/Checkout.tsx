@@ -19,6 +19,7 @@ import { getAllShops } from '@/data/shopData';
 // import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 import { checkout, addItemToCart } from '@/data/orderData';
 import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
+import useAuth from "@/hooks/useAuth";
 
 const steps = [
   { id: 1, name: 'Delivery', completed: false, active: true },
@@ -27,11 +28,12 @@ const steps = [
 ];
 
 export default function Checkout() {
+  const {user} = useAuth()
   const navigate = useNavigate();
   const { cart, cartTotal, cartCount, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState('Lurambi');
-  const [phone, setPhone] = useState('254712345678');
+  const [phone, setPhone] = useState('');
   const [paymentPhone, setPaymentPhone] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -232,6 +234,7 @@ export default function Checkout() {
                       <Input
                         id="phone"
                         value={phone}
+                        defaultValue={user.phone_number}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+254712345678"
                         className="mt-2"
@@ -301,8 +304,8 @@ export default function Checkout() {
                           <Input
                             id="mpesa-phone"
                             value={paymentPhone}
+                            defaultValue={phone}
                             onChange={(e) => setPaymentPhone(e.target.value)}
-                            placeholder={phone}
                             className="mt-2"
                           />
                           <p className="text-xs text-muted-foreground mt-2">

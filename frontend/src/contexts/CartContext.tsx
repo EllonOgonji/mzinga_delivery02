@@ -29,6 +29,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
     // const res = await addItemToCart(item)
     // toast.success('Added to cart!')
+
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
@@ -39,6 +40,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             : i
         );
       }
+      
       toast.success('Added to cart!');
       return [...prev, { ...item, quantity: 1 }];
     });
