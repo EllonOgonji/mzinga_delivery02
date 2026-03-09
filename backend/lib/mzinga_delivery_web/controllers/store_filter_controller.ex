@@ -21,6 +21,8 @@ defmodule MzingaDeliveryWeb.StoreFilterController do
       name: store.name,
       status: store.status,
       category: store.category,
+      logo: store.logo,
+      banner: store.banner,
       is_verified: store.is_verified,
       inserted_at: store.inserted_at,
       updated_at: store.updated_at
