@@ -223,6 +223,23 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/re
 
 **Status:** 200 OK (Status changes to `rejected`)
 
+**3.4 Update Store Location**
+**Endpoint:** `PATCH /api/admin/stores/:id`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "store": {
+      "latitude": -1.2921,
+      "longitude": 36.8219
+    }
+  }'
+```
+
+**Status:** 200 OK (Returns updated store data)
+
 ---
 
 ### 4. Public Access (Verified)
