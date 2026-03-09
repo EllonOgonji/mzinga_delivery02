@@ -38,7 +38,7 @@ const VendorOrders = () => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: orders = [] } = useQuery<Array<any>>({
+  const { data: orders = [], isLoading: isOrdersLoading } = useQuery<Array<any>>({
     queryKey: ['store', 'orders', JSON.parse(localStorage.getItem('user') || '{}').id],
     queryFn: async () => {
       const res = await getOrders();
@@ -111,7 +111,7 @@ const VendorOrders = () => {
         </div> */}
 
         {/* Items Ordered */}
-        <div>
+        <div className="hidden md:block">
           <h3 className="font-semibold mb-2">Items Ordered</h3>
           <div className="rounded-md border">
             <Table>
@@ -154,6 +154,69 @@ const VendorOrders = () => {
               </TableBody>
             </Table>
           </div>
+        </div>
+
+        {/* Mobile view - cards */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {order.items.map((item: any) => (
+            <div
+              key={item.id}
+              className="bg-white border border-gray-100 shadow-sm overflow-hidden"
+            >
+              {/* Card Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+                <span className="font-semibold text-gray-800 text-sm truncate max-w-[65%]">
+                  {item.product.name}
+                </span>
+                <span className="text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-2 py-0.5">
+                  x{item.quantity}
+                </span>
+              </div>
+
+              {/* Card Body */}
+              <div className="px-4 py-3 flex items-center justify-between gap-3">
+                {/* Pricing */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>Unit</span>
+                    <span className="font-medium text-gray-700">
+                      KES. {Number(item.product.price).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>Total</span>
+                    <span className="font-semibold text-gray-900">
+                      KES. {Number(item.subtotal).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Select */}
+                <div className="ml-auto">
+                  {loading ? (
+                    <Loader className="animate-spin h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Select
+                      value={item.status}
+                      onValueChange={(newStatus) =>
+                        handleOrderItemStatusUpdate(order.id, item.id, newStatus)
+                      }
+                    >
+                      <SelectTrigger className="w-28 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="preparing">Preparing</SelectItem>
+                        <SelectItem value="ready">Ready</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Payment Information */}
@@ -204,8 +267,8 @@ const VendorOrders = () => {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Orders</h1>
-            <p className="text-muted-foreground mt-1">{orders.length} total orders</p>
+            <h1 className="text-xl md:text-3xl font-bold">Orders</h1>
+            <p className="text-muted-foreground mt-1 text-sm md:text-base">{orders.length} total orders</p>
           </div>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
@@ -217,7 +280,7 @@ const VendorOrders = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by order number, customer name..."
+            placeholder="Search by customer name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -226,7 +289,7 @@ const VendorOrders = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="all">
-          <TabsList>
+          <TabsList className="hidden md:block">
             <TabsTrigger value="all">All ({orders.length})</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="confirmed">Confirmed</TabsTrigger>
@@ -237,52 +300,90 @@ const VendorOrders = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      {/* <TableCell>
-                        <div>
-                          <p className="font-medium">{order.customer}</p>
-                          <p className="text-sm text-muted-foreground">{order.phone}</p>
-                        </div>
-                      </TableCell> */}
-                      <TableCell className="text-sm">{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{order.items.length} items</TableCell>
-                      <TableCell className="font-medium">KES. {Number(order.total_price).toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div>
-                          <Badge variant="outline" className="text-xs">{order.payment_status}</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(order.order_status)}</TableCell>
-                      <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                          </DialogTrigger>
-                          <OrderDetailDialog order={order} />
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            {isOrdersLoading ? 
+              (   
+                <div className="text-center py-16 flex justify-center items-center h-96">
+                  <Loader className="animate-spin h-5 w-5 mr-3" />
+                </div>
+              ) : 
+                <>
+                  <div className="hidden md:block border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Items</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead>Payment</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            {/* <TableCell>
+                              <div>
+                                <p className="font-medium">{order.customer}</p>
+                                <p className="text-sm text-muted-foreground">{order.phone}</p>
+                              </div>
+                            </TableCell> */}
+                            <TableCell className="text-sm">{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>{order.items.length} items</TableCell>
+                            <TableCell className="font-medium">KES. {Number(order.total_price).toFixed(2)}</TableCell>
+                            <TableCell>
+                              <div>
+                                <Badge variant="outline" className="text-xs">{order.payment_status}</Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(order.order_status)}</TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                </DialogTrigger>
+                                <OrderDetailDialog order={order} />
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="md:hidden border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-center">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell>{getStatusBadge(order.order_status)}</TableCell>
+                            <TableCell>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="w-full">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                </DialogTrigger>
+                                <OrderDetailDialog order={order} />
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+            }
           </TabsContent>
         </Tabs>
       </div>

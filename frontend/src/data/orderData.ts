@@ -1,4 +1,5 @@
-import { CartItem, Shop, ShopFilters } from "@/types";
+import { CartItem, ReturnData, Shop, ShopFilters } from "@/types";
+import { stat } from "fs";
 
 type Order = {
     "order": {
@@ -34,6 +35,96 @@ export const addItemToCart = async function (item) {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({product_id: item.id, quantity: item.quantity}),
+    }).then(response => {
+        if(!response.ok){
+            throw new Error("Add item to cart failed. Please try again after a few minutes")
+        }
+        return response.json()
+    })
+    .then(data => {
+        return {
+            status: true, 
+            data: null,
+            error: null
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            data: null,
+            error: error.message
+        }
+    });
+};
+
+export const removeItemFromCart = async function (id) {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart/items/${id}`;
+
+    return fetch(url,{
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    }).then(response => {
+        if (!response.ok){
+            throw new Error("Deleting item from cart failed")
+        }
+
+        return {
+            status: true,
+            data: null,
+            error: null
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            data: null,
+            error: error.message
+        }
+    });
+};
+
+export const clearCartItems = async function (): Promise<ReturnData> {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart`;
+
+    return fetch(url,{
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    }).then(response => {
+        if (!response.ok){
+            throw new Error("Clearing cart failed")
+        }
+
+        return {
+            status: true,
+            data: null,
+            error: null
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            data: null,
+            error: error.message
+        }
+    });
+};
+
+export const updateCartItem = async function (item) {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart/items`;
+
+    return fetch(url,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({product_id: item.id, quantity: item.quantity}),
     }).then(response => response.json()).then(data => {
         console.log('item added to cart:');
         return data.status;
@@ -42,6 +133,39 @@ export const addItemToCart = async function (item) {
         return [];
     });
 };
+
+export const fetchCart = async function () {
+    let url = `${import.meta.env.VITE_BASE_URL}/api/cart`;
+
+    return fetch(url,{
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+    }).then(response => {
+        if(!response.ok){
+          throw new Error("Fetch cart failed. Please try again")
+        }
+
+        return response.json()
+    })
+    .then(data => {
+        return {
+            status: true, 
+            data: data.data,
+            error: null
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        return {
+            status: false,
+            data: null, 
+            error: error.message
+        }
+    });
+};
+
+
 
 export const checkout = async function (paymentPhoneNumber: string) {
     let url = `${import.meta.env.VITE_BASE_URL}/api/checkout`;
