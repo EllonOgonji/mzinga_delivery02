@@ -12,7 +12,6 @@ const ProtectedRoute = ({ requiredRole }: Props) => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-
       if (path == "/"){
         navigate("/auth/login", {
           replace: true
@@ -28,30 +27,24 @@ const ProtectedRoute = ({ requiredRole }: Props) => {
           },
         });
       }
-
       return;
     }
 
-    // if (requiredRole) {
-    //   if (requiredRole == "admin"){
-    //     navigate("/admin/dashboard", {
-    //       replace: true
-    //     });
-    //   }else if (requiredRole == "vendor"){
-    //      navigate("/vendor/dashboard", {
-    //       replace: true
-    //     });
-    //   }else if(requiredRole == "customer"){
-    //     navigate("/", {
-    //       replace: true
-    //     });
-    //   }else{
-    //     console.log(requiredRole)
-    //   }
-    // }
+    if (requiredRole && requiredRole !== role) {
+      navigate("/auth/login", {
+        replace: true,
+        state: {
+          authToast: {
+            title: "Unauthorized",
+            description: "You don't have access to this page.",
+          },
+        },
+      });
+      return;
+    }
   }, [isAuthenticated, role, requiredRole, navigate]);
 
-  if (!isAuthenticated || (requiredRole != role)) return null;
+  if (!isAuthenticated || (requiredRole && requiredRole !== role)) return null;
   
   return <Outlet />;
 };

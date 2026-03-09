@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem, ReturnData } from '@/types';
 import { toast } from 'sonner';
 import { addItemToCart } from '@/data/orderData';
-import { add } from 'date-fns';
 import { fetchCart, updateCartItem, removeItemFromCart, clearCartItems } from '@/data/orderData';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -21,6 +20,33 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient()
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!(user?.id && token));
+    } catch {
+      setIsLoggedIn(false);
+    }
+  }, []);
+
+  // Listen for storage changes (e.g. after login)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        const token = localStorage.getItem("token");
+        setIsLoggedIn(!!(user?.id && token));
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const {data: cart = [], isLoading: isCartLoading } = useQuery<CartItem[]>({
     queryKey: ["cart"],
@@ -28,12 +54,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const {status, data, error} = await fetchCart()
 
       if(!status){
-        toast.error("Failed to fetch cart")
         return []
       }
 
       return data ? data.items : []
     },
+    enabled: isLoggedIn,
+    retry: false,
   })
 
   const addToCart = async (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {

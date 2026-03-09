@@ -121,7 +121,7 @@ export const useShopDeliveryData = (shopIds: number[], allShops: any[], cartBySh
     return () => {
       isMounted = false;
     };
-  }, [shopIds, allShops, cartByShop]);
+  }, [shopIds, allShops, cartByShop, latitude, longitude, status.enabled]);
 
   return { shopsData, isLoading };
 };
