@@ -36,7 +36,7 @@ defmodule MzingaDelivery.Payments.MpesaService do
           "Password" => password,
           "Timestamp" => timestamp,
           "TransactionType" => "CustomerPayBillOnline",
-          "Amount" => round(amount),
+          "Amount" => to_mpesa_amount(amount),
           "PartyA" => formatted_phone,
           "PartyB" => shortcode(),
           "PhoneNumber" => formatted_phone,
@@ -51,7 +51,7 @@ defmodule MzingaDelivery.Payments.MpesaService do
 
         headers = [
           {"Content-Type", "application/json"},
-          {"Authorization", "Bearer #{get_access_token()}"}
+          {"Authorization", "Bearer #{get_access_token() || ""}"}
         ]
 
         case HTTPoison.post(
@@ -127,7 +127,6 @@ defmodule MzingaDelivery.Payments.MpesaService do
     end
   end
 
-
   defp get_access_token do
     auth = Base.encode64("#{consumer_key()}:#{consumer_secret()}")
     headers = [{"Authorization", "Basic #{auth}"}]
@@ -185,4 +184,9 @@ defmodule MzingaDelivery.Payments.MpesaService do
       item -> item["Value"]
     end
   end
+
+  defp to_mpesa_amount(%Decimal{} = dec), do: dec |> Decimal.round() |> Decimal.to_integer()
+  defp to_mpesa_amount(num) when is_integer(num), do: num
+  defp to_mpesa_amount(num) when is_float(num), do: round(num)
+  defp to_mpesa_amount(num), do: num |> to_string() |> String.to_integer()
 end

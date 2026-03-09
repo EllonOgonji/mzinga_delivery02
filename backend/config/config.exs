@@ -60,6 +60,13 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configures Delivery variables
+config :mzinga_delivery, :delivery,
+  google_maps_api_key: System.get_env("GOOGLE_MAPS_API_KEY", "PLACEHOLDER_KEY"),
+  fuel_rate_per_km: String.to_integer(System.get_env("DELIVERY_FUEL_RATE", "15")),
+  maintenance_rate_per_km: String.to_integer(System.get_env("DELIVERY_MAINTENANCE_RATE", "5")),
+  rider_pay_per_km: String.to_integer(System.get_env("DELIVERY_RIDER_PAY", "20"))
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
@@ -67,9 +74,17 @@ config :phoenix, :json_library, Jason
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
 
+# Frontend URL for password reset emails
+config :mzinga_delivery,
+  frontend_url: System.get_env("FRONTEND_URL", "https://mzinga-delivery.vercel.app")
+
 # Default CORS settings (development-friendly). Override in runtime.exs
 config :cors_plug,
-  origin: ["http://localhost:8080", "http://localhost:3000"],
+  origin: [
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "https://mzinga-delivery.vercel.app"
+  ],
   max_age: 86_400,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   headers: ["authorization", "content-type", "accept"],

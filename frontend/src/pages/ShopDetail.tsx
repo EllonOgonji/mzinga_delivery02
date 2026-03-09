@@ -27,11 +27,12 @@ import {
 } from "lucide-react";
 import { getAllShops, getSingleShop } from "@/data/shopData";
 import { getAllProducts, getSingleStoreProducts } from "@/data/productData";
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from "@/lib/utils";
 import { Shop } from "@/types";
+import { useToast } from '@/hooks/use-toast';
 
 const ShopDetail = () => {
   const { id } = useParams();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
     const [paginationSettings, setPaginationSettings] = useState({
@@ -81,8 +82,13 @@ const ShopDetail = () => {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const deliveryFees = calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude });
-  const distanceToUser = findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude });
+  const handleShopShare = (shopId: number) => {
+    navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL}/shop/${shopId}`)
+    toast({
+      title: "Success!",
+      description: `Link copied successfully`,
+    });
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -114,13 +120,13 @@ const ShopDetail = () => {
 
                   {/* Info */}
                   <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                      <div>
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4 h-full">
+                      <div className="h-full flex flex-col justify-between">
                         <h1 className="text-2xl md:text-3xl font-bold mb-2">{shop.name}</h1>
                         <div className="flex flex-wrap gap-2 mb-2">
-                            <Badge variant="secondary">
-                              {shop.category}
-                            </Badge>
+                          <Badge variant="secondary">
+                            {shop.category}
+                          </Badge>
                         </div>
                         {/* <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
@@ -128,14 +134,14 @@ const ShopDetail = () => {
                               <Star
                                 key={i}
                                 className={`w-5 h-5 ${
-                                  i < Math.floor(Number(averageRating))
+                                  i < Math.floor(Number(shop.averageRating))
                                     ? "fill-primary text-primary"
                                     : "text-muted"
                                 }`}
                               />
                             ))}
                           </div>
-                          <span className="font-medium">{averageRating}</span>
+                          <span className="font-medium">{shop.averageRating}</span>
                           <span className="text-muted-foreground">
                             ({shop.rating.length} reviews)
                           </span>
@@ -143,42 +149,13 @@ const ShopDetail = () => {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button variant="outline" size="icon">
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => {handleShopShare(shop.id)}} title="Share shop">
                           <Share2 className="w-4 h-4" />
                         </Button>
+                        <Button variant="outline" size="icon" onClick={() => {handleShopShare(shop.id)}} title="View on map">
+                          <MapPin className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </div>
-
-                    {/* Quick Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center gap-2 text-xs md:text-sm">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span>{distanceToUser.toFixed(1)} km away</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs md:text-sm">
-                        <Truck className="w-4 h-4 text-muted-foreground" />
-                        <span>KES. {deliveryFees} delivery</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs md:text-sm">
-                        <Clock className={`w-4 h-4 ${shop.status === "approved" ? "text-success" : "text-destructive"}`} />
-                        <span className={shop.status === "approved" ? "text-success" : "text-destructive"}>
-                          {shop.status.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 mt-4">
-                      {/* <Button>
-                        <Phone className="w-4 h-4 mr-2" />
-                        Contact Shop
-                      </Button>
-                      <Button variant="outline">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        View on Map
-                      </Button> */}
                     </div>
                   </div>
                 </div>
@@ -198,41 +175,9 @@ const ShopDetail = () => {
             <TabsTrigger value="about" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
               About
             </TabsTrigger>
-            {/* <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              Reviews
-            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="products" className="mt-6">
-            {/* Search and Filter */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1 flex gap-2">
-                <Input
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                 <Button
-                    variant="outline"
-                    onClick={() => {setPaginationSettings(prev => ({ ...prev, page: 1, searchQuery: searchQuery }));}}>
-                    <Search className="w-4 h-4" />
-                  </Button>
-              </div>
-
-              {/* Dropdown quick filter */}
-              {/* <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full md:w-48 rounded-none">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                  <SelectItem value="rating">Top Rated</SelectItem>
-                </SelectContent>
-              </Select> */}
-            </div>
-
             {/* Products Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
@@ -291,115 +236,8 @@ const ShopDetail = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-base md:text-lg mb-4">Contact Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Phone className="w-5 h-5 text-muted-foreground" />
-                      <a href="tel:+254712345678" className="text-xs md:text-sm hover:text-primary">
-                        +254 712 345 678
-                      </a>
-                    </div>
-                    {/* <div className="flex items-center gap-3">
-                      <Mail className="w-5 h-5 text-muted-foreground" />
-                      <a href="mailto:info@shop.com" className="text-sm hover:text-primary">
-                        info@{shop.name.toLowerCase().replace(/\s+/g, '')}.com
-                      </a>
-                    </div> */}
-                  </div>
-
-                  {/* <div className="mt-6">
-                    <h4 className="font-medium mb-3">Follow Us</h4>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="icon">
-                        <Facebook className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="icon">
-                        <Instagram className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="icon">
-                        <Twitter className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div> */}
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
-
-          {/* <TabsContent value="reviews" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-2">
-                    {[5, 4, 3, 2, 1].map((rating) => (
-                      <div key={rating} className="flex items-center gap-2">
-                        <span className="text-sm w-3">{rating}</span>
-                        <Star className="w-4 h-4 fill-primary text-primary" />
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary"
-                            style={{
-                              width: `${rating === 5 ? 80 : rating === 4 ? 15 : 5}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm text-muted-foreground w-10 text-right">
-                          {rating === 5 ? 80 : rating === 4 ? 15 : 5}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              
-              <div className="lg:col-span-2 space-y-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <img
-                        src="/placeholder.svg"
-                        alt=""
-                        className="w-12 h-12 rounded-full"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold">John Doe</span>
-                          <Badge variant="secondary" className="text-xs">
-                            Verified Purchase
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className="w-4 h-4 fill-primary text-primary"
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            2 days ago
-                          </span>
-                        </div>
-                        <p className="text-sm mb-2">
-                          Excellent shop with great products and fast delivery!
-                          Will definitely order again.
-                        </p>
-                        <Button variant="ghost" size="sm">
-                          Helpful (12)
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent> */}
         </Tabs>
       </div>
 

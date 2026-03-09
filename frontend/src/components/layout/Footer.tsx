@@ -9,15 +9,15 @@ export const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
+          <div className='text-center md:text-left'>
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
               <ShoppingBag className="h-6 w-6 text-accent" />
               <span className="font-bold text-base md:text-lg">Mzinga Delivery</span>
             </div>
             <p className="text-xs md:text-sm text-muted-foreground mb-4">
               Shop Everything, Everywhere - Your Way. The modern multi-vendor marketplace.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-center md:justify-start items-center">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Facebook className="h-4 w-4" />
               </Button>
@@ -34,7 +34,7 @@ export const Footer = () => {
           </div>
 
           {/* Customer Service */}
-          <div>
+          <div className='text-center'>
             <h3 className="font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li>
@@ -51,7 +51,7 @@ export const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className='text-center'>
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li>
@@ -60,7 +60,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/shops" className="hover:text-accent transition-colors">
+                <Link to="/" className="hover:text-accent transition-colors">
                   All Shops
                 </Link>
               </li>
@@ -73,7 +73,7 @@ export const Footer = () => {
           </div>
 
           {/* Newsletter */}
-          {/* <div>
+          <div className='text-center md:text-right'>
             <h3 className="font-semibold mb-4">Stay Connected</h3>
             <p className="text-xs md:text-sm text-muted-foreground mb-4">
               Subscribe to get special offers and updates.
@@ -88,7 +88,7 @@ export const Footer = () => {
                 Subscribe
               </Button>
             </div>
-          </div> */}
+          </div>
         </div>
 
         {/* Bottom Bar */}
@@ -97,17 +97,14 @@ export const Footer = () => {
             © {new Date().getFullYear()} Mzinga Delivery. All rights reserved.
           </p>
           {/* Policies */}
-          {/* <div className="flex gap-6 text-xs md:text-sm text-muted-foreground">
+          <div className="flex gap-6 text-xs md:text-sm text-muted-foreground">
             <Link to="/terms" className="hover:text-accent transition-colors">
               Terms of Service
             </Link>
             <Link to="/privacy" className="hover:text-accent transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/cookies" className="hover:text-accent transition-colors">
-              Cookie Policy
-            </Link>
-          </div> */}
+          </div>
         </div>
       </div>
     </footer>

@@ -1,3 +1,9 @@
+export interface ReturnData {
+  status: boolean,
+  data: any,
+  error: any
+}
+
 export interface ShopFilters {
   idMultiple?: number[];
   id?: number;
@@ -8,6 +14,8 @@ export interface ShopFilters {
   page: number;
   // featured?: boolean;
   searchQuery?: string;
+  verified_status?: boolean | null;
+  status?: string
 }
 
 export interface ProductFilters {
@@ -67,13 +75,18 @@ export interface Shop {
   status: 'open' | 'suspended' | 'closed' | 'approved';
   createdAt: string;
   updatedAt?: string;
+  address: string
   // 
-  verified?: boolean;
+  is_verified?: boolean;
 }
 
 export interface Product {
   id?: number;
-  store_id: number;
+  store?: {
+    id?: number,
+    logo?: string,
+    name?: string
+  }
   name: string;
   category: string;
   description: string;
@@ -83,7 +96,7 @@ export interface Product {
   images?: string[];
   image_url: string;
   stock: number;
-  ratings?: number[];
+  ratings?: any;
   specifications: Record<string, string>;
   status: 'active' | 'inactive';
   createdAt?: string;
@@ -95,11 +108,17 @@ export interface Product {
 }
 
 export interface CartItem extends Partial<Product> {
-  id: number;
-  store_id: number;
-  shopId?: number; // Added shop_id to CartItem
-  quantity: number;
-  price: number;
+  id: number,
+  product: {
+      id: number,
+      name: string,
+      store_id: number,
+      image_url: string
+  },
+  product_id: number,
+  quantity: string,
+  subtotal: string,    
+  unit_price: string
 }
 
 export interface Order {

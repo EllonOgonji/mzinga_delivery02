@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Check, ChevronRight, MapPin, Phone, Smartphone } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Phone, Smartphone, Loader } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,10 @@ import { toast } from 'sonner';
 import { useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { getAllShops } from '@/data/shopData';
-import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
+// import { calculateDeliveryFee, findDistanceBetweenUserAndShop } from '@/lib/utils';
 import { checkout, addItemToCart } from '@/data/orderData';
+import {useShopDeliveryData} from '@/hooks/useCalculateDelivery'
+import useAuth from "@/hooks/useAuth";
 
 const steps = [
   { id: 1, name: 'Delivery', completed: false, active: true },
@@ -26,40 +28,30 @@ const steps = [
 ];
 
 export default function Checkout() {
+  const {user} = useAuth()
   const navigate = useNavigate();
-  const { cart, cartTotal, cartCount, clearCart } = useCart();
+  const { cart, cartTotal, cartCount, clearCart, isCartLoading } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState('Lurambi');
-  const [phone, setPhone] = useState('254712345678');
+  const [phone, setPhone] = useState(user.phone_number);
+  const [paymentPhone, setPaymentPhone] = useState(phone)
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [loading, setLoading] = useState(false)
 
-  if (cartCount === 0) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center py-16">
-          <div className="text-center space-y-6">
-            <h1 className="text-3xl font-bold">Your cart is empty</h1>
-            <Button asChild className="bg-accent hover:bg-accent/90">
-              <Link to="/">Start Shopping</Link>
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const cartByShop = useMemo(() => {
+    return cart.reduce((acc, item) => {
+      if (!acc[item.product.store_id]) {
+        acc[item.product.store_id] = [];
+      }
+      acc[item.product.store_id].push(item);
+      return acc;
+    }, {} as Record<number, typeof cart>);
+  }, [cart]);
 
-  const cartByShop = cart.reduce((acc, item) => {
-    if (!acc[item.store_id]) {
-      acc[item.store_id] = [];
-    }
-    acc[item.store_id].push(item);
-    return acc;
-  }, {} as Record<number, typeof cart>);
-
-  const shopIds = Object.keys(cartByShop).map(Number);
+  const shopIds = useMemo(() => {
+    return Object.keys(cartByShop).map(Number);
+  }, [cartByShop]);
 
   const { data: allShops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops', 'cart', shopIds],
@@ -70,71 +62,70 @@ export default function Checkout() {
     enabled: shopIds.length > 0
   });
 
-  const shopsData = useMemo(() => {
-    return shopIds.map(shopId => {
-      const shop = allShops.find(s => s.id === shopId);
-      const shopItems = cartByShop[shopId];
-      const shopSubtotal = shopItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      
-      const deliveryFee = shop 
-        ? calculateDeliveryFee({ lat: shop.latitude, lon: shop.longitude })
-        : 0;
-      
-      const distance = shop
-        ? findDistanceBetweenUserAndShop({ lat: shop.latitude, lon: shop.longitude })
-        : 0;
-      
-      const shopTotal = shopSubtotal + deliveryFee;
+  const isMounted = useRef(true);
 
-      return {
-        shopId,
-        shop,
-        items: shopItems,
-        subtotal: shopSubtotal,
-        deliveryFee,
-        distance,
-        total: shopTotal
-      };
-    });
-  }, [allShops, cartByShop, shopIds]);
-
+  const { shopsData, isLoading: isLoadingDelivery } = useShopDeliveryData(shopIds, allShops, cartByShop);
   const totalDeliveryFees = shopsData.reduce((sum, shopData) => sum + shopData.deliveryFee, 0);
   const orderTotal = cartTotal + totalDeliveryFees;
 
   const handlePlaceOrder = async () => {
+    setLoading(true)
+
     if (!agreedToTerms) {
       toast.error('Please agree to the Terms of Service');
+      setLoading(false)
       return;
     }
 
-    for (const shopData of shopsData) {
-      const orderPayload = {
-        order: {
-          store_id: shopData.shopId,
-          payment_phone: phone,
-          items: shopData.items.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            subtotal: item.quantity * Number(item.price),
-          })),
-        },
-      };
+    const res = await checkout(String(paymentPhone));
 
-      for (const item of orderPayload.order.items) {
-        const res = await addItemToCart({
-          id: item.product_id,
-          quantity: item.quantity,
-        });
-        console.log('Item added to cart response:', res);
+    if (res.status == false){
+      toast.error('An issue occurred while creating your order')
+      setLoading(false)
+      return
+    }
+
+    toast.success('Order placed successfully!');
+
+    const clearCartaRes = await clearCart();
+
+    if(!clearCartaRes.status){
+      const {status} = await clearCart()
+
+      if (!status){
+        toast.error('Failed to clear cart. Please try again')
       }
     }
 
-    const res = await checkout(String(phone));
-    toast.success('Order placed successfully!');
-    clearCart();
-    navigate(`/}`);
-
+    setLoading(false)
+    navigate(`/`);
   };
+
+  if (cartCount === 0) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-16">
+          <div className="text-center space-y-6">
+             {isLoadingDelivery || isLoadingShops || isCartLoading ? 
+                (   
+                  <div className="text-center py-16 flex justify-center items-center h-96">
+                    <Loader className="animate-spin h-5 w-5" />
+                  </div>
+                ) : 
+                <>
+                  <h1 className="text-3xl font-bold">Your cart is empty</h1>
+                  <Button asChild className="bg-accent hover:bg-accent/90">
+                    <Link to="/">Start Shopping</Link>
+                  </Button>
+                </>
+              }
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -202,7 +193,7 @@ export default function Checkout() {
                         id="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+254712345678"
+                        placeholder={user.phone_number}
                         className="mt-2"
                       />
                     </div>
@@ -210,7 +201,7 @@ export default function Checkout() {
                     <div>
                       <Label>Delivery Method</Label>
                       <RadioGroup defaultValue="standard" className="mt-2 space-y-3">
-                        <div className="flex items-center space-x-2 border rounded-lg p-4">
+                        <div className="flex items-center space-x-2 border p-4">
                           <RadioGroupItem value="standard" id="standard" />
                           <Label htmlFor="standard" className="flex-1 cursor-pointer">
                             <p className="font-medium">Standard Delivery</p>
@@ -269,9 +260,8 @@ export default function Checkout() {
                           <Label htmlFor="mpesa-phone">M-Pesa Phone Number</Label>
                           <Input
                             id="mpesa-phone"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="254712345678"
+                            value={paymentPhone}
+                            onChange={(e) => setPaymentPhone(e.target.value)}
                             className="mt-2"
                           />
                           <p className="text-xs text-muted-foreground mt-2">
@@ -336,7 +326,7 @@ export default function Checkout() {
                         {paymentMethod === 'mpesa' ? 'M-Pesa' : 'Cash on Delivery'}
                       </p>
                       {paymentMethod === 'mpesa' && (
-                        <p className="text-sm text-muted-foreground">{phone}</p>
+                        <p className="text-sm text-muted-foreground">{paymentPhone}</p>
                       )}
                     </div>
 
@@ -348,16 +338,16 @@ export default function Checkout() {
                         return (
                           <div key={item.id} className="flex gap-3 text-sm">
                             <img
-                              src={item.image_url}
-                              alt={item.name}
+                              src={item.product.image_url}
+                              alt={item.product.name}
                               className="h-16 w-16 object-cover rounded"
                             />
                             <div className="flex-1">
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                              <p className="font-medium">{item.product.name}</p>
+                              <p className="text-muted-foreground">Qty: {Number(item.quantity)}</p>
                             </div>
                             <p className="font-medium">
-                              KES. {(item.price * item.quantity).toFixed(2)}
+                              KES. {(Number(item.unit_price) * Number(item.quantity)).toFixed(2)}
                             </p>
                           </div>
                         );
@@ -380,17 +370,17 @@ export default function Checkout() {
                 <h3 className="font-bold mb-4">Order Summary</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span>Items ({cartCount}):</span>
-                    <span>KES. {cartTotal.toFixed(2)}</span>
+                    <span>Items :</span>
+                    <span>KES. {cartTotal}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Delivery Fees:</span>
-                    <span>KES. {totalDeliveryFees.toFixed(2)}</span>
+                    <span>KES. {totalDeliveryFees}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold text-accent">
                     <span>Total:</span>
-                    <span>KES. {orderTotal.toFixed(2)}</span>
+                    <span>KES. {cartTotal + totalDeliveryFees}</span>
                   </div>
                   <div className="flex items-start space-x-2">
                     <Checkbox
@@ -414,7 +404,7 @@ export default function Checkout() {
                     onClick={handlePlaceOrder}
                     disabled={!agreedToTerms}
                   >
-                    Place Order - KES. {orderTotal.toFixed(2)}
+                    {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Place Order'}
                   </Button>
                 </div>
               </Card>

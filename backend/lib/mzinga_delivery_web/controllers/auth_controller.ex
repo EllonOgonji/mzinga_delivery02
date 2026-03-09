@@ -65,6 +65,27 @@ defmodule MzingaDeliveryWeb.AuthController do
   end
 
   @doc """
+  Update current user profile
+  PUT /api/auth/me
+  """
+  def update_profile(conn, params) do
+    user = Guardian.Plug.current_resource(conn)
+    user_params = params["user"] || params
+
+    case Accounts.update_user(user, user_params) do
+      {:ok, updated_user} ->
+        conn
+        |> put_status(:ok)
+        |> render(:user, user: updated_user)
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, changeset: changeset)
+    end
+  end
+
+  @doc """
   Logout user (client should delete token)
   POST /api/auth/logout
   """
@@ -73,5 +94,62 @@ defmodule MzingaDeliveryWeb.AuthController do
     |> Guardian.Plug.sign_out()
     |> put_status(:ok)
     |> json(%{message: "Logged out successfully"})
+  end
+
+  @doc """
+  Initiate forgot password flow
+  POST /api/auth/forgot_password
+  """
+  def forgot_password(conn, %{"email" => email}) do
+    if user = Accounts.get_user_by_email(email) do
+      {:ok, updated_user} = Accounts.generate_reset_password_token(user)
+
+      case MzingaDelivery.Accounts.UserNotifier.send_password_reset_instructions(updated_user) do
+        {:ok, _} ->
+          :ok
+
+        {:error, reason} ->
+          require Logger
+          Logger.error("Failed to send password reset email: #{inspect(reason)}")
+      end
+    end
+
+    # Always return success to prevent email enumeration
+    conn
+    |> put_status(:ok)
+    |> json(%{
+      message: "If your email is in our system, you will receive reset instructions shortly."
+    })
+  end
+
+  @doc """
+  Reset password
+  POST /api/auth/reset_password
+  """
+  def reset_password(conn, %{
+        "token" => token,
+        "password" => password,
+        "password_confirmation" => password_confirmation
+      }) do
+    if user = Accounts.get_user_by_reset_password_token(token) do
+      case Accounts.reset_user_password(user, %{
+             password: password,
+             password_confirmation: password_confirmation
+           }) do
+        {:ok, _user} ->
+          conn
+          |> put_status(:ok)
+          |> json(%{message: "Password reset successfully"})
+
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(:error, changeset: changeset)
+      end
+    else
+      conn
+      |> put_status(:unprocessable_entity)
+      |> json(%{errors: %{detail: "Invalid or expired reset token"}})
+    end
   end
 end

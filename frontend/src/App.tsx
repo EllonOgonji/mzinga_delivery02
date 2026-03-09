@@ -30,7 +30,10 @@ import Register from "./pages/auth/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ToastFromLocation from "./components/LocationToastHandler";
 import VendorProfileForm from "./pages/vendor/ProfileForm";
-import VendorProfile from "./pages/vendor/Profile";
+import VendorProfile from "./pages/vendor/StoreProfile";
+import VendorSettings from "./pages/vendor/VendorProfile";
+import Reset from "./pages/auth/Reset";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 
 const queryClient = new QueryClient();
 
@@ -66,8 +69,10 @@ const App = () => (
                 </Route> */}
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/register" element={<Register />} />
+                <Route path="/auth/reset/:token" element={<Reset />} />
+                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
-                <Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute requiredRole="customer" />}>
                   <Route path="/" element={<ShopDirectory />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
@@ -87,6 +92,7 @@ const App = () => (
                   <Route path="/vendor/orders" element={<VendorOrders />} />
                   <Route path="/vendor/shop-profile/edit" element={<VendorProfileForm />} />
                   <Route path="/vendor/shop-profile" element={<VendorProfile />} />
+                  <Route path="/vendor/settings" element={<VendorSettings />} />
                 </Route>
 
                 <Route element={<ProtectedRoute requiredRole="admin" />}>

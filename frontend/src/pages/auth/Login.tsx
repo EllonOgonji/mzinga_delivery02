@@ -42,8 +42,7 @@ const Login = () => {
             body: JSON.stringify(formData),
         }).then(async (response) => {
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Login failed');
+                throw new Error('Incorrect email or password');
             }
 
             return response.json();
@@ -57,17 +56,10 @@ const Login = () => {
             localStorage.setItem('role', res.data.user.role);
             localStorage.setItem('user', JSON.stringify(res.data.user));
 
-            if(res.data.user.role == loginType){
-                res.data.user.role == 'customer' ? navigate('/') : navigate('/vendor/dashboard');
-            }else{
-                toast({
-                    title: "Error",
-                    description: `You are trying to login as a ${loginType} but your account is registered as a ${res.data.user.role}.`,
-                    variant: "destructive",
-                });
-                setLoading(false);
-                return;
-            }
+            res.data.user.role == 'customer' ? navigate('/') 
+                : res.data.user.role == 'vendor' ? navigate('/vendor/dashboard') 
+                : res.data.user.role == 'admin' ? navigate('/admin/dashboard') 
+                : navigate('/auth/login');
             
         }).catch((error) => {
             toast({
@@ -82,12 +74,8 @@ const Login = () => {
 
     return (
         <div className="h-[100vh] w-full flex flex-col justify-center items-center">
-            <div className='w-96'>
-                <div className='grid grid-cols-2 w-full'>
-                    <Button variant={loginType === 'vendor' ? 'active' : 'ghost'} onClick={() => setLoginType('vendor')} className='col-span-1 border-none'>Vendor Login</Button>
-                    <Button variant={loginType === 'customer' ? 'active' : 'ghost'} onClick={() => setLoginType('customer')} className='col-span-1 border-none'>Customer Login</Button>
-                </div>
-
+            <div className='w-80 md:w-96'>
+                <h1 className='text-center font-bold mb-4 text-lg'>Mzinga Delivery Login</h1>
                 <form onSubmit={handleSubmit} className='w-full'>
                     {/* Basic Information */}
                     <Card className='flex flex-col items-center pt-8'>
@@ -119,12 +107,19 @@ const Login = () => {
                                 type="submit"
                                 className='w-full'
                             >
-                                {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Login'}
+                                {loading ? <Loader className="animate-spin h-5 w-5" /> : 'Login'}
                             </Button>
                         </CardContent>
-                        <CardFooter className='text-sm text-muted-foreground justify-center'>
-                            <span>Don't have an account? </span>
-                            <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
+                        <CardFooter className='text-sm text-muted-foreground justify-center flex flex-col'>
+                            <div>
+                                <span>Don't have an account? </span>
+                                <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/register')}>Register here</Button>
+                            </div>
+
+                            <div>
+                                <span>Forgot your password? </span>
+                                <Button variant='link' className='p-0 ml-1' onClick={() => navigate('/auth/forgot-password')}>Reset</Button>
+                            </div>
                         </CardFooter>
                     </Card>
                 </form>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { VendorLayout } from "@/components/vendor/VendorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Pencil, Trash2, Copy } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Copy, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Table,
@@ -41,17 +41,22 @@ import { useToast } from '@/hooks/use-toast';
 
 const VendorProducts = () => {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
-  const { data: shopData } = useQuery({
-    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
-    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
+  const { data: shopData = {}, isLoading: isShopDataLoading } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user')).id],
+    queryFn: async () => {
+      const {status, error, data} = await getVendorShops(JSON.parse(localStorage.getItem('user')).id)
+      return data.data[0]
+    }
   });
 
-  const {data: products = [] } = useQuery<Product[]>({
+  const {data: products = [], isLoading: isProductsLoading } = useQuery<Product[]>({
     queryKey: ["vendor-dashboard-products"],
-    queryFn: () => getSingleStoreProducts(shopData.id)
+    queryFn: () => {
+      return getSingleStoreProducts(shopData.id)
+    },
+    enabled: Object.keys(shopData).length > 0
   })
 
   const getStockColor = (stock: number) => {
@@ -82,7 +87,7 @@ const VendorProducts = () => {
     if (!status){
       toast({
         title: "Error",
-        description: error || "An error occurred",
+        description: error || "An error occurred while deleting. Please try again",
         variant: "destructive",
       });
       return;
@@ -98,21 +103,20 @@ const VendorProducts = () => {
     <VendorLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex gap-4 items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Products</h1>
-            <p className="text-muted-foreground mt-1">{products.length} products</p>
+            <h1 className="text-xl md:text-3xl font-bold">Products</h1>
+            <p className="text-muted-foreground mt-1 text-sm md:text-base">{products.length} products</p>
           </div>
           <Link to="/vendor/products/new">
             <Button size="lg">
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Product
+              Add Product
             </Button>
           </Link>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+        {/* <div className="flex flex-col gap-4 md:flex-row md:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -144,7 +148,7 @@ const VendorProducts = () => {
               <SelectItem value="date">Date Added</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         {/* Bulk Actions */}
         {selectedProducts.length > 0 && (
@@ -165,108 +169,174 @@ const VendorProducts = () => {
         )}
 
         {/* Products Table */}
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedProducts.length === products.length}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedProducts.includes(product.id)}
-                      onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="h-12 w-12 rounded object-cover"
-                      />
-                      <div>
-                        <Link to={`/vendor/products/${product.id}`} className="font-medium hover:underline">
-                          {product.name}
-                        </Link>
-                        <p className="text-sm text-muted-foreground">ID: {product.id}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{product.category}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="font-medium">KES. {Number(product.price).toFixed(2)}</p>
-                      {product.compareAtPrice && (
-                        <p className="text-sm text-muted-foreground line-through">
-                          KES. {Number(product.compareAtPrice).toFixed(2)}
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`font-medium ${getStockColor(product.stock)}`}>
-                      {product.stock === 0 ? "Out of stock" : product.stock}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {/* <Switch checked={product.status == 'active'} /> */}
-                    {product.status}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Link to={`/vendor/products/${product.id}`}>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Product</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{product.name}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => {handleDeleteProduct(product.id)}} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+         {isShopDataLoading || isProductsLoading ? 
+            (   
+              <div className="text-center py-16 flex justify-center items-center h-96">
+                <Loader className="animate-spin h-5 w-5 mr-3" />
+              </div>
+            ) : 
+            <>
+              <div className="hidden md:blockrounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedProducts.length === products.length}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedProducts.includes(product.id)}
+                            onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={JSON.parse(product.image_url)[0]}
+                              alt={product.name}
+                              className="h-12 w-12 rounded object-cover"
+                            />
+                            <div>
+                              <Link to={`/vendor/products/${product.id}`} className="font-medium hover:underline">
+                                {product.name}
+                              </Link>
+                              <p className="text-sm text-muted-foreground">ID: {product.id}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{product.category}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="font-medium">KES. {Number(product.price).toFixed(2)}</p>
+                            {product.compareAtPrice && (
+                              <p className="text-sm text-muted-foreground line-through">
+                                KES. {Number(product.compareAtPrice).toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`font-medium ${getStockColor(product.stock)}`}>
+                            {product.stock === 0 ? "Out of stock" : product.stock}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {product.status}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link to={`/vendor/products/${product.id}`}>
+                              <Button variant="ghost" size="icon">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{product.name}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => {handleDeleteProduct(product.id)}} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="rounded-md border md:hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead className="text-right"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <Link to={`/vendor/products/${product.id}`} className="font-medium hover:underline">
+                                {product.name}
+                              </Link>
+                            </div>
+                          </div>
+                        </TableCell>
+                      
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link to={`/vendor/products/${product.id}`}>
+                              <Button variant="ghost" size="icon">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{product.name}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => {handleDeleteProduct(product.id)}} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          }
+
 
         {/* Pagination */}
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {products.length} of {products.length} products
           </p>
@@ -278,7 +348,7 @@ const VendorProducts = () => {
               Next
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </VendorLayout>
   );
