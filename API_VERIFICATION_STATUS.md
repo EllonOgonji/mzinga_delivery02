@@ -299,6 +299,7 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/dashboard/sta
 ```
 
 **Status:** 200 OK
+
 ```json
 {
   "data": {
@@ -326,3 +327,45 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/filter
 ```
 
 **Status:** 200 OK
+
+---
+
+### 7. Cart & Checkout (Restored & Verified)
+
+**7.1 Get Cart**
+**Endpoint:** `GET /api/cart`
+
+```bash
+curl -X GET "https://mzinga-delivery-2rkz.onrender.com/api/cart" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Status:** 200 OK
+
+**7.2 Add Item to Cart**
+**Endpoint:** `POST /api/cart/items`
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/cart/items" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{"product_id": 1, "quantity": 1}'
+```
+
+**Status:** 200 OK
+
+**7.3 Unified Checkout**
+**Endpoint:** `POST /api/checkout`
+
+```bash
+curl -X POST "https://mzinga-delivery-2rkz.onrender.com/api/checkout" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "delivery_lat": -1.2921,
+    "delivery_lng": 36.8219,
+    "payment_phone": "254700000000"
+  }'
+```
+
+**Status:** 200 OK (Returns M-Pesa STK Push response)

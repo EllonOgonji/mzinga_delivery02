@@ -97,6 +97,61 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
 
 ---
 
+**1.6 Update Current User**
+**Endpoint:** `PUT /api/auth/me`
+**Method:** Allows any authenticated user to update their personal details. (Password cannot be updated here).
+
+```bash
+curl -X PUT "https://mzinga-delivery02-t6rg.onrender.com/api/auth/me" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "full_name": "Updated Name",
+      "phone_number": "254700000000",
+      "avatar_url": "https://example.com/avatar.jpg"
+    }
+  }'
+```
+
+**Status:** 200 OK (Returns updated User JSON)
+
+---
+
+**1.7 Forgot Password**
+**Endpoint:** `POST /api/auth/forgot_password`
+**Method:** Triggers an email with a reset link if the account exists. Returns success regardless to prevent user enumeration.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/forgot_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "venom@example.com"
+  }'
+```
+
+**Status:** 200 OK
+
+---
+
+**1.8 Reset Password**
+**Endpoint:** `POST /api/auth/reset_password`
+**Method:** Resets user password using the token sent to their email.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/auth/reset_password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "<RESET_TOKEN>",
+    "password": "NewPassword123",
+    "password_confirmation": "NewPassword123"
+  }'
+```
+
+**Status:** 200 OK
+
+---
+
 ### 2. Vendor Store Management (Verified)
 
 **2.1 Create Store**
@@ -167,6 +222,23 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5/re
 ```
 
 **Status:** 200 OK (Status changes to `rejected`)
+
+**3.4 Update Store Location**
+**Endpoint:** `PATCH /api/admin/stores/:id`
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "store": {
+      "latitude": -1.2921,
+      "longitude": 36.8219
+    }
+  }'
+```
+
+**Status:** 200 OK (Returns updated store data)
 
 ---
 
@@ -270,6 +342,20 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/products/1" \
 
 **Status:** 204 No Content
 
+**5.6 Rate Product**
+**Endpoint:** `POST /api/products/:id/rate`
+**Method:** Pass the `rating` for the product in the request body. (Currently does not require Auth Token).
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products/1/rate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rating": 4.5
+  }'
+```
+
+**Status:** 200 OK (Returns updated Product JSON)
+
 ---
 
 ### 6. Order Workflow (New Features)
@@ -301,11 +387,60 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
 
 ## Not Yet Tested / Pending Verification
 
-### Orders (Auth Required)
+### Orders (Verified)
 
-- `GET /api/orders` (List Orders)
-- `POST /api/orders` (Create Order)
-- `GET /api/orders/:id` (Order Details)
+**6.3 List My Orders (Customer/Vendor/Admin)**
+**Endpoint:** `GET /api/orders`
+**Method:** Returns orders based on the authenticated user's role.
+
+- **Customer:** Returns all orders placed by the customer.
+- **Vendor:** Returns all orders for all stores owned by the vendor.
+- **Admin:** Returns all orders in the system.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**6.4 Get Single Order Details**
+**Endpoint:** `GET /api/orders/:id`
+**Method:** Returns details for a specific order. User must be auth'd and own the order (or be vendor of the store, or admin).
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK
+
+**6.5 Create Order**
+**Endpoint:** `POST /api/orders`
+**Method:** Creates an order and initiates an M-Pesa STK push. (Customer Auth Required)
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "order": {
+      "store_id": 5,
+      "items": [
+        {"product_id": 1, "quantity": 2, "subtotal": 500.00}
+      ]
+    }
+  }'
+```
+
+**Status:** 201 Created
+
+---
+
+## Not Yet Tested / Pending Verification
+
+### Order Vendor Actions (Pending)
+
 - `PATCH /api/orders/:id/accept` (Accept Order)
 - `PATCH /api/orders/:id/reject` (Reject Order)
 
@@ -327,13 +462,66 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
 
 ---
 
-### 7. Image Uploads (Direct-to-Supabase)
+### 7. Cart Management (Auth Required)
+
+These endpoints manage the user's shopping cart. A user can only add items from **one store** at a time. Trying to add an item from a different store returns a `409 Conflict` error.
+
+**7.1 View Cart**
+**Endpoint:** `GET /api/cart`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK (Returns the cart, its items, and the subtotal)
+
+**7.2 Add Item to Cart**
+**Endpoint:** `POST /api/cart/items`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{
+    "product_id": 1,
+    "quantity": 2
+  }'
+```
+
+**Status:** 201 Created (Returns updated cart)
+_Note:_ Returns `409 Conflict` if the product belongs to a different store than what is already in the cart.
+
+**7.3 Remove Item from Cart**
+**Endpoint:** `DELETE /api/cart/items/:product_id`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items/1" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 200 OK (Returns updated cart)
+
+**7.4 Clear Entire Cart**
+**Endpoint:** `DELETE /api/cart`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/cart" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+**Status:** 204 No Content
+
+---
+
+### 8. Image Uploads (Direct-to-Supabase)
 
 There are no dedicated Elixir API endpoints for uploading image files directly. Instead, the frontend uploads images directly to the Supabase Storage bucket (`store-images`) and passes the resulting public URL strings to the existing backend endpoints.
 
 **7.1 Update User Avatar**
 **Endpoint:** `PUT /api/users/:id` (or your user update route)
 **Method:** Pass the `avatar_url` string in the standard JSON payload.
+
 ```json
 {
   "user": {
@@ -343,8 +531,9 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 ```
 
 **7.2 Store Logos & Banners**
-**Endpoint:** `POST /api/vendor/stores` or `PUT /api/vendor/stores/:id`
+**Endpoint:** `POST /api/vendor/stores` or `PATCH /api/vendor/stores/:id` or `PATCH /api/admin/stores/:id`
 **Method:** Pass the `logo` and `banner` string URLs.
+
 ```json
 {
   "store": {
@@ -358,12 +547,45 @@ There are no dedicated Elixir API endpoints for uploading image files directly. 
 **7.3 Product Images**
 **Endpoint:** `POST /api/products` or `PUT /api/products/:id`
 **Method:** Pass the `image_url` string.
+
 ```json
 {
   "product": {
     "name": "Premium Lager",
-    "price": 250.00,
+    "price": 250.0,
     "image_url": "https://[PROJECT_ID].supabase.co/storage/v1/object/public/store-images/beer.jpg"
+  }
+}
+```
+
+---
+
+### 8. Delivery & Logistics
+
+**8.1 Calculate Delivery Fee (Customer)**
+**Endpoint:** `POST /api/delivery/calculate`
+**Method:** Pass the `store_id` and the customer's delivery destination coordinates (`delivery_lat`, `delivery_lng`).
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/delivery/calculate" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "store_id": 5,
+    "delivery_lat": "-1.2921",
+    "delivery_lng": "36.8219"
+  }'
+```
+
+**Status:** 200 OK (Returns distance and cost information)
+
+```json
+{
+  "data": {
+    "distance_km": 1.5,
+    "delivery_fee": 150.0,
+    "duration_text": "12 mins",
+    "distance_text": "1.5 km"
   }
 }
 ```

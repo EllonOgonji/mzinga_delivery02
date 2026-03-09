@@ -32,10 +32,9 @@ defmodule MzingaDelivery.Stores do
   end
 
   def get_store!(id) do
-    case get_store(id) do
-      nil -> {:error, :not_found}
-      store -> {:ok, store}
-    end
+    Store
+    |> preload([:vendor, :approved_by, :rejected_by])
+    |> Repo.get!(id)
   end
 
   def get_stores_by_vendor(vendor_id) do
@@ -84,6 +83,12 @@ defmodule MzingaDelivery.Stores do
     |> order_by([s], desc: s.inserted_at)
     |> preload([:vendor, :approved_by, :rejected_by])
     |> Repo.all()
+  end
+
+  def update_vendor_store(%Store{} = store, attrs) do
+    store
+    |> Store.vendor_update_changeset(attrs)
+    |> Repo.update()
   end
 
   # admin store approval management
@@ -192,6 +197,7 @@ defmodule MzingaDelivery.Stores do
   def list_products_by_store(store_id) do
     Product
     |> where([p], p.store_id == ^store_id)
+    |> preload(:store)
     |> Repo.all()
   end
 
@@ -231,6 +237,62 @@ defmodule MzingaDelivery.Stores do
     Repo.delete(product)
   end
 
+  def rate_product(%Product{} = product, rating) do
+    case parse_rating(rating) do
+      {:ok, rating_dec} ->
+        if Decimal.compare(rating_dec, Decimal.new("1")) in [:gt, :eq] and
+             Decimal.compare(rating_dec, Decimal.new("5")) in [:lt, :eq] do
+          updated_ratings = (product.ratings || []) ++ [rating_dec]
+
+          product
+          |> Product.changeset(%{ratings: updated_ratings})
+          |> Repo.update()
+        else
+          changeset =
+            Ecto.Changeset.change(product)
+            |> Ecto.Changeset.add_error(:rating, "must be between 1 and 5")
+
+          {:error, changeset}
+        end
+
+      :error ->
+        changeset =
+          Ecto.Changeset.change(product)
+          |> Ecto.Changeset.add_error(:rating, "is invalid")
+
+        {:error, changeset}
+    end
+  end
+
+  defp parse_rating(rating) do
+    try do
+      rating_dec =
+        case rating do
+          %Decimal{} = r ->
+            r
+
+          r when is_float(r) ->
+            Decimal.from_float(r)
+
+          r when is_integer(r) ->
+            Decimal.new(r)
+
+          r when is_binary(r) ->
+            case Decimal.parse(r) do
+              {dec, ""} -> dec
+              _ -> raise ArgumentError
+            end
+
+          _ ->
+            raise ArgumentError
+        end
+
+      {:ok, rating_dec}
+    rescue
+      _ -> :error
+    end
+  end
+
   def reduce_product_stock(product_id, quantity) do
     product = Repo.get(Product, product_id)
 
@@ -250,7 +312,9 @@ defmodule MzingaDelivery.Stores do
   def count_filtered_stores(params \\ %{}), do: StoreFilters.count_filtered_stores(params)
 
   def filter_admin_stores(params \\ %{}), do: StoreFilters.filter_admin_stores(params)
-  def count_filtered_admin_stores(params \\ %{}), do: StoreFilters.count_filtered_admin_stores(params)
+
+  def count_filtered_admin_stores(params \\ %{}),
+    do: StoreFilters.count_filtered_admin_stores(params)
 
   def list_categories do
     Product

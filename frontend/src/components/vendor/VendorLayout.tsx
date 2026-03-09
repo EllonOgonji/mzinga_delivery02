@@ -23,10 +23,8 @@ const navigation = [
   { name: "Dashboard", href: "/vendor/dashboard", icon: LayoutDashboard },
   { name: "Products", href: "/vendor/products", icon: Package },
   { name: "Orders", href: "/vendor/orders", icon: ShoppingBag },
-  // { name: "Reviews", href: "/vendor/reviews", icon: Star },
-  // { name: "Analytics", href: "/vendor/analytics", icon: BarChart3 },
   { name: "Shop Profile", href: "/vendor/shop-profile", icon: Store },
-  // { name: "Settings", href: "/vendor/settings", icon: Settings },
+  { name: "Settings", href: "/vendor/settings", icon: Settings },
 ];
 
 export const VendorLayout = ({ children }: VendorLayoutProps) => {
@@ -34,12 +32,15 @@ export const VendorLayout = ({ children }: VendorLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: shopData } = useQuery({
-    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user') || '{}').id],
-    queryFn: () => getVendorShops(JSON.parse(localStorage.getItem('user') || '{}').id)
+
+  const { data: shopData = {} } = useQuery({
+    queryKey: ['store', 'index', JSON.parse(localStorage.getItem('user')).id],
+    queryFn: async () => {
+      const {status, error, data} = await getVendorShops(JSON.parse(localStorage.getItem('user')).id)
+      return data.data[0]
+    }
   });
 
-  // Mock data - replace with actual data
   const shopName = shopData?.name
   const notificationCount = 5;
 
@@ -92,9 +93,9 @@ export const VendorLayout = ({ children }: VendorLayoutProps) => {
             </Sheet>
 
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <Store className="h-5 w-5" />
-              </div>
+              </div> */}
               <h1 className="text-lg font-semibold hidden sm:block">{shopName}</h1>
             </div>
           </div>
@@ -102,43 +103,23 @@ export const VendorLayout = ({ children }: VendorLayoutProps) => {
           {/* Right: Notifications and Profile */}
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
+            {/* <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               {notificationCount > 0 && (
                 <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
                   {notificationCount}
                 </Badge>
               )}
-            </Button>
+            </Button> */}
 
             {/* Profile Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2">
                   <User className="h-5 w-5" />
-                  <span className="hidden sm:inline">Account</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link to="/shop/1" className="cursor-pointer">
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Shop (Public)
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/vendor/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Account Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/" className="cursor-pointer">
-                    <ShoppingBag className="mr-2 h-4 w-4" />
-                    Switch to Customer View
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout

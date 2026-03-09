@@ -26,12 +26,7 @@ defmodule MzingaDeliveryWeb.Admin.StoreJSON do
       rejection_reason: store.rejection_reason,
       approved_at: store.approved_at,
       rejected_at: store.rejected_at,
-      vendor: %{
-        id: store.vendor.id,
-        full_name: store.vendor.full_name,
-        email: store.vendor.email,
-        phone: store.vendor.phone_number
-      },
+      vendor: render_vendor(store.vendor),
       approved_by: render_admin(store.approved_by),
       rejected_by: render_admin(store.rejected_by),
       inserted_at: store.inserted_at,
@@ -39,6 +34,19 @@ defmodule MzingaDeliveryWeb.Admin.StoreJSON do
     }
   end
 
+  defp render_vendor(%Ecto.Association.NotLoaded{}), do: nil
+  defp render_vendor(nil), do: nil
+
+  defp render_vendor(vendor) do
+    %{
+      id: vendor.id,
+      full_name: vendor.full_name,
+      email: vendor.email,
+      phone: vendor.phone_number
+    }
+  end
+
+  defp render_admin(%Ecto.Association.NotLoaded{}), do: nil
   defp render_admin(nil), do: nil
 
   defp render_admin(admin) do

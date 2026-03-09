@@ -7,6 +7,9 @@ defmodule MzingaDelivery.Orders do
   alias MzingaDelivery.Repo
   alias MzingaDelivery.Orders.{Order, OrderItem}
   alias MzingaDelivery.Stores
+  alias MzingaDelivery.Carts
+  alias MzingaDelivery.Payments
+  alias MzingaDelivery.Payments.MpesaService
   alias MzingaDeliveryWeb.Endpoint
 
   @doc """
@@ -17,6 +20,62 @@ defmodule MzingaDelivery.Orders do
     |> preload([:customer, store: :vendor, order_items: :product])
     |> Repo.all()
   end
+
+  @doc """
+  Filters and paginates orders.
+  Supports: customer_id, store_id, payment_status, page, limit
+  """
+  def filter_orders(params) do
+    limit = parse_int(params["limit"], 10)
+    page = parse_int(params["page"], 1)
+    offset = (page - 1) * limit
+
+    Order
+    |> filter_by_customer(params)
+    |> filter_by_store(params)
+    |> filter_by_payment_status(params)
+    |> order_by([o], desc: o.inserted_at)
+    |> preload([:customer, store: :vendor, order_items: :product])
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def count_filtered_orders(params) do
+    Order
+    |> filter_by_customer(params)
+    |> filter_by_store(params)
+    |> filter_by_payment_status(params)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  defp filter_by_customer(query, %{"customer_id" => cid}) when cid != "" and not is_nil(cid),
+    do: where(query, [o], o.customer_id == ^cid)
+
+  defp filter_by_customer(query, _), do: query
+
+  defp filter_by_store(query, %{"store_id" => sid}) when sid != "" and not is_nil(sid),
+    do: where(query, [o], o.store_id == ^sid)
+
+  defp filter_by_store(query, _), do: query
+
+  defp filter_by_payment_status(query, %{"payment_status" => ps})
+       when ps != "" and not is_nil(ps),
+       do: where(query, [o], o.payment_status == ^ps)
+
+  defp filter_by_payment_status(query, _), do: query
+
+  defp parse_int(nil, default), do: default
+
+  defp parse_int(val, default) when is_binary(val) do
+    case Integer.parse(val) do
+      {x, _} -> x
+      _ -> default
+    end
+  end
+
+  defp parse_int(val, _default) when is_integer(val), do: val
+  defp parse_int(_val, default), do: default
 
   @doc """
   Calculates the total value of all successful (delivered) orders.
@@ -32,8 +91,8 @@ defmodule MzingaDelivery.Orders do
       Order
       |> join(:inner, [o], item in assoc(o, :order_items))
       |> where([o, item], item.status == "delivered")
-      
-    query = 
+
+    query =
       case timeframe do
         :day ->
           time_limit = DateTime.utc_now() |> DateTime.add(-24, :hour)
@@ -55,12 +114,13 @@ defmodule MzingaDelivery.Orders do
           query
       end
 
-    # The order has a total_amount column, but since we are joining order_items, 
+    # The order has a total_price column, but since we are joining order_items,
     # we should grab a distinct order amount to avoid multiplying the joined items
     # or just use fragment to sum distinct
     Repo.one(
-      from [o, _item] in query,
-      select: type(fragment("COALESCE(SUM(DISTINCT ?), 0)", o.total_amount), :decimal)
+      from([o, _item] in query,
+        select: type(fragment("COALESCE(SUM(DISTINCT ?), 0)", o.total_price), :decimal)
+      )
     )
   end
 
@@ -70,7 +130,7 @@ defmodule MzingaDelivery.Orders do
   def list_customer_orders(customer_id) do
     Order
     |> where([o], o.customer_id == ^customer_id)
-    |> preload([:store, order_items: :product])
+    |> preload([:customer, store: :vendor, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
   end
@@ -315,5 +375,178 @@ defmodule MzingaDelivery.Orders do
         end
       end
     end)
+  end
+
+  @doc """
+  Creates unified checkout orders for cart items.
+  Splits items by store, creates one order per store, and one payment for the total.
+  """
+  def create_unified_checkout(user, attrs \\ %{}) do
+    require Logger
+    Logger.info("Checkout attrs received: #{inspect(attrs)}")
+    payment_phone = Map.get(attrs, "payment_phone") || user.phone_number
+
+    # Get Cart
+    cart = Carts.get_cart(user.id)
+
+    if is_nil(cart) or Enum.empty?(cart.items) do
+      {:error, :empty_cart}
+    else
+      Repo.transaction(
+        fn ->
+          items = cart.items
+          checkout_group_id = Ecto.UUID.generate()
+
+          # Group items by store
+          grouped_items = Enum.group_by(items, & &1.product.store_id)
+
+          # Create Orders (one per store)
+          created_orders =
+            Enum.map(grouped_items, fn {store_id, store_items} ->
+              items_total =
+                Enum.reduce(store_items, Decimal.new(0), &Decimal.add(&1.subtotal, &2))
+
+              store = MzingaDelivery.Stores.get_store!(store_id)
+              delivery_lat = Map.get(attrs, "delivery_lat")
+              delivery_lng = Map.get(attrs, "delivery_lng")
+
+              require Logger
+
+              Logger.info(
+                "Checkout delivery calc: delivery_lat=#{inspect(delivery_lat)}, delivery_lng=#{inspect(delivery_lng)}, store_lat=#{inspect(store.latitude)}, store_lng=#{inspect(store.longitude)}"
+              )
+
+              # Try to calculate delivery fee
+              delivery_fee =
+                if is_nil(delivery_lat) or is_nil(delivery_lng) do
+                  Logger.warning(
+                    "Checkout: delivery_lat or delivery_lng is nil, defaulting delivery_fee to 0"
+                  )
+
+                  Decimal.new(0)
+                else
+                  if is_nil(store.latitude) or is_nil(store.longitude) do
+                    Logger.warning(
+                      "Checkout: Store #{store_id} has nil latitude/longitude, defaulting delivery_fee to 0"
+                    )
+
+                    Decimal.new(0)
+                  else
+                    case MzingaDelivery.Delivery.Calculator.calculate_delivery(
+                           store.latitude,
+                           store.longitude,
+                           delivery_lat,
+                           delivery_lng
+                         ) do
+                      {:ok, result} ->
+                        fee = Decimal.from_float(result.fee)
+                        Logger.info("Checkout: Delivery fee calculated = #{inspect(fee)}")
+                        fee
+
+                      {:error, reason} ->
+                        Logger.error("Checkout: Delivery calculation failed: #{inspect(reason)}")
+                        Decimal.new(0)
+                    end
+                  end
+                end
+
+              total_price = Decimal.add(items_total, delivery_fee)
+
+              Logger.info(
+                "Checkout: items_total=#{inspect(items_total)}, delivery_fee=#{inspect(delivery_fee)}, total_price=#{inspect(total_price)}"
+              )
+
+              # Prepare Order Items attrs
+              order_items_attrs =
+                Enum.map(store_items, fn item ->
+                  %{
+                    "product_id" => item.product_id,
+                    "quantity" => item.quantity,
+                    "subtotal" => item.subtotal
+                  }
+                end)
+
+              order_params = %{
+                "customer_id" => user.id,
+                "store_id" => store_id,
+                "total_price" => total_price,
+                "delivery_fee" => delivery_fee,
+                "checkout_group_id" => checkout_group_id,
+                "payment_status" => "pending",
+                "delivery_lat" => delivery_lat,
+                "delivery_lng" => delivery_lng,
+                "items" => order_items_attrs
+              }
+
+              case create_order_with_items(order_params) do
+                {:ok, order} -> order
+                {:error, reason} -> Repo.rollback(reason)
+              end
+            end)
+
+          # Calculate Grand Total
+          grand_total =
+            Enum.reduce(created_orders, Decimal.new(0), &Decimal.add(&1.total_price, &2))
+
+          # Create Payment
+          {:ok, payment} =
+            Payments.create_payment(%{
+              checkout_group_id: checkout_group_id,
+              amount: grand_total,
+              status: "pending",
+              provider: "M-Pesa"
+            })
+
+          # Initiate M-Pesa STK Push
+          # Use short ref for AccountReference
+          ref_id = "GRP-#{String.slice(checkout_group_id, 0, 8)}"
+
+          Logger.info(
+            "Checkout: grand_total for STK push = #{inspect(grand_total)}, phone = #{inspect(payment_phone)}"
+          )
+
+          case MpesaService.initiate_stk_push(payment_phone, grand_total, ref_id) do
+            {:ok, mpesa_response} ->
+              # Update payment with transaction ID
+              Payments.update_payment(payment, %{
+                transaction_id: mpesa_response["CheckoutRequestID"]
+              })
+
+              # Clear Cart
+              Carts.clear_cart(user.id)
+
+              %{
+                status: "payment_initiated",
+                checkout_group_id: checkout_group_id,
+                payment: payment,
+                orders: created_orders,
+                mpesa_response: mpesa_response,
+                message: "Payment initiated for #{length(created_orders)} orders"
+              }
+
+            {:error, reason} ->
+              Repo.rollback(reason)
+          end
+        end,
+        timeout: 60_000
+      )
+    end
+  end
+
+  @doc """
+  Updates payment status for all orders in a checkout group.
+  """
+  def update_group_orders_payment_status(group_id, status) do
+    from(o in Order, where: o.checkout_group_id == ^group_id)
+    |> Repo.update_all(set: [payment_status: status])
+  end
+
+  @doc """
+  Get all orders in a checkout group.
+  """
+  def get_orders_by_group(group_id) do
+    from(o in Order, where: o.checkout_group_id == ^group_id)
+    |> Repo.all()
+    |> Repo.preload(:customer)
   end
 end

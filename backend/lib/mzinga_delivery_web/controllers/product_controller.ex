@@ -82,6 +82,17 @@ defmodule MzingaDeliveryWeb.ProductController do
     end
   end
 
+  @doc """
+  Rate a product
+  POST /api/products/:id/rate
+  """
+  def rate(conn, %{"id" => id, "rating" => rating}) do
+    with {:ok, product} <- Stores.get_product!(id),
+         {:ok, updated_product} <- Stores.rate_product(product, rating) do
+      render(conn, "show.json", product: updated_product)
+    end
+  end
+
   # Authorization: vendor must own the store OR be admin
   defp ensure_vendor_or_admin(conn, _opts) do
     user = Guardian.Plug.current_resource(conn)

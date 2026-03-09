@@ -66,6 +66,8 @@ if config_env() == :prod do
       ssl: [verify: :verify_none],
       url: database_url,
       pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
+      queue_target: 5000,
+      queue_interval: 5000,
       # Required for Supabase Transaction Pooler (port 6543)
       prepare: :unnamed,
       socket_options: maybe_ipv6
@@ -110,6 +112,9 @@ if config_env() == :prod do
     consumer_secret:
       System.get_env("MPESA_CONSUMER_SECRET") || raise("MPESA_CONSUMER_SECRET not set"),
     callback_url: System.get_env("MPESA_CALLBACK_URL") || raise("MPESA_CALLBACK_URL not set")
+
+  config :mzinga_delivery, MzingaDelivery.Mailer,
+    api_key: System.get_env("BREVO_API_KEY") || raise("BREVO_API_KEY not set")
 else
   # DEVELOPMENT/TEST CONFIGURATION
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
@@ -16,7 +16,7 @@ import { Slider } from '@/components/ui/slider';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useShopFilter } from '@/contexts/ShopFilterContext';
-import { Filter, Grid, List, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, Grid, List, X, ChevronDown, ChevronUp, Search, Loader } from 'lucide-react';
 import { Product, ProductFilters } from '@/types';
 import { getAllProducts } from '@/data/productData';
 import { Pagination, PaginationContent,
@@ -27,15 +27,9 @@ import { Pagination, PaginationContent,
   PaginationPrevious, } from "@/components/ui/pagination";
 
 const categories = [
-  'Alcohol & Beverages',
+  'Alcohol',
+  'Beverage',
   'Fast Food',
-  'Groceries',
-  'Electronics',
-  'Fashion',
-  'Beauty & Personal Care',
-  'Home & Garden',
-  'Services',
-  'Health & Wellness'
 ];
 
 export default function Products() {
@@ -53,13 +47,18 @@ export default function Products() {
   const [maxPrice, setMaxPrice] = useState('0');
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [shopFeatures, setShopFeatures] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>(search ? search : '');
+  const searchTermRef = useRef(null)
   const [paginationSettings, setPaginationSettings] = useState({
     page: 1,
-    limit: 6,
+    limit: 8,
     total: 0,
     totalPages: 0,
-    searchQuery: search || ''
+    searchQuery: search || '',
+    category: '',
+    priceRange: {
+      min: null,
+      max: null
+    }
   });
 
   // Expandable sections
@@ -77,30 +76,10 @@ export default function Products() {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Filter and sort products
-  // Construct filter object
-  const filter = useMemo(() => {
-    let f: ProductFilters = {limit: paginationSettings.limit, page: paginationSettings.page};
-
-    if (selectedCategory && selectedCategory !== '') {
-      f.category = selectedCategory;
-    }
-
-    if (priceRange[0] != 0 || priceRange[1] != 0) {
-      f.priceRange = { min: priceRange[0], max: priceRange[1] };
-    }
-
-    if (searchQuery && searchQuery.trim() !== '') {
-      f.searchQuery = searchQuery;
-    }
-
-    return f;
-  }, [selectedCategory, priceRange, selectedRating, searchQuery, paginationSettings]);
-
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['products', filter],
+    queryKey: ['products', paginationSettings],
     queryFn: async () => {
-      const res = await getAllProducts(filter)
+      const res = await getAllProducts(paginationSettings)
       setPaginationSettings(prev => ({
         ...prev,
         total: res.meta.total,
@@ -110,368 +89,162 @@ export default function Products() {
     },
   });
 
-  // Sort products
-  const filteredProducts = useMemo(() => {
-    let productsCopy = [...products];
-
-    switch (sortBy) {
-      case 'price-low':
-        productsCopy.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        productsCopy.sort((a, b) => b.price - a.price)
-        break;
-      case 'newest':
-        productsCopy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        break;
-    }
-
-    return productsCopy;
-  }, [products, sortBy]);
-
   const clearAllFilters = () => {
-    setSelectedCategory('');
-    setPriceRange([0, 0]);
-    setMinPrice('0');
-    setMaxPrice('0');
-    setSelectedRating(0);
-    setShopFeatures([]);
-  };
-
-  const activeFilters = [
-    ...(selectedCategory ? [{ label: selectedCategory, type: 'category' as const }] : []),
-    ...(selectedRating > 0 ? [{ label: `${selectedRating}+ stars`, type: 'rating' as const }] : []),
-    ...(priceRange[0] > 0 || priceRange[1] > 0 ? [{ label: `$${priceRange[0]}-$${priceRange[1]}`, type: 'price' as const }] : []),
-    ...shopFeatures.map(f => ({ label: f.replace('-', ' '), type: 'feature' as const })),
-  ];
-
-  const removeFilter = (filter: typeof activeFilters[0]) => {
-    if (filter.type === 'category') {
-      setSelectedCategory('');
-    } else if (filter.type === 'rating') {
-      setSelectedRating(0);
-    } else if (filter.type === 'price') {
-      setPriceRange([0, 0]);
-      setMinPrice('0');
-      setMaxPrice('0');
-    } else if (filter.type === 'feature') {
-      setShopFeatures(prev => prev.filter(f => f.replace('-', ' ') !== filter.label));
+   setPaginationSettings({
+    page: 1,
+    limit: 8,
+    total: 0,
+    totalPages: 0,
+    searchQuery: '',
+    category: '',
+    priceRange: {
+      min: 0,
+      max: 0
     }
+   })
+   setIsFilterOpen(false)
   };
 
-  const FilterSidebar = () => (
-    <div className="space-y-6">
-      {/* Shop Filter Section */}
-      {/* <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('shops')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Selected Shops</h3>
-          {expandedSections.shops ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.shops && (
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="shop-from-all"
-                checked={shopFromAll}
-                onCheckedChange={(checked) => setShopFromAll(checked as boolean)}
-              />
-              <Label htmlFor="shop-from-all" className="text-sm cursor-pointer">
-                Shop from all stores
-              </Label>
-            </div>
-            {!shopFromAll && (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {selectedShops.length === 0 ? 'No shops selected' : `${selectedShops.length} shops selected`}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setIsShopFilterOpen(true)}
-                >
-                  Change Shops
-                </Button>
-              </>
-            )}
-          </div>
-        )}
-      </div> */}
-
-      {/* Category Filter */}
-      {/* <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('categories')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Categories</h3>
-          {expandedSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.categories && (
-          <div className="space-y-2">
-            {categories.map(category => (
-              <div key={category} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`category-${category}`}
-                  checked={selectedCategories.includes(category)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedCategories(prev => [...prev, category]);
-                    } else {
-                      setSelectedCategories(prev => prev.filter(c => c !== category));
-                    }
-                  }}
-                />
-                <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
-                  {category}
-                </Label>
-              </div>
-            ))}
-          </div>
-        )}
-      </div> */}
-
-      {/* Price Range */}
-      <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('price')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Price Range</h3>
-          {expandedSections.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.price && (
-          <div className="space-y-4">
-            {/* <Slider
-              value={priceRange}
-              onValueChange={(value) => {
-                setPriceRange(value);
-                setMinPrice(value[0].toString());
-                setMaxPrice(value[1].toString());
-              }}
-              max={500}
-              step={5}
+  const DesktopFilters = () => (
+    <div className='grid grid-cols-1 md:grid-cols-10 gap-4'>
+      <div className="md:col-span-5 md:mt-7">
+        <div className="relative w-full flex gap-2">
+          <form className='flex items-center gap-2 w-full' onSubmit={(e) => {e.preventDefault(); setIsFilterOpen(false); setPaginationSettings({...paginationSettings, searchQuery: searchTermRef.current.value})}}>
+            <Input
+              ref={searchTermRef}
+              name='searchTerm'
+              type="search"
+              placeholder="Search products"
               className="w-full"
-            /> */}
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                placeholder="Min"
-                value={minPrice}
-                onChange={(e) => {
-                  setMinPrice(e.target.value);
-                  const val = parseInt(e.target.value) || 0;
-                  setPriceRange([val, priceRange[1]]);
-                }}
-                className="w-full"
-              />
-              -
-              <Input
-                type="number"
-                placeholder="Max"
-                value={maxPrice}
-                onChange={(e) => {
-                  setMaxPrice(e.target.value);
-                  const val = parseInt(e.target.value) || 500;
-                  setPriceRange([priceRange[0], val]);
-                }}
-                className="w-full"
-              />
-            </div>
-            {/* <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setPriceRange([0, 10]); setMinPrice('0'); setMaxPrice('10'); }}>
-                Under $10
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => { setPriceRange([10, 50]); setMinPrice('10'); setMaxPrice('50'); }}>
-                $10-$50
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => { setPriceRange([50, 100]); setMinPrice('50'); setMaxPrice('100'); }}>
-                $50-$100
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => { setPriceRange([100, 500]); setMinPrice('100'); setMaxPrice('500'); }}>
-                Over $100
-              </Button>
-            </div> */}
-          </div>
-        )}
+            />
+            <Button type='submit' variant="outline">
+              <Search/>
+            </Button>
+          </form>
+        </div>
       </div>
 
-      {/* Rating Filter */}
-      <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('rating')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Rating</h3>
-          {expandedSections.rating ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.rating && (
-          <div className="space-y-2">
-            {[5, 4, 3, 2, 1].map(rating => (
-              <div key={rating} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`rating-${rating}`}
-                  checked={selectedRating === rating}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedRating(rating);
-                    } else {
-                      setSelectedRating(0);
-                    }
-                  }}
-                />
-                <Label htmlFor={`rating-${rating}`} className="text-sm cursor-pointer">
-                  {rating === 5 ? '5 stars' : `${rating} stars & up`}
-                </Label>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="md:col-span-1">
+        <div className="flex flex-col items-start justify-center gap-2">
+          <Label className='text-sm text-muted-foreground font-light'>Category</Label>
+          <Select value={paginationSettings.category} onValueChange={(value) => setPaginationSettings({...paginationSettings, category: value})}>
+            <SelectTrigger className="w-full rounded-none">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>{category}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Delivery Options */}
-      {/* <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('delivery')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Delivery Options</h3>
-          {expandedSections.delivery ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.delivery && (
-          <div className="space-y-2">
-            {['Pickup available', 'Express delivery', 'Standard delivery', 'Scheduled delivery', 'Free delivery'].map(option => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`delivery-${option}`}
-                  checked={deliveryOptions.includes(option)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setDeliveryOptions(prev => [...prev, option]);
-                    } else {
-                      setDeliveryOptions(prev => prev.filter(o => o !== option));
-                    }
-                  }}
-                />
-                <Label htmlFor={`delivery-${option}`} className="text-sm cursor-pointer">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </div>
-        )}
-      </div> */}
-
-      {/* Shop Features */}
-      <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('features')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Shop Features</h3>
-          {expandedSections.features ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.features && (
-          <div className="space-y-2">
-            {[
-              { id: 'open-now', label: 'Open now' },
-            ].map(feature => (
-              <div key={feature.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`feature-${feature.id}`}
-                  checked={shopFeatures.includes(feature.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setShopFeatures(prev => [...prev, feature.id]);
-                    } else {
-                      setShopFeatures(prev => prev.filter(f => f !== feature.id));
-                    }
-                  }}
-                />
-                <Label htmlFor={`feature-${feature.id}`} className="text-sm cursor-pointer">
-                  {feature.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="flex items-center gap-2 md:col-span-2">
+        <div className='flex flex-col'>
+          <Label className='mb-2 text-sm text-muted-foreground font-light'>Min price</Label>
+          <Input
+            type="number"
+            placeholder="Min price"
+            value={minPrice}
+            onChange={(e) => {
+              setPaginationSettings({...paginationSettings, priceRange: {...paginationSettings.priceRange, min: Number(e.target.value)}})
+            }}
+            className="w-full"
+          />
+        </div>
+        <div className='flex flex-col'>
+          <Label className='mb-2 text-sm text-muted-foreground font-light'>Max price</Label>
+            <Input
+            type="number"
+            placeholder="Max price"
+            value={maxPrice}
+            onChange={(e) => {
+            setPaginationSettings({...paginationSettings, priceRange: {...paginationSettings.priceRange, max: Number(e.target.value)}})
+            }}
+            className="w-full"
+          />
+        </div>
       </div>
 
-      {/* Distance Filter */}
-      {/* <div className="pb-4">
-        <button
-          onClick={() => toggleSection('distance')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Distance</h3>
-          {expandedSections.distance ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.distance && (
-          <RadioGroup value={distance} onValueChange={setDistance}>
-            {['within-1km', 'within-5km', 'any'].map(dist => (
-              <div key={dist} className="flex items-center space-x-2">
-                <RadioGroupItem value={dist} id={`distance-${dist}`} />
-                <Label htmlFor={`distance-${dist}`} className="text-sm cursor-pointer">
-                  {dist === 'any' ? 'Any distance' : dist.replace('within-', 'Within ').replace('km', ' km')}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        )}
-      </div> */}
+      <div className="space-y-2 col-span-2 flex items-end">
+        <Button variant="outline" className="w-full" onClick={clearAllFilters}>
+          Clear All Filters
+        </Button>
+      </div>
 
-      {/* Action Buttons */}
+    </div>
+  );
+
+  const MobileSidebar = () => (
+    <div className='grid grid-cols-1 md:grid-cols-9 gap-4'>
+      <div className="md:col-span-6 md:mt-7">
+        <div className="relative w-full flex gap-2">
+          <form className='flex items-center gap-2 w-full' onSubmit={(e) => {e.preventDefault(); setIsFilterOpen(false); setPaginationSettings({...paginationSettings, searchQuery: searchTermRef.current.value})}}>
+            <Input
+              ref={searchTermRef}
+              name='searchTerm'
+              type="search"
+              placeholder="Search products"
+              className="w-full"
+            />
+            <Button type='submit' variant="outline">
+              <Search/>
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      <div className="md:col-span-1">
+        <div className="flex flex-col items-start justify-center gap-2">
+          <Label className='text-sm text-muted-foreground font-light'>Category</Label>
+          <Select value={paginationSettings.category} onValueChange={(value) => setPaginationSettings({...paginationSettings, category: value})}>
+            <SelectTrigger className="w-full rounded-none">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>{category}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+      </div>
+        </div>
+        {/* Sort Dropdown */}
+
+      <div className="flex items-center gap-2 md:col-span-2">
+        <div className='flex flex-col'>
+          <Label className='mb-2 text-sm text-muted-foreground font-light'>Min price</Label>
+          <Input
+            type="number"
+            placeholder="Min price"
+            value={minPrice}
+            onChange={(e) => {
+              setPaginationSettings({...paginationSettings, priceRange: {...paginationSettings.priceRange, min: Number(e.target.value)}})
+            }}
+            className="w-full"
+          />
+        </div>
+        <div className='flex flex-col'>
+          <Label className='mb-2 text-sm text-muted-foreground font-light'>Max price</Label>
+            <Input
+            type="number"
+            placeholder="Max price"
+            value={maxPrice}
+            onChange={(e) => {
+            setPaginationSettings({...paginationSettings, priceRange: {...paginationSettings.priceRange, max: Number(e.target.value)}})
+            }}
+            className="w-full"
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Button variant="outline" className="w-full" onClick={clearAllFilters}>
           Clear All Filters
         </Button>
       </div>
-    </div>
-  );
 
-  const CategoriesSidebar = () => (
-    <div className="space-y-6">
-      <div className="border-b pb-4">
-        <button
-          onClick={() => toggleSection('categories')}
-          className="flex items-center justify-between w-full text-left mb-3"
-        >
-          <h3 className="font-semibold">Categories</h3>
-          {expandedSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {expandedSections.categories && (
-          <div className="space-y-2">
-            <RadioGroup value={selectedCategory} onValueChange={val => setSelectedCategory(val)}>
-              {categories.map(category => (
-                <div key={category} className="flex items-center space-x-2">
-                  <RadioGroupItem value={category} id={`category-${category}`} />
-
-                  <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
-                    {category}
-                  </Label>
-                  {/* <Checkbox
-                    id={`category-${category}`}
-                    checked={selectedCategory === category}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedCategory(category);
-                      } else {
-                        setSelectedCategory('');
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
-                    {category}
-                  </Label> */}
-                </div>
-              ))}
-          </RadioGroup>
-          </div>
-        )}
-      </div>
     </div>
   );
 
@@ -480,52 +253,19 @@ export default function Products() {
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-6">
-        {/* Breadcrumb */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Products</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        <div className='lg:flex flex-wrap justify-between mb-6 hidden'>
-          {categories.map((category) => (
-            <Button variant='outline'>
-              {category}
-            </Button>
-          ))}
-        </div>
-
         <div className="flex gap-6">
-          {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-20">
-              <FilterSidebar />
-            </div>
-          </aside>
 
           {/* Main Content */}
           <div className="flex-1">
             {/* Results Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex md:flex-col items-end md:items-start justify-between gap-4 mb-6">
               <div className="flex items-center justify-between gap-4">
-                <h1 className="text-xl font-bold">
-                  {paginationSettings.total} products found
-                </h1>
 
-                {/* Mobile Filter Button */}
-                {/* <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                {/* Mobile filters button */}
+                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="lg:hidden">
-                      <Filter className="h-4 w-4" />
-
+                    <Button variant="outline" size="icon" className="lg:hidden">
+                      <Filter className="h-2 w-2" />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 overflow-y-auto">
@@ -533,100 +273,55 @@ export default function Products() {
                       <SheetTitle>Filters</SheetTitle>
                     </SheetHeader>
                     <div className="mt-6">
-                      <FilterSidebar />
-                    </div>
-                  </SheetContent>
-                </Sheet> */}
-
-                {/* Mobile Categories Button */}
-                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="lg:hidden">
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-80 overflow-y-auto">
-                    <SheetHeader>
-                      <SheetTitle>Categories</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6">
-                      <CategoriesSidebar />
+                      <MobileSidebar />
                     </div>
                   </SheetContent>
                 </Sheet>
               </div>
-
-              <div className="flex items-center gap-4">
-                {/* View Toggle */}
-                {/* <div className="flex border rounded-lg">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div> */}
-
-                {/* Sort Dropdown */}
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full md:w-48 rounded-none">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                  </SelectContent>
-                </Select>
+              
+              <div className='hidden md:block'>
+                <DesktopFilters />
               </div>
+              
+              <h1 className="text-sm uppercase text-accent-foreground">
+                {paginationSettings.total} products found
+              </h1>
             </div>
 
-            {/* Active Filters */}
-            {activeFilters.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {activeFilters.map((filter, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
-                    {filter.label}
-                    <button onClick={() => removeFilter(filter)}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                <Button variant="link" size="sm" onClick={clearAllFilters}>
-                  Clear filters
-                </Button>
-              </div>
-            )}
-
             {/* Product Grid */}
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="mb-4 text-6xl">🛍️</div>
-                <h2 className="text-2xl font-semibold mb-2">No products found</h2>
-                <p className="text-muted-foreground mb-6">Try adjusting your filters or browse all shops</p>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Suggestions:</p>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Clear some filters</li>
-                    <li>• Browse all shops</li>
-                    <li>• Try different keywords</li>
-                  </ul>
+            {products.length === 0 ? (
+              <>
+               {isLoading ? (   
+                <div className="text-center py-16 flex justify-center items-center h-96">
+                  <Loader className="animate-spin h-5 w-5 mr-3" />
+                </div>) : 
+                <div className="text-center py-16">
+                  <div className="mb-4 text-6xl">🛍️</div>
+                  <h2 className="text-2xl font-semibold mb-2">No products found</h2>
+                  <p className="text-muted-foreground mb-6">Try adjusting your filters or browse all shops</p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Suggestions:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>
+                        <Button onClick={clearAllFilters} className="mt-6">
+                          Clear Filters
+                        </Button>
+                      </li>
+                      <li>
+                        <Link to={"/"}>
+                          <Button onClick={clearAllFilters} className="mt-6">
+                            View all shops
+                          </Button>
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                <Button onClick={clearAllFilters} className="mt-6">
-                  Clear Filters
-                </Button>
-              </div>
+               }
+              </>
             ) : (
-              <div className={'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'}>
-                {filteredProducts.map(product => (
+              <div className={'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6'}>
+                {products.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
