@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader } from 'lucide-react';
+import { Loader, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -16,6 +16,11 @@ const Login = () => {
         password: '',
     });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const preventCopyPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+    };
 
     const handleSubmit = (e: React.FormEvent, asDraft = false) => {
         setLoading(true);
@@ -26,6 +31,18 @@ const Login = () => {
             toast({
                 title: "Error",
                 description: "Please fill in all required fields",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            toast({
+                title: "Error",
+                description: "Please enter a valid email address",
                 variant: "destructive",
             });
             setLoading(false);
@@ -47,11 +64,6 @@ const Login = () => {
 
             return response.json();
         }).then((res) => {
-            toast({
-                title: "Success!",
-                description: `Successfully logged in as ${res.data.user.role}.`,
-            });
-
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('role', res.data.user.role);
             localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -93,14 +105,27 @@ const Login = () => {
 
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password *</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Enter your password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    required
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Enter your password"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        onCopy={preventCopyPaste}
+                                        onPaste={preventCopyPaste}
+                                        onCut={preventCopyPaste}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <Button

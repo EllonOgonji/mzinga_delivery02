@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Check, ChevronRight, MapPin, Phone, Smartphone, Loader } from 'lucide-react';
+import { Check, ChevronRight, MapPin, Phone, Smartphone, Loader, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,18 @@ export default function Checkout() {
 
     if (!agreedToTerms) {
       toast.error('Please agree to the Terms of Service');
+      setLoading(false)
+      return;
+    }
+
+    if (!latitude || !longitude) {
+      toast.error('Please set your delivery location before placing an order');
+      setLoading(false)
+      return;
+    }
+
+    if (!shopsData?.length || totalDeliveryFees <= 0) {
+      toast.error('Delivery fee has not been calculated yet. Please set your location and wait for delivery fees to load.');
       setLoading(false)
       return;
     }
@@ -418,10 +430,22 @@ export default function Checkout() {
                       </Link>
                     </Label>
                   </div>
+                  {(!latitude || !longitude) && (
+                    <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                      <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                      <span>Please set your delivery location before placing an order</span>
+                    </div>
+                  )}
+                  {(latitude && longitude && (!shopsData?.length || totalDeliveryFees <= 0) && !isLoadingDelivery) && (
+                    <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                      <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                      <span>Delivery fee is being calculated. Please wait...</span>
+                    </div>
+                  )}
                   <Button
                     className="w-full bg-accent hover:bg-accent/90"
                     onClick={handlePlaceOrder}
-                    disabled={!agreedToTerms || !latitude || !longitude}
+                    disabled={!agreedToTerms || !latitude || !longitude || !shopsData?.length || totalDeliveryFees <= 0}
                   >
                     {loading ? <Loader className="animate-spin h-5 w-5 mr-3" /> : 'Place Order'}
                   </Button>

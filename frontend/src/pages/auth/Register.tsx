@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
+import { ArrowLeft, Upload, X, Plus, Loader, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { mockProducts } from '@/data/mockData';
 
@@ -23,6 +23,8 @@ type Response = {
 const Login = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         full_name: '',
         email: '',
@@ -32,16 +34,46 @@ const Login = () => {
         password_confirmation: '',
     });
 
+    const preventCopyPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+    };
+
     const handleSubmit = (e: React.FormEvent, asDraft = false) => {
         e.preventDefault();
+        setLoading(true);
 
         // Validation
         if (!formData.role) {
             toast({
                 title: "Error",
-                description: "Please fill in all required fields",
+                description: "Please select a role",
                 variant: "destructive",
             });
+            setLoading(false);
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            toast({
+                title: "Error",
+                description: "Please enter a valid email address",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return;
+        }
+
+        // Validate phone number format (254XXXXXXXXX)
+        const phoneRegex = /^254\d{9}$/;
+        if (!phoneRegex.test(formData.phone_number)) {
+            toast({
+                title: "Error",
+                description: "Phone number must be in the format 254XXXXXXXXX (e.g., 254712345678)",
+                variant: "destructive",
+            });
+            setLoading(false);
             return;
         }
 
@@ -81,6 +113,7 @@ const Login = () => {
                         variant: "destructive",
                     });
                     console.log("Vendor store creation failed");
+                    setLoading(false);
                     return;
                 }
                 navigate('/vendor/dashboard')
@@ -94,6 +127,7 @@ const Login = () => {
                 description: error.message,
                 variant: "destructive",
             });
+            setLoading(false);
             return;
         })
 
@@ -177,7 +211,7 @@ const Login = () => {
                                 <Label htmlFor="phone_number">Phone Number *</Label>
                                 <Input
                                     id="phone_number"
-                                    placeholder="e.g., +1234567890"
+                                    placeholder="e.g., 254712345678"
                                     value={formData.phone_number}
                                     onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                                     required
@@ -202,21 +236,34 @@ const Login = () => {
 
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password *</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Enter your password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value, password_confirmation: e.target.value })}
-                                    required
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Enter your password"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value, password_confirmation: e.target.value })}
+                                        onCopy={preventCopyPaste}
+                                        onPaste={preventCopyPaste}
+                                        onCut={preventCopyPaste}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <Button
                                 type="submit"
                                 className='w-full'
                             >
-                                Sign Up
+                                {loading ? <Loader className="animate-spin h-5 w-5" /> : 'Sign Up'}
                             </Button>
                         </CardContent>
                         <CardFooter className='text-sm text-muted-foreground justify-center'>

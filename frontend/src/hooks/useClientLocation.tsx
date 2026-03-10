@@ -31,18 +31,18 @@ export const useClientLocation = () => {
     // Set loading to true when starting to fetch location
     setLocation(prev => ({ ...prev, locationLoading: true, error: null }));
 
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    };
+    const attempt = (useHighAccuracy: boolean = true) => {
+      const options = {
+        enableHighAccuracy: useHighAccuracy,
+        timeout: useHighAccuracy ? 10000 : 15000,
+        maximumAge: 0
+      };
 
-    const attempt = () => {
       const success = (position) => {
         retryCountRef.current = 0;
         setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+          latitude: Math.round(position.coords.latitude * 1e6) / 1e6,
+          longitude: Math.round(position.coords.longitude * 1e6) / 1e6,
           error: null,
           locationLoading: false
         });
@@ -52,28 +52,49 @@ export const useClientLocation = () => {
         retryCountRef.current += 1;
 
         if (retryCountRef.current < MAX_RETRIES) {
-          // Retry after a delay
-          setTimeout(attempt, RETRY_DELAY_MS);
+          // On second retry, fall back to low accuracy for broader compatibility
+          const fallbackAccuracy = retryCountRef.current >= 2 ? false : useHighAccuracy;
+          setTimeout(() => attempt(fallbackAccuracy), RETRY_DELAY_MS);
         } else {
-          // Max retries reached
-          setLocation({
-            latitude: null,
-            longitude: null,
-            error: err.message,
-            locationLoading: false
-          });
-          toast.error('Unable to get your location. Please check your location permissions and try again.');
+          // Max retries reached — try watchPosition as a last resort
+          const watchId = navigator.geolocation.watchPosition(
+            (position) => {
+              navigator.geolocation.clearWatch(watchId);
+              setLocation({
+                latitude: Math.round(position.coords.latitude * 1e6) / 1e6,
+                longitude: Math.round(position.coords.longitude * 1e6) / 1e6,
+                error: null,
+                locationLoading: false
+              });
+            },
+            () => {
+              navigator.geolocation.clearWatch(watchId);
+              setLocation({
+                latitude: null,
+                longitude: null,
+                error: err.message,
+                locationLoading: false
+              });
+              toast.error('Unable to get your location. Please check your location permissions and try again.');
+            },
+            { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+          );
+
+          // Safety timeout to clear watch if it hangs
+          setTimeout(() => {
+            navigator.geolocation.clearWatch(watchId);
+          }, 25000);
         }
       };
 
       navigator.geolocation.getCurrentPosition(success, error, options);
     };
 
-    attempt();
-  }, []); // Empty dependency array since it doesn't depend on any props/state
-  console.log(location)
+    attempt(true);
+  }, []);
+
   return {
     ...location,
-    getLocation // Return the function to trigger location fetch
+    getLocation
   };
 };

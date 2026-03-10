@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader } from 'lucide-react';
+import { Loader, Eye, EyeOff } from 'lucide-react';
 
 const Reset = () => {
     const {token} = useParams()
@@ -17,6 +17,12 @@ const Reset = () => {
         password_confirmation: ''
     });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const preventCopyPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         setLoading(true);
@@ -76,26 +82,52 @@ const Reset = () => {
                         <CardContent className="space-y-4 w-full text-left">
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Enter your password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    required
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Enter your password"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        onCopy={preventCopyPaste}
+                                        onPaste={preventCopyPaste}
+                                        onCut={preventCopyPaste}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="password" className={`${(formData.password != formData.password_confirmation) && "text-red-600"}`}>Password Confirmation</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Confirm your password"
-                                    value={formData.password_confirmation}
-                                    onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-                                    required
-                                />
+                                <Label htmlFor="password_confirmation" className={`${(formData.password != formData.password_confirmation) && "text-red-600"}`}>Password Confirmation</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="password_confirmation"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder="Confirm your password"
+                                        value={formData.password_confirmation}
+                                        onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                                        onCopy={preventCopyPaste}
+                                        onPaste={preventCopyPaste}
+                                        onCut={preventCopyPaste}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        tabIndex={-1}
+                                    >
+                                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <Button
