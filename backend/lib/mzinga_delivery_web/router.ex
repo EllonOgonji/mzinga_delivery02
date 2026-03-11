@@ -62,11 +62,14 @@ defmodule MzingaDeliveryWeb.Router do
 
     # Orders
     get("/orders/filter", OrderFilterController, :filter)
+    get("/orders/available", OrderController, :available_for_pickup)
+    get("/orders/assigned", OrderController, :assigned_to_rider)
     resources("/orders", OrderController, only: [:index, :show, :create])
     patch("/orders/:id/accept", OrderController, :accept)
     patch("/orders/:id/reject", OrderController, :reject)
     patch("/orders/:id/items/:item_id", OrderController, :update_item)
     post("/orders/:id/pick", OrderController, :pick_order)
+    patch("/orders/:id/deliver", OrderController, :deliver)
     post("/checkout", CheckoutController, :create)
 
     # Cart
