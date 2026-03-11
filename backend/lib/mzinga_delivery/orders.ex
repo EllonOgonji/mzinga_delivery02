@@ -549,4 +549,48 @@ defmodule MzingaDelivery.Orders do
     |> Repo.all()
     |> Repo.preload(:customer)
   end
+
+  @doc """
+  Returns orders that are ready for pickup but not yet assigned to a rider.
+  """
+  def list_available_for_pickup do
+    Order
+    |> where([o], is_nil(o.rider_id))
+    |> preload([:customer, store: :vendor, order_items: :product])
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+    |> Enum.filter(fn order -> get_orders_status(order) == "ready" end)
+  end
+
+  @doc """
+  Returns orders assigned to a specific rider.
+  """
+  def list_rider_assigned_orders(rider_id) do
+    Order
+    |> where([o], o.rider_id == ^rider_id)
+    |> preload([:customer, store: :vendor, order_items: :product])
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Marks an order as delivered by a specific rider.
+  """
+  def deliver_order(%Order{} = order, rider_id) do
+    if order.rider_id != rider_id do
+      {:error, :unauthorized}
+    else
+      Repo.transaction(fn ->
+        order_items = Repo.preload(order, :order_items).order_items
+
+        Enum.each(order_items, fn item ->
+          item
+          |> OrderItem.changeset(%{status: "delivered"})
+          |> Repo.update()
+        end)
+
+        Repo.preload(order, [:order_items, :customer, :store], force: true)
+      end)
+    end
+  end
 end

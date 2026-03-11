@@ -367,11 +367,98 @@ defmodule MzingaDeliveryWeb.OrderController do
     end
   end
 
+  @doc """
+  List available orders for pickup (rider only)
+  GET /api/orders/available
+  """
+  def available_for_pickup(conn, _params) do
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.role != "rider" do
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Only riders can view available orders"})
+    else
+      orders = Orders.list_available_for_pickup()
+      render(conn, "index.json", orders: orders)
+    end
+  end
+
+  @doc """
+  List orders assigned to the rider
+  GET /api/orders/assigned
+  """
+  def assigned_to_rider(conn, _params) do
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.role != "rider" do
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Only riders can view assigned orders"})
+    else
+      orders = Orders.list_rider_assigned_orders(user.id)
+      render(conn, "index.json", orders: orders)
+    end
+  end
+
+  @doc """
+  Deliver order (rider only)
+  PATCH /api/orders/:id/deliver
+  """
+  def deliver(conn, %{"id" => id}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.role != "rider" do
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Only riders can perform this action"})
+    else
+      with {:ok, order} <- Orders.get_order!(id),
+           {:ok, updated_order} <- Orders.deliver_order(order, user.id) do
+        # Broadcast to customer
+        MzingaDeliveryWeb.Endpoint.broadcast(
+          "notifications:customer_#{order.customer_id}",
+          "order_delivered",
+          %{
+            order_id: order.id,
+            store_name: order.store.name,
+            message: "Your order has been delivered! Enjoy!",
+            timestamp: DateTime.utc_now()
+          }
+        )
+
+        Notifications.create_notification(%{
+          user_id: order.customer_id,
+          message: "Your order ##{order.id} from #{order.store.name} has been delivered. Enjoy!",
+          type: "order_delivered"
+        })
+
+        render(conn, "show.json", order: updated_order)
+      else
+        {:error, :not_found} ->
+          conn
+          |> put_status(:not_found)
+          |> json(%{error: "Order not found"})
+
+        {:error, :unauthorized} ->
+          conn
+          |> put_status(:forbidden)
+          |> json(%{error: "You are not assigned to this order"})
+
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render("error.json", changeset: changeset)
+      end
+    end
+  end
+
   # Check if user can view the order
   defp can_view_order?(user, order) do
     user.role == "admin" ||
       user.id == order.customer_id ||
-      (user.role == "vendor" && order_belongs_to_vendor?(user.id, order.store_id))
+      (user.role == "vendor" && order_belongs_to_vendor?(user.id, order.store_id)) ||
+      (user.role == "rider" && user.id == order.rider_id)
   end
 
   # Check if user can manage (accept/reject) the order
