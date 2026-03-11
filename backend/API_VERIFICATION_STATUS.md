@@ -385,6 +385,56 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders/72/pick" \
 
 ---
 
+### 6.3 Rider Workflow (New Features)
+
+**6.3.1 Find Available Orders**
+**Endpoint:** `GET /api/rider/orders/available`
+**Method:** Fetches a list of unassigned orders that are marked as ready for pickup.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/rider/orders/available" \
+  -H "Authorization: Bearer <RIDER_TOKEN>"
+```
+
+**Status:** 200 OK (Returns a list of available Order JSONs)
+
+**6.3.2 Pick an Order**
+**Endpoint:** `POST /api/rider/orders/:id/pick`
+**Method:** Assigns the logged-in rider to the specified order to perform the delivery.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/rider/orders/72/pick" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -H "Content-Type: application/json"
+```
+
+**Status:** 200 OK (Returns updated Order JSON)
+
+**6.3.3 View Assigned Orders**
+**Endpoint:** `GET /api/rider/orders/assigned`
+**Method:** Retrieves an array of orders that the logged-in rider has picked but not yet delivered.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/rider/orders/assigned" \
+  -H "Authorization: Bearer <RIDER_TOKEN>"
+```
+
+**Status:** 200 OK (Returns a list of assigned Order JSONs)
+
+**6.3.4 Mark Order as Delivered**
+**Endpoint:** `PATCH /api/rider/orders/:id/deliver`
+**Method:** The rider marks the order as delivered once it reaches the customer.
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/rider/orders/72/deliver" \
+  -H "Authorization: Bearer <RIDER_TOKEN>" \
+  -H "Content-Type: application/json"
+```
+
+**Status:** 200 OK (Returns updated Order JSON with status 'delivered' and broadcasts `order_delivered` WebSocket event to the customer)
+
+---
+
 ## Not Yet Tested / Pending Verification
 
 ### Orders (Verified)
