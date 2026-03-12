@@ -204,7 +204,15 @@ defmodule MzingaDelivery.Stores.Filters do
   # Apply pagination
   defp apply_pagination(query, params) do
     limit = parse_integer(params["limit"]) || 100
-    offset = parse_integer(params["offset"]) || 0
+    offset = parse_integer(params["offset"])
+
+    offset =
+      if is_nil(offset) do
+        page = parse_integer(params["page"]) || 1
+        (page - 1) * limit
+      else
+        offset
+      end
 
     query
     |> limit(^limit)
