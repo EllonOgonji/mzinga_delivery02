@@ -1,13 +1,20 @@
 defmodule MzingaDeliveryWeb.ProductFilterView do
   use MzingaDeliveryWeb, :view
 
-  def render("filter.json", %{products: products, total: total, limit: limit, offset: offset}) do
+  def render("filter.json", %{
+        products: products,
+        total: total,
+        limit: limit,
+        offset: offset,
+        page: page
+      }) do
     %{
       data: Enum.map(products, &product_json/1),
       meta: %{
         total: total,
         count: length(products),
         limit: limit,
+        page: page,
         offset: offset,
         has_more: offset + length(products) < total
       }

@@ -41,7 +41,8 @@ defmodule MzingaDeliveryWeb.ProductFilterController do
       products: products,
       total: total_count,
       limit: parse_int(params["limit"], 100),
-      offset: parse_int(params["offset"], 0)
+      page: parse_int(params["page"], 1),
+      offset: parse_int(params["offset"], nil)
     )
   end
 
