@@ -266,6 +266,8 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5"
 
 ### 5. Product Management (Verified)
 
+_Note: All public product listings (`GET /api/products` and `GET /api/products/filter`) are strictly filtered to only return products belonging to stores that are both **approved** and **verified**._
+
 **5.1 Create Product**
 **Endpoint:** `POST /api/products`
 
