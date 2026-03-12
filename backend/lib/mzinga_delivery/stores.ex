@@ -204,7 +204,9 @@ defmodule MzingaDelivery.Stores do
   def list_available_products do
     Product
     |> where([p], p.available == true)
-    |> preload(:store)
+    |> join(:inner, [p], s in assoc(p, :store))
+    |> where([_p, s], s.status == "approved" and s.is_verified == true)
+    |> preload([p, s], store: s)
     |> Repo.all()
   end
 
