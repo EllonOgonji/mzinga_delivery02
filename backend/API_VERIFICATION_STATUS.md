@@ -356,6 +356,16 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/products/1/rate" \
 
 **Status:** 200 OK (Returns updated Product JSON)
 
+**5.7 Filter & Paginate Products**
+**Endpoint:** `GET /api/products/filter`
+**Method:** Allows filtering products by various attributes and supports pagination.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/products/filter?category=Beer&min_price=100&max_price=500&page=1&limit=10"
+```
+
+**Status:** 200 OK (Returns paginated products and metadata including `total`, `page`, `limit`)
+
 ---
 
 ### 6. Order Workflow (New Features)
