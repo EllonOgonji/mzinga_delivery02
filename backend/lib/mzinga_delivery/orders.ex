@@ -370,8 +370,11 @@ defmodule MzingaDelivery.Orders do
         |> Order.changeset(%{rider_id: rider_id})
         |> Repo.update()
         |> case do
-          {:ok, updated_order} -> updated_order
-          {:error, changeset} -> Repo.rollback(changeset)
+          {:ok, updated_order} ->
+            Repo.preload(updated_order, [:customer, store: :vendor, order_items: :product])
+
+          {:error, changeset} ->
+            Repo.rollback(changeset)
         end
       end
     end)
@@ -589,7 +592,7 @@ defmodule MzingaDelivery.Orders do
           |> Repo.update()
         end)
 
-        Repo.preload(order, [:order_items, :customer, :store], force: true)
+        Repo.preload(order, [:customer, store: :vendor, order_items: :product], force: true)
       end)
     end
   end
