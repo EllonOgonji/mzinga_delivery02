@@ -33,10 +33,12 @@ defmodule MzingaDelivery.Stores.Filters do
 
   def filter_products(params \\ %{}) do
     Product
+    |> join(:inner, [p], s in assoc(p, :store))
+    |> where([_p, s], s.status == "approved" and s.is_verified == true)
     |> build_query(params)
     |> apply_sorting(params)
     |> apply_pagination(params)
-    |> preload(:store)
+    |> preload([p, s], store: s)
     |> Repo.all()
   end
 
@@ -45,6 +47,8 @@ defmodule MzingaDelivery.Stores.Filters do
   """
   def count_filtered_products(params \\ %{}) do
     Product
+    |> join(:inner, [p], s in assoc(p, :store))
+    |> where([_p, s], s.status == "approved" and s.is_verified == true)
     |> build_query(params)
     |> Repo.aggregate(:count, :id)
   end
