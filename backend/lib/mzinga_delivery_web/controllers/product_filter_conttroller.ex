@@ -35,14 +35,18 @@ defmodule MzingaDeliveryWeb.ProductFilterController do
 
     Logger.info("Found #{length(products)} products, total matching: #{total_count}")
 
+    limit = parse_int(params["limit"], 100)
+    page = parse_int(params["page"], 1)
+    offset = parse_int(params["offset"], (page - 1) * limit)
+
     conn
     |> put_status(:ok)
     |> render("filter.json",
       products: products,
       total: total_count,
-      limit: parse_int(params["limit"], 100),
-      page: parse_int(params["page"], 1),
-      offset: parse_int(params["offset"], nil)
+      limit: limit,
+      page: page,
+      offset: offset
     )
   end
 
