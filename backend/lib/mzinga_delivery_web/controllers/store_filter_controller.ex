@@ -19,6 +19,9 @@ defmodule MzingaDeliveryWeb.StoreFilterController do
     %{
       id: store.id,
       name: store.name,
+      address: store.address,
+      latitude: store.latitude,
+      longitude: store.longitude,
       status: store.status,
       category: store.category,
       logo: store.logo,
