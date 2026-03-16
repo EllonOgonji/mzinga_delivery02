@@ -83,6 +83,9 @@ defmodule MzingaDeliveryWeb.Router do
     # Products
     resources("/products", ProductController, only: [:create, :update, :delete])
     post("/products/:id/rate", ProductController, :rate)
+
+    # Payments
+    post("/payments/retry", PaymentController, :retry)
   end
 
   # vendor routes

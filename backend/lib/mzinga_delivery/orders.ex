@@ -518,6 +518,9 @@ defmodule MzingaDelivery.Orders do
               # Clear Cart
               Carts.clear_cart(user.id)
 
+              # Broadcast payment initiated
+              broadcast_payment_initiated(payment, user.id, mpesa_response)
+
               %{
                 status: "payment_initiated",
                 checkout_group_id: checkout_group_id,
@@ -595,5 +598,110 @@ defmodule MzingaDelivery.Orders do
         Repo.preload(order, [:customer, store: :vendor, order_items: :product], force: true)
       end)
     end
+  end
+
+  @doc """
+  Retries a failed payment for an order or a checkout group.
+  """
+  def retry_payment(user, payment_phone, params) do
+    require Logger
+    payment_phone = payment_phone || user.phone_number
+
+    # Try to find payment record
+    payment =
+      cond do
+        group_id = params["checkout_group_id"] ->
+          Payments.get_payment_by_checkout_group(group_id)
+
+        order_id = params["order_id"] ->
+          Payments.get_payment_by_order(order_id)
+
+        true ->
+          nil
+      end
+
+    with payment when not is_nil(payment) <- payment,
+         true <- payment.status in ["pending", "failed"],
+         # Check ownership (if it's a single order payment)
+         true <- validate_payment_ownership(payment, user) do
+      # Initiate M-Pesa STK Push
+      ref_id =
+        if payment.checkout_group_id do
+          "GRP-#{String.slice(to_string(payment.checkout_group_id), 0, 8)}"
+        else
+          "ORD-#{payment.order_id}"
+        end
+
+      case MpesaService.initiate_stk_push(payment_phone, payment.amount, ref_id) do
+        {:ok, mpesa_response} ->
+          # Update payment with new transaction ID
+          Payments.update_payment(payment, %{
+            transaction_id: mpesa_response["CheckoutRequestID"],
+            status: "pending"
+          })
+
+          # If it's a group, update all orders in the group back to pending
+          if payment.checkout_group_id do
+            update_group_orders_payment_status(payment.checkout_group_id, "pending")
+          else
+            # Single order
+            order = Repo.get!(Order, payment.order_id)
+            update_payment_status(order, "pending")
+          end
+
+          # Broadcast payment initiated
+          broadcast_payment_initiated(payment, user.id, mpesa_response)
+
+          {:ok,
+           %{
+             status: "payment_initiated",
+             mpesa_response: mpesa_response,
+             payment: payment
+           }}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    else
+      nil -> {:error, :payment_not_found}
+      false -> {:error, :invalid_payment_status}
+      {:error, :unauthorized} -> {:error, :unauthorized}
+    end
+  end
+
+  defp validate_payment_ownership(payment, user) do
+    cond do
+      payment.order_id ->
+        order = Repo.get(Order, payment.order_id)
+        order && order.customer_id == user.id
+
+      payment.checkout_group_id ->
+        # Check if user has at least one order in this group
+        query =
+          from(o in Order,
+            where:
+              o.checkout_group_id == ^payment.checkout_group_id and o.customer_id == ^user.id,
+            select: count(o.id)
+          )
+
+        Repo.one(query) > 0
+
+      true ->
+        false
+    end
+    |> case do
+      true -> true
+      false -> {:error, :unauthorized}
+    end
+  end
+
+  defp broadcast_payment_initiated(payment, user_id, mpesa_response) do
+    Endpoint.broadcast("notifications:customer_#{user_id}", "payment_initiated", %{
+      checkout_group_id: payment.checkout_group_id,
+      order_id: payment.order_id,
+      checkout_request_id: mpesa_response["CheckoutRequestID"],
+      message: "Payment initiated, please check your phone.",
+      timestamp: DateTime.utc_now()
+    })
   end
 end

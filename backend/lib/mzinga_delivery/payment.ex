@@ -31,6 +31,13 @@ defmodule MzingaDelivery.Payments do
   end
 
   @doc """
+  Gets payment by checkout_group_id.
+  """
+  def get_payment_by_checkout_group(checkout_group_id) do
+    Repo.get_by(Payment, checkout_group_id: checkout_group_id)
+  end
+
+  @doc """
   Updates a payment.
   """
   def update_payment(%Payment{} = payment, attrs) do
