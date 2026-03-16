@@ -35,6 +35,7 @@ defmodule MzingaDeliveryWeb.WishlistJSON do
       price: product.price,
       image_url: product.image_url,
       category: product.category,
+      stock: product.stock,
       store: %{
         id: product.store.id,
         name: product.store.name
