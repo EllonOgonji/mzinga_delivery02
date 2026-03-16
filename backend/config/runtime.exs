@@ -30,7 +30,14 @@ cors_allowed = System.get_env("CORS_ALLOWED_ORIGINS")
 
 if cors_allowed && cors_allowed != "" do
   origins = cors_allowed |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
-  config :cors_plug, origin: origins, credentials: true
+
+  config :cors_plug,
+    origin: origins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    headers: ["authorization", "content-type", "accept"],
+    expose: ["authorization"],
+    credentials: true,
+    max_age: 86_400
 end
 
 # ## Using releases
