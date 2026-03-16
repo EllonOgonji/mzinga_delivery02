@@ -33,59 +33,63 @@ defmodule MzingaDelivery.Carts do
         {:error, :product_not_found}
 
       {:ok, product} ->
-        Repo.transaction(fn ->
-          # 1. Get or Create Cart
-          # Logic: If cart exists but different store -> Error
-          cart = get_cart(user_id)
+        if product.stock < quantity do
+          {:error, :out_of_stock}
+        else
+          Repo.transaction(fn ->
+            # 1. Get or Create Cart
+            # Logic: If cart exists but different store -> Error
+            cart = get_cart(user_id)
 
-          cart =
-            case cart do
-              nil ->
-                {:ok, new_cart} = get_or_create_cart(user_id, product.store_id)
-                new_cart
+            cart =
+              case cart do
+                nil ->
+                  {:ok, new_cart} = get_or_create_cart(user_id, product.store_id)
+                  new_cart
 
-              %Cart{} = existing_cart ->
-                existing_cart
+                %Cart{} = existing_cart ->
+                  existing_cart
+              end
+
+            # 2. Add or Update Item
+            existing_item = Repo.get_by(CartItem, cart_id: cart.id, product_id: product_id)
+
+            subtotal = Decimal.mult(product.price, Decimal.new(quantity))
+
+            item_result =
+              case existing_item do
+                nil ->
+                  %CartItem{}
+                  |> CartItem.changeset(%{
+                    cart_id: cart.id,
+                    product_id: product_id,
+                    quantity: quantity,
+                    unit_price: product.price,
+                    subtotal: subtotal
+                  })
+                  |> Repo.insert()
+
+                item ->
+                  new_qty = quantity
+                  new_subtotal = Decimal.mult(product.price, Decimal.new(new_qty))
+
+                  item
+                  |> CartItem.changeset(%{
+                    quantity: new_qty,
+                    subtotal: new_subtotal
+                  })
+                  |> Repo.update()
+              end
+
+            # 3. Update Cart Total
+            update_cart_total(cart.id)
+
+            case item_result do
+              {:ok, item} -> item
+              {:error, cs} -> Repo.rollback(cs)
             end
-
-          # 2. Add or Update Item
-          existing_item = Repo.get_by(CartItem, cart_id: cart.id, product_id: product_id)
-
-          subtotal = Decimal.mult(product.price, Decimal.new(quantity))
-
-          item_result =
-            case existing_item do
-              nil ->
-                %CartItem{}
-                |> CartItem.changeset(%{
-                  cart_id: cart.id,
-                  product_id: product_id,
-                  quantity: quantity,
-                  unit_price: product.price,
-                  subtotal: subtotal
-                })
-                |> Repo.insert()
-
-              item ->
-                new_qty = quantity
-                new_subtotal = Decimal.mult(product.price, Decimal.new(new_qty))
-
-                item
-                |> CartItem.changeset(%{
-                  quantity: new_qty,
-                  subtotal: new_subtotal
-                })
-                |> Repo.update()
-            end
-
-          # 3. Update Cart Total
-          update_cart_total(cart.id)
-
-          case item_result do
-            {:ok, item} -> item
-            {:error, cs} -> Repo.rollback(cs)
-          end
-        end)
+          end)
+        end
     end
   end
 
