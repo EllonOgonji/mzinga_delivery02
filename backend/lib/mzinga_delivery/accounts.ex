@@ -5,7 +5,7 @@ defmodule MzingaDelivery.Accounts do
 
   import Ecto.Query, warn: false
   alias MzingaDelivery.Repo
-  alias MzingaDelivery.Accounts.User
+  alias MzingaDelivery.Accounts.{User, WishlistItem}
 
   @doc """
   returns list of users
@@ -114,5 +114,40 @@ defmodule MzingaDelivery.Accounts do
     User
     |> where([u], u.role == ^role)
     |> Repo.all()
+  end
+
+  # Wishlist
+
+  @doc """
+  Returns a user's wishlist items with products and stores preloaded.
+  """
+  def list_wishlist_items(user_id) do
+    WishlistItem
+    |> where([wi], wi.user_id == ^user_id)
+    |> preload(product: :store)
+    |> order_by([wi], desc: wi.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Adds a product to a user's wishlist.
+  """
+  def add_to_wishlist(user_id, product_id) do
+    %WishlistItem{}
+    |> WishlistItem.changeset(%{user_id: user_id, product_id: product_id})
+    |> Repo.insert()
+  end
+
+  @doc """
+  Removes a product from a user's wishlist.
+  """
+  def remove_from_wishlist(user_id, product_id) do
+    WishlistItem
+    |> where([wi], wi.user_id == ^user_id and wi.product_id == ^product_id)
+    |> Repo.delete_all()
+    |> case do
+      {n, _} when n > 0 -> {:ok, :deleted}
+      _ -> {:error, :not_found}
+    end
   end
 end

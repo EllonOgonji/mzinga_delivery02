@@ -672,13 +672,37 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/payments/retry" \
 
 ---
 
-```json
-{
-  "data": {
-    "distance_km": 1.5,
-    "delivery_fee": 150.0,
-    "duration_text": "12 mins",
-    "distance_text": "1.5 km"
-  }
-}
+### 10. Wishlist (Auth Required)
+
+These endpoints allow customers to manage their personal wishlist of products.
+
+**10.1 View Wishlist**
+**Endpoint:** `GET /api/wishlist`
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/wishlist" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
 ```
+
+**Status:** 200 OK (Returns a list of wishlist items with product details)
+
+**10.2 Add Product to Wishlist**
+**Endpoint:** `POST /api/wishlist/:product_id`
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/wishlist/1" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Status:** 201 Created (Returns the created wishlist item)
+_Note:_ Returns `422 Unprocessable Entity` if the product is already in the wishlist.
+
+**10.3 Remove Product from Wishlist**
+**Endpoint:** `DELETE /api/wishlist/:product_id`
+
+```bash
+curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/wishlist/1" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>"
+```
+
+**Status:** 204 No Content

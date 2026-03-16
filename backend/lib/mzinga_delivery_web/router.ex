@@ -74,6 +74,11 @@ defmodule MzingaDeliveryWeb.Router do
     delete("/cart/items/:product_id", CartController, :remove_item)
     delete("/cart", CartController, :delete)
 
+    # Wishlist
+    get("/wishlist", WishlistController, :index)
+    post("/wishlist/:product_id", WishlistController, :create)
+    delete("/wishlist/:product_id", WishlistController, :delete)
+
     # Notifications
     get("/notifications", NotificationController, :index)
     get("/notifications/unread", NotificationController, :unread)
