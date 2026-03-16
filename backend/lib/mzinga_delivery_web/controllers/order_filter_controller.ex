@@ -25,7 +25,10 @@ defmodule MzingaDeliveryWeb.OrderFilterController do
         "vendor" ->
           stores = Stores.get_stores_by_vendor(user.id)
           store_ids = Enum.map(stores, & &1.id)
-          Map.put(params, "vendor_store_ids", store_ids)
+
+          params
+          |> Map.put("vendor_store_ids", store_ids)
+          |> Map.put("payment_status", "paid")
 
         _ ->
           params

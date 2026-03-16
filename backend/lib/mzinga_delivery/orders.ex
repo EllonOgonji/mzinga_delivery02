@@ -140,7 +140,7 @@ defmodule MzingaDelivery.Orders do
   """
   def list_store_orders(store_id) do
     Order
-    |> where([o], o.store_id == ^store_id)
+    |> where([o], o.store_id == ^store_id and o.payment_status == "paid")
     |> preload([:customer, store: :vendor, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
@@ -561,7 +561,7 @@ defmodule MzingaDelivery.Orders do
   """
   def list_available_for_pickup do
     Order
-    |> where([o], is_nil(o.rider_id))
+    |> where([o], is_nil(o.rider_id) and o.payment_status == "paid")
     |> preload([:customer, store: :vendor, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
@@ -573,7 +573,7 @@ defmodule MzingaDelivery.Orders do
   """
   def list_rider_assigned_orders(rider_id) do
     Order
-    |> where([o], o.rider_id == ^rider_id)
+    |> where([o], o.rider_id == ^rider_id and o.payment_status == "paid")
     |> preload([:customer, store: :vendor, order_items: :product])
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()

@@ -137,6 +137,8 @@ defmodule MzingaDeliveryWeb.PaymentController do
 
           if List.first(orders) do
             broadcast_payment_success(List.first(orders), transaction_id, payment_data)
+            # Notify ALL vendors in this group
+            Enum.each(orders, &notify_vendor_on_payment/1)
           end
         else
           # Single Order Flow
@@ -149,6 +151,7 @@ defmodule MzingaDeliveryWeb.PaymentController do
                 {:ok, updated_order} ->
                   Logger.info("Order #{updated_order.id} marked as paid")
                   broadcast_payment_success(order, transaction_id, payment_data)
+                  notify_vendor_on_payment(order)
 
                 {:error, changeset} ->
                   Logger.error(
@@ -186,6 +189,35 @@ defmodule MzingaDeliveryWeb.PaymentController do
     })
 
     Logger.info("Payment notification sent to customer #{order.customer_id}")
+  end
+
+  defp notify_vendor_on_payment(order) do
+    # Ensure items and products are preloaded
+    order = MzingaDelivery.Repo.preload(order, [:customer, :order_items, store: :vendor])
+
+    # Broadcast to store owner via WebSocket
+    MzingaDeliveryWeb.Endpoint.broadcast(
+      "notifications:store_#{order.store_id}",
+      "new_order",
+      %{
+        order_id: order.id,
+        customer_name: order.customer.full_name,
+        customer_phone: order.customer.phone_number,
+        total: Decimal.to_float(order.total_price),
+        items_count: length(order.order_items),
+        timestamp: DateTime.utc_now()
+      }
+    )
+
+    # Save notification to database for vendor
+    MzingaDelivery.Notifications.create_notification(%{
+      user_id: order.store.vendor_id,
+      message:
+        "New paid order ##{order.id} from #{order.customer.full_name} - KES #{Decimal.to_float(order.total_price)}",
+      type: "new_order"
+    })
+
+    Logger.info("Notification sent to vendor #{order.store.vendor_id} for order #{order.id}")
   end
 
   # handle failed payment

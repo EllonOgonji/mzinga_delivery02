@@ -119,33 +119,6 @@ defmodule MzingaDeliveryWeb.OrderController do
             checkout_request_id = mpesa_response["CheckoutRequestID"]
             Payments.update_payment(payment, %{transaction_id: checkout_request_id})
 
-            # Get store with vendor info
-            store = Stores.get_store(order.store_id)
-
-            # Broadcast to store owner via WebSocket
-            MzingaDeliveryWeb.Endpoint.broadcast(
-              "notifications:store_#{order.store_id}",
-              "new_order",
-              %{
-                order_id: order.id,
-                customer_name: user.full_name,
-                customer_phone: user.phone_number,
-                total: Decimal.to_float(order.total_price),
-                items_count: length(order.order_items),
-                timestamp: DateTime.utc_now()
-              }
-            )
-
-            # Save notification to database for vendor
-            Notifications.create_notification(%{
-              user_id: store.vendor_id,
-              message:
-                "New order ##{order.id} from #{user.full_name} - KES #{Decimal.to_float(order.total_price)}",
-              type: "new_order"
-            })
-
-            Logger.info("Notification sent to vendor #{store.vendor_id} for order #{order.id}")
-
             conn
             |> put_status(:created)
             |> render("show.json", order: order, mpesa_response: mpesa_response)
@@ -336,8 +309,9 @@ defmodule MzingaDeliveryWeb.OrderController do
   defp can_view_order?(user, order) do
     user.role == "admin" ||
       user.id == order.customer_id ||
-      (user.role == "vendor" && order_belongs_to_vendor?(user.id, order.store_id)) ||
-      (user.role == "rider" && user.id == order.rider_id)
+      (user.role == "vendor" && order.payment_status == "paid" &&
+         order_belongs_to_vendor?(user.id, order.store_id)) ||
+      (user.role == "rider" && order.payment_status == "paid" && user.id == order.rider_id)
   end
 
   # Check if user can manage (accept/reject) the order
