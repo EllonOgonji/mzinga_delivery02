@@ -194,6 +194,24 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores" \
 
 **Status:** 200 OK
 
+**2.3 Update Store**
+**Endpoint:** `PATCH /api/vendor/stores/:id`
+**Method:** Allows a vendor to update their store details (name, address, category, logo, banner).
+
+```bash
+curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/vendor/stores/5" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <VENDOR_TOKEN>" \
+  -d '{
+    "store": {
+      "name": "Updated Store Name",
+      "category": "Wine Shop"
+    }
+  }'
+```
+
+**Status:** 200 OK (Returns updated store data)
+
 ---
 
 ### 3. Admin Approval Flow (Verified)
