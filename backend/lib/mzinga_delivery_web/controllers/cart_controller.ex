@@ -33,6 +33,14 @@ defmodule MzingaDeliveryWeb.CartController do
           message: "Would you like to clear your cart and start a new order?"
         })
 
+      {:error, :out_of_stock} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{
+          error: "Product is out of stock",
+          code: "OUT_OF_STOCK"
+        })
+
       {:error, reason} ->
         conn
         |> put_status(:unprocessable_entity)
