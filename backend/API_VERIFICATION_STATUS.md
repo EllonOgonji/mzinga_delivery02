@@ -662,6 +662,28 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/delivery/calculate
 
 **Status:** 200 OK (Returns distance and cost information)
 
+---
+
+### 9. Payments
+
+**9.1 Retry Failed Payment**
+**Endpoint:** `POST /api/payments/retry`
+**Method:** Allows customers to re-initiate a failed M-Pesa STK push. Supports both individual `order_id` and `checkout_group_id`.
+
+```bash
+curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/payments/retry" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <CUSTOMER_TOKEN>" \
+  -d '{
+    "checkout_group_id": "64b2985f-84cf-40ab-ab69-610dc1ad216a",
+    "payment_phone": "254712345678"
+  }'
+```
+
+**Status:** 200 OK (Initiates STK Push and broadcasts `payment_initiated` via WebSocket)
+
+---
+
 ```json
 {
   "data": {

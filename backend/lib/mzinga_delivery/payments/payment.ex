@@ -2,6 +2,8 @@ defmodule MzingaDelivery.Payments.Payment do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder,
+           only: [:status, :amount, :transaction_id, :checkout_group_id, :order_id]}
   schema "payments" do
     field(:transaction_id, :string)
     field(:amount, :decimal)

@@ -49,6 +49,46 @@ defmodule MzingaDeliveryWeb.PaymentController do
     end
   end
 
+  @doc """
+  Retry a failed payment
+  POST /api/payments/retry
+  """
+  def retry(conn, params) do
+    user = MzingaDelivery.Auth.Guardian.Plug.current_resource(conn)
+    payment_phone = params["payment_phone"]
+
+    case Orders.retry_payment(user, payment_phone, params) do
+      {:ok, result} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          status: "success",
+          message: "Payment retry initiated",
+          data: result
+        })
+
+      {:error, :payment_not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Payment record not found"})
+
+      {:error, :invalid_payment_status} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "Payment cannot be retried (status must be pending or failed)"})
+
+      {:error, :unauthorized} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "You are not authorized to retry this payment"})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "Failed to initiate retry: #{inspect(reason)}"})
+    end
+  end
+
   # handle successful payment
   defp handle_successful_payment(
          %{transaction_id: transaction_id, checkout_request_id: checkout_request_id} =
