@@ -240,6 +240,17 @@ curl -X PATCH "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/5" \
 
 **Status:** 200 OK (Returns updated store data)
 
+**3.5 Filter Admin Stores**
+**Endpoint:** `GET /api/admin/stores/filter`
+**Method:** Allows admins to filter and search through all stores with pagination. Returns full store details including `address`, `latitude`, and `longitude`.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/admin/stores/filter?name=Premium&limit=10" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Status:** 200 OK
+
 ---
 
 ### 4. Public Access (Verified)
@@ -258,6 +269,16 @@ curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores"
 
 ```bash
 curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/5"
+```
+
+**Status:** 200 OK
+
+**4.3 Filter Public Stores**
+**Endpoint:** `GET /api/stores/filter`
+**Method:** Public endpoint to search and filter approved stores. Responses now include `address`, `latitude`, and `longitude`.
+
+```bash
+curl -X GET "https://mzinga-delivery02-t6rg.onrender.com/api/stores/filter?category=Liquor%20Store&limit=5"
 ```
 
 **Status:** 200 OK
