@@ -9,7 +9,16 @@
 
 The following endpoints have been verified using the specific test cases below.
 
-### 1. Authentication
+### 1. Visibility & Permissions Rules (Global)
+
+- **Customers**: Can view all their own orders (pending, paid, failed).
+- **Vendors**: Can ONLY see orders that have been successfully **paid**. Notifications for new orders are only sent after a successful M-Pesa callback.
+- **Riders**: Can ONLY see and pick up orders that have been successfully **paid**.
+- **Admins**: Have full visibility of all orders regardless of payment status.
+
+---
+
+### 2. Authentication
 
 **1.1 Register Customer**
 **Endpoint:** `POST /api/auth/register`
@@ -520,28 +529,7 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/orders" \
 
 ---
 
-## Not Yet Tested / Pending Verification
-
-### Order Vendor Actions (Pending)
-
-- `PATCH /api/orders/:id/accept` (Accept Order)
-- `PATCH /api/orders/:id/reject` (Reject Order)
-
-### Notifications (Auth Required)
-
-- `GET /api/notifications` (List Notifications)
-- `GET /api/notifications/unread` (Unread Count)
-- `PATCH /api/notifications/:id/read` (Mark Read)
-- `PATCH /api/notifications/read_all` (Mark All Read)
-
-### Payments
-
-- `POST /api/payments/callback` (M-Pesa Callback)
-
-### Real-time
-
-- `WS /live/websocket` (LiveView)
-- `WS /socket/websocket` (User Socket)
+---
 
 ---
 
