@@ -723,4 +723,25 @@ curl -X DELETE "https://mzinga-delivery02-t6rg.onrender.com/api/wishlist/1" \
   -H "Authorization: Bearer <CUSTOMER_TOKEN>"
 ```
 
-**Status:** 204 No Content
+---
+
+### 11. WebSockets (Real-time Notifications)
+
+The backend uses Phoenix Channels for real-time notifications.
+
+**Endpoint:** `wss://mzinga-delivery02-t6rg.onrender.com/socket`
+
+**Connection Params:**
+
+- `token`: JWT token (same one used for HTTP Bearer Auth).
+
+#### **11.1 Channels & Topics**
+
+- **Customer Notifications:** `notifications:customer_<user_id>`
+  - Event: `payment_initiated` - When STK push is triggered.
+  - Event: `payment_completed` - When payment is confirmed.
+  - Event: `payment_failed` - When payment fails or is cancelled.
+- **Vendor Notifications:** `notifications:store_<store_id>`
+  - Event: `new_order` - When a new paid order arrives.
+- **Rider Notifications:** `riders:available`
+  - Event: `order_ready` - When an order is marked ready for pickup.
