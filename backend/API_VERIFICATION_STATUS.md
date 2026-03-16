@@ -579,7 +579,10 @@ curl -X POST "https://mzinga-delivery02-t6rg.onrender.com/api/cart/items" \
 ```
 
 **Status:** 201 Created (Returns updated cart)
-_Note:_ Returns `409 Conflict` if the product belongs to a different store than what is already in the cart.
+_Note:_
+
+- Returns `409 Conflict` if the product belongs to a different store than what is already in the cart.
+- Returns `422 Unprocessable Entity` with code `OUT_OF_STOCK` if the requested quantity exceeds available stock.
 
 **7.3 Remove Item from Cart**
 **Endpoint:** `DELETE /api/cart/items/:product_id`
