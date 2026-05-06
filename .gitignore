@@ -1,0 +1,14 @@
+# Environment variables
+.env
+
+# Logs and test outputs
+server.log
+test_output.txt
+test_output_2.txt
+
+# Elixir language server
+.elixir_ls/
+
+# Executables and archives
+*.tgz
+ngrok
